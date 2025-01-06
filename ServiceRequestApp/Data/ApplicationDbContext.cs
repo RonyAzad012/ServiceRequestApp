@@ -11,7 +11,7 @@ namespace ServiceRequestApp.Data
         }
 
         // Add DbSet properties for your models here, e.g.,
-        public DbSet<ServiceRequest> ServiceRequests { get; set; }
+        public DbSet<ServiceRequestApp.Models.ServiceRequest> ServiceRequests { get; set; }
     }
 }
 
