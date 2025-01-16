@@ -2,22 +2,88 @@
     ViewData["Title"] = "Home";
 }
 
-<div class="container">
-    <div class="text-center">
-        <h1 class="display-4">Welcome to Service Request App</h1>
-        <p class="lead">Connect with local service providers or find service requests in your area.</p>
+<div class="hero-section text-center py-5 mb-5">
+    <div class="container">
+        <h1 class="display-3 fw-bold mb-4">Welcome to Service Request App</h1>
+        <p class="lead mb-4">Connect with trusted service providers or find clients in your area</p>
+        <div class="d-flex justify-content-center gap-3">
+            @if (!User.Identity.IsAuthenticated)
+            {
+                <a asp-controller="Account" asp-action="Register" class="btn btn-primary btn-lg">
+                    <i class="fas fa-user-plus me-2"></i>Get Started
+                </a>
+                <a asp-controller="Account" asp-action="Login" class="btn btn-outline-primary btn-lg">
+                    <i class="fas fa-sign-in-alt me-2"></i>Sign In
+                </a>
+            }
+            else
+            {
+                <a asp-controller="ServiceRequest" asp-action="Index" class="btn btn-primary btn-lg">
+                    <i class="fas fa-list-ul me-2"></i>View Requests
+                </a>
+            }
+        </div>
+    </div>
+</div>
 
-        <div class="row justify-content-center mt-5">
-            <div class="col-md-4">
-                <h3>Looking for Services?</h3>
-                <p>Create a service request and find qualified providers in your area.</p>
-                <a asp-controller="ServiceRequest" asp-action="Create" class="btn btn-primary">Create Request</a>
+<div class="container">
+    <div class="row g-4 mb-5">
+        <div class="col-md-4">
+            <div class="feature-card text-center p-4">
+                <div class="feature-icon mb-3">
+                    <i class="fas fa-tasks fa-3x text-primary"></i>
+                </div>
+                <h3>Create Requests</h3>
+                <p class="text-muted">Easily create and manage your service requests with our intuitive interface.</p>
             </div>
-            <div class="col-md-4">
-                <h3>Service Provider?</h3>
-                <p>Browse available service requests in your area.</p>
-                <a asp-controller="ServiceRequest" asp-action="Index" class="btn btn-success">View Requests</a>
+        </div>
+        <div class="col-md-4">
+            <div class="feature-card text-center p-4">
+                <div class="feature-icon mb-3">
+                    <i class="fas fa-handshake fa-3x text-primary"></i>
+                </div>
+                <h3>Connect</h3>
+                <p class="text-muted">Connect with reliable service providers or find new clients in your area.</p>
             </div>
+        </div>
+        <div class="col-md-4">
+            <div class="feature-card text-center p-4">
+                <div class="feature-icon mb-3">
+                    <i class="fas fa-star fa-3x text-primary"></i>
+                </div>
+                <h3>Quality Service</h3>
+                <p class="text-muted">Experience high-quality service delivery and professional interactions.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="row align-items-center mb-5">
+        <div class="col-md-6">
+            <h2 class="display-6 mb-4">How It Works</h2>
+            <div class="d-flex mb-3">
+                <div class="step-number me-3">1</div>
+                <div>
+                    <h4>Create an Account</h4>
+                    <p class="text-muted">Sign up as a service requester or provider.</p>
+                </div>
+            </div>
+            <div class="d-flex mb-3">
+                <div class="step-number me-3">2</div>
+                <div>
+                    <h4>Post or Browse Requests</h4>
+                    <p class="text-muted">Create service requests or browse available opportunities.</p>
+                </div>
+            </div>
+            <div class="d-flex">
+                <div class="step-number me-3">3</div>
+                <div>
+                    <h4>Connect and Complete</h4>
+                    <p class="text-muted">Connect with others and complete service requests.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <img src="~/images/service-illustration.svg" alt="How it works" class="img-fluid" />
         </div>
     </div>
 </div> 

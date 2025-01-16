@@ -1,97 +1,45 @@
-﻿@using Microsoft.AspNetCore.Identity
-@using ServiceRequestApp.Models
-@model ServiceRequestApp.Models.ServiceRequest
-@inject UserManager<ApplicationUser> UserManager
+﻿@model ServiceRequestApp.Models.ServiceRequest
 
 @{
-    ViewData["Title"] = "Edit Request";
-    var currentUser = await UserManager.GetUserAsync(User);
+    ViewData["Title"] = "Edit Service Request";
 }
 
-<div class="container">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card">
-                <div class="card-body">
-                    <h2 class="card-title">Edit Service Request</h2>
+<h2>Edit Service Request</h2>
 
-                    <form asp-action="Edit">
-                        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-                        <input type="hidden" asp-for="Id" />
-                        <input type="hidden" asp-for="RequesterId" />
-                        <input type="hidden" asp-for="CreatedAt" />
-                        <input type="hidden" asp-for="Status" />
+<form asp-action="Edit">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <input type="hidden" asp-for="Id" />
 
-                        <div class="form-group mb-3">
-                            <label asp-for="Title" class="control-label"></label>
-                            <input asp-for="Title" class="form-control" />
-                            <span asp-validation-for="Title" class="text-danger"></span>
-                        </div>
-
-                        <div class="form-group mb-3">
-                            <label asp-for="ServiceType" class="control-label"></label>
-                            <select asp-for="ServiceType" class="form-control">
-                                <option value="Cleaning">Cleaning</option>
-                                <option value="Plumbing">Plumbing</option>
-                                <option value="Electrical">Electrical</option>
-                                <option value="Moving">Moving</option>
-                                <option value="Other">Other</option>
-                            </select>
-                            <span asp-validation-for="ServiceType" class="text-danger"></span>
-                        </div>
-
-                        <div class="form-group mb-3">
-                            <label asp-for="Description" class="control-label"></label>
-                            <textarea asp-for="Description" class="form-control" rows="4"></textarea>
-                            <span asp-validation-for="Description" class="text-danger"></span>
-                        </div>
-
-                        <div class="form-group mb-3">
-                            <label>Location</label>
-                            <div id="map" style="height: 400px;" class="mb-2"></div>
-                            <input type="hidden" asp-for="Latitude" id="Latitude" />
-                            <input type="hidden" asp-for="Longitude" id="Longitude" />
-                        </div>
-
-                        <div class="form-group d-flex justify-content-between">
-                            <a asp-action="Index" class="btn btn-secondary">Back to List</a>
-                            <button type="submit" class="btn btn-primary">Save Changes</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
+    <div class="form-group">
+        <label asp-for="Title" class="control-label"></label>
+        <input asp-for="Title" class="form-control" />
+        <span asp-validation-for="Title" class="text-danger"></span>
     </div>
-</div>
+
+    <div class="form-group">
+        <label asp-for="Description" class="control-label"></label>
+        <textarea asp-for="Description" class="form-control"></textarea>
+        <span asp-validation-for="Description" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="Status" class="control-label"></label>
+        <select asp-for="Status" class="form-control">
+            <option value="Pending">Pending</option>
+            <option value="InProgress">In Progress</option>
+            <option value="Completed">Completed</option>
+        </select>
+        <span asp-validation-for="Status" class="text-danger"></span>
+    </div>
+
+    <div class="form-group mt-3">
+        <input type="submit" value="Save" class="btn btn-primary" />
+        <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+    </div>
+</form>
 
 @section Scripts {
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
-
-    <script>
-        // Initialize the map
-        var map = L.map('map').setView([@Model.Latitude, @Model.Longitude], 13);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap contributors'
-        }).addTo(map);
-
-        var marker = L.marker([@Model.Latitude, @Model.Longitude], {draggable: true}).addTo(map);
-
-        // Update coordinates when marker is dragged
-        marker.on('dragend', function() {
-            var position = marker.getLatLng();
-            document.getElementById('Latitude').value = position.lat;
-            document.getElementById('Longitude').value = position.lng;
-        });
-
-        // Handle map clicks
-        map.on('click', function(e) {
-            marker.setLatLng(e.latlng);
-            document.getElementById('Latitude').value = e.latlng.lat;
-            document.getElementById('Longitude').value = e.latlng.lng;
-        });
-    </script>
 } 
