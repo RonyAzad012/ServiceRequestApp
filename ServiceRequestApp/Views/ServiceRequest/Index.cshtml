@@ -1,37 +1,64 @@
-﻿@model IEnumerable<ServiceRequestApp.Models.ServiceRequest>
+﻿@using Microsoft.AspNetCore.Identity
+@model IEnumerable<ServiceRequestApp.Models.ServiceRequest>
+@inject UserManager<ApplicationUser> UserManager
+@using ServiceRequestApp.Models
 
-<h1>Service Requests</h1>
+@{
+    ViewData["Title"] = "Service Requests";
+    var currentUser = await UserManager.GetUserAsync(User);
+}
 
-<p>
-    <a asp-action="Create" class="btn btn-primary">Create New Request</a>
-</p>
+<div class="container">
+    <h1>Service Requests</h1>
 
-<table class="table table-striped">
-    <thead>
-        <tr>
-            <th>Title</th>
-            <th>Description</th>
-            <th>Requested By</th>
-            <th>Requested At</th>
-            <th>Is Completed</th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
+    @if (currentUser.UserType == "Requester")
+    {
+        <p>
+            <a asp-action="Create" class="btn btn-primary">Create New Request</a>
+        </p>
+    }
+
+    <div class="row">
         @foreach (var item in Model)
         {
-            <tr>
-                <td>@item.Title</td>
-                <td>@item.Description</td>
-                <td>@item.RequestedBy</td>
-                <td>@item.RequestedAt.ToString("g")</td>
-                <td>@item.IsCompleted</td>
-                <td>
-                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-warning btn-sm">Edit</a>
-                    <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-danger btn-sm">Delete</a>
-                    <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-info btn-sm">Details</a>
-                </td>
-            </tr>
+            <div class="col-md-6 mb-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">@item.Title</h5>
+                        <h6 class="card-subtitle mb-2 text-muted">@item.ServiceType</h6>
+                        <p class="card-text">@item.Description</p>
+                        <p class="card-text">
+                            <small class="text-muted">
+                                Status: @item.Status<br />
+                                Created: @item.CreatedAt.ToString("g")
+                            </small>
+                        </p>
+
+                        @if (currentUser.UserType == "Provider" && item.Status == "Pending")
+                        {
+                            <form asp-action="Accept" asp-route-id="@item.Id" method="post" style="display: inline;">
+                                <button type="submit" class="btn btn-success">Accept Request</button>
+                            </form>
+                        }
+
+                        <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-info">Details</a>
+
+                        @if (item.Status == "Accepted" &&
+                       (item.RequesterId == currentUser.Id ||
+                       item.AcceptedRequest?.ProviderId == currentUser.Id))
+                        {
+                            <form asp-action="Complete" asp-route-id="@item.Id" method="post" style="display: inline;">
+                                <button type="submit" class="btn btn-primary">Mark as Completed</button>
+                            </form>
+                        }
+
+                        @if (item.Status == "Pending" && item.RequesterId == currentUser.Id)
+                        {
+                            <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-danger">Delete</a>
+                        }
+                    </div>
+                </div>
+            </div>
         }
-    </tbody>
-</table>
+    </div>
+</div> 

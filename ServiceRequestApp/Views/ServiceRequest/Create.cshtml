@@ -1,62 +1,107 @@
-﻿@model ServiceRequestApp.Models.ServiceRequest
+﻿@model ServiceRequestApp.ViewModels.CreateServiceRequestViewModel
 
 @{
-    Layout = null;
+    ViewData["Title"] = "Create Service Request";
 }
 
-<!DOCTYPE html>
-
-<html>
-<head>
-    <meta name="viewport" content="width=device-width" />
-    <title>Create</title>
-</head>
-<body>
-
-<h4>ServiceRequest</h4>
-<hr />
-<div class="row">
-    <div class="col-md-4">
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <h2>Create Service Request</h2>
             <form asp-action="Create">
-                <div class="mb-3">
-                    <label asp-for="Title" class="form-label"></label>
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                <div class="form-group mb-3">
+                    <label asp-for="Title" class="control-label"></label>
                     <input asp-for="Title" class="form-control" />
                     <span asp-validation-for="Title" class="text-danger"></span>
                 </div>
-                <div class="mb-3">
-                    <label asp-for="Description" class="form-label"></label>
-                    <textarea asp-for="Description" class="form-control"></textarea>
+
+                <div class="form-group mb-3">
+                    <label asp-for="ServiceType" class="control-label"></label>
+                    <select asp-for="ServiceType" class="form-control">
+                        <option value="">Select a service type...</option>
+                        <option value="Cleaning">Cleaning</option>
+                        <option value="Plumbing">Plumbing</option>
+                        <option value="Electrical">Electrical</option>
+                        <option value="Moving">Moving</option>
+                        <option value="Other">Other</option>
+                    </select>
+                    <span asp-validation-for="ServiceType" class="text-danger"></span>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label asp-for="Description" class="control-label"></label>
+                    <textarea asp-for="Description" class="form-control" rows="4"></textarea>
                     <span asp-validation-for="Description" class="text-danger"></span>
                 </div>
-                <div class="mb-3">
-                    <label asp-for="RequestedBy" class="form-label"></label>
-                    <input asp-for="RequestedBy" class="form-control" />
-                    <span asp-validation-for="RequestedBy" class="text-danger"></span>
+
+                <div class="form-group mb-3">
+                    <label>Location</label>
+                    <div id="map" style="height: 400px;" class="mb-2"></div>
+                    <input type="hidden" asp-for="Latitude" id="Latitude" />
+                    <input type="hidden" asp-for="Longitude" id="Longitude" />
                 </div>
-                <div class="mb-3">
-                    <label asp-for="RequestedAt" class="form-label"></label>
-                    <input asp-for="RequestedAt" type="datetime-local" class="form-control" />
-                    <span asp-validation-for="RequestedAt" class="text-danger"></span>
+
+                <div class="form-group">
+                    <button type="submit" class="btn btn-primary">Create Request</button>
+                    <a asp-action="Index" class="btn btn-secondary">Back to List</a>
                 </div>
-                <div class="form-check mb-3">
-                    <input asp-for="IsCompleted" class="form-check-input" />
-                    <label asp-for="IsCompleted" class="form-check-label"></label>
-                </div>
-                <button type="submit" class="btn btn-primary">Submit</button>
-                <a asp-action="Index" class="btn btn-secondary">Back to List</a>
             </form>
+        </div>
     </div>
 </div>
 
-<div>
-    <a asp-action="Index">Back to List</a>
-</div>
-
 @section Scripts {
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
-}
-</body>
-</html>
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
 
+    <script>
+        // Initialize the map
+        var map = L.map('map').setView([0, 0], 2);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
 
+        var marker;
 
+        // Try to get user's location
+        if ("geolocation" in navigator) {
+            navigator.geolocation.getCurrentPosition(function(position) {
+                var lat = position.coords.latitude;
+                var lng = position.coords.longitude;
+                map.setView([lat, lng], 13);
+
+                if (marker) {
+                    marker.setLatLng([lat, lng]);
+                } else {
+                    marker = L.marker([lat, lng], {draggable: true}).addTo(map);
+                }
+
+                updateCoordinates(lat, lng);
+            });
+        }
+
+        // Handle map clicks
+        map.on('click', function(e) {
+            var lat = e.latlng.lat;
+            var lng = e.latlng.lng;
+
+            if (marker) {
+                marker.setLatLng([lat, lng]);
+            } else {
+                marker = L.marker([lat, lng], {draggable: true}).addTo(map);
+            }
+
+            updateCoordinates(lat, lng);
+        });
+
+        function updateCoordinates(lat, lng) {
+            document.getElementById('Latitude').value = lat;
+            document.getElementById('Longitude').value = lng;
+        }
+    </script>
+} 

@@ -1,28 +1,129 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using ServiceRequestApp.Data;
 using ServiceRequestApp.Models;
+using ServiceRequestApp.ViewModels;
 
 namespace ServiceRequestApp.Controllers
 {
+    [Authorize]
     public class ServiceRequestController : Controller
     {
-        private readonly ApplicationDbContext _context;
+        private readonly ApplicationDbContext _dbContext;
+        private readonly UserManager<ApplicationUser> _userManager;
 
-        public ServiceRequestController(ApplicationDbContext context)
+        public ServiceRequestController(
+            ApplicationDbContext context,
+            UserManager<ApplicationUser> userManager)
         {
-            _context = context;
+            _dbContext = context;
+            _userManager = userManager;
         }
 
         // GET: ServiceRequest
         public async Task<IActionResult> Index()
         {
-            return View(await _context.ServiceRequests.ToListAsync());
+            var currentUser = await _userManager.GetUserAsync(User);
+            var requests = new List<ServiceRequest>();
+
+            if (currentUser.UserType == "Provider")
+            {
+                // Providers see available requests and their accepted requests
+                requests = await _dbContext.ServiceRequests
+                    .Include(r => r.Requester)
+                    .Include(r => r.AcceptedRequest)
+                    .Where(r => r.Status == "Pending" ||
+                           (r.AcceptedRequest != null &&
+                            r.AcceptedRequest.ProviderId == currentUser.Id))
+                    .ToListAsync();
+            }
+            else
+            {
+                // Requesters see only their own requests
+                requests = await _dbContext.ServiceRequests
+                    .Include(r => r.Requester)
+                    .Include(r => r.AcceptedRequest)
+                    .Where(r => r.RequesterId == currentUser.Id)
+                    .ToListAsync();
+            }
+
+            return View(requests);
+        }
+
+        // GET: ServiceRequest/Create
+        [Authorize(Roles = "Requester")]
+        public IActionResult Create()
+        {
+            return View();
+        }
+
+        // POST: ServiceRequest/Create
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Requester")]
+        public async Task<IActionResult> Create(CreateServiceRequestViewModel model)
+        {
+            if (ModelState.IsValid)
+            {
+                var currentUser = await _userManager.GetUserAsync(User);
+                var request = new ServiceRequest
+                {
+                    Title = model.Title,
+                    Description = model.Description,
+                    ServiceType = model.ServiceType,
+                    CreatedAt = DateTime.UtcNow,
+                    Status = "Pending",
+                    Latitude = model.Latitude,
+                    Longitude = model.Longitude,
+                    RequesterId = currentUser.Id
+                };
+
+                _dbContext.Add(request);
+                await _dbContext.SaveChangesAsync();
+                return RedirectToAction(nameof(Index));
+            }
+            return View(model);
+        }
+
+        // POST: ServiceRequest/Accept/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Provider")]
+        public async Task<IActionResult> Accept(int id)
+        {
+            var request = await _dbContext.ServiceRequests
+                .Include(r => r.AcceptedRequest)
+                .FirstOrDefaultAsync(r => r.Id == id);
+
+            if (request == null)
+            {
+                return NotFound();
+            }
+
+            if (request.Status != "Pending")
+            {
+                return BadRequest("This request is no longer available.");
+            }
+
+            var currentUser = await _userManager.GetUserAsync(User);
+
+            var acceptedRequest = new AcceptedRequest
+            {
+                ServiceRequestId = request.Id,
+                ProviderId = currentUser.Id,
+                AcceptedAt = DateTime.UtcNow,
+                Status = "InProgress"
+            };
+
+            request.Status = "Accepted";
+            _dbContext.AcceptedRequests.Add(acceptedRequest);
+            await _dbContext.SaveChangesAsync();
+
+            // TODO: Send notification to requester
+
+            return RedirectToAction(nameof(Index));
         }
 
         // GET: ServiceRequest/Details/5
@@ -33,39 +134,54 @@ namespace ServiceRequestApp.Controllers
                 return NotFound();
             }
 
-            var serviceRequest = await _context.ServiceRequests
+            var request = await _dbContext.ServiceRequests
+                .Include(r => r.Requester)
+                .Include(r => r.AcceptedRequest)
+                    .ThenInclude(ar => ar.Provider)
                 .FirstOrDefaultAsync(m => m.Id == id);
-            if (serviceRequest == null)
+
+            if (request == null)
             {
                 return NotFound();
             }
 
-            return View(serviceRequest);
+            return View(request);
         }
 
-        // GET: ServiceRequest/Create
-        public IActionResult Create()
-        {
-            return View();
-        }
-
-        // POST: ServiceRequest/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
+        // POST: ServiceRequest/Complete/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Title,Description,RequestedBy,RequestedAt,IsCompleted")] ServiceRequest serviceRequest)
+        public async Task<IActionResult> Complete(int id)
         {
-            if (ModelState.IsValid)
+            var request = await _dbContext.ServiceRequests
+                .Include(r => r.AcceptedRequest)
+                .FirstOrDefaultAsync(r => r.Id == id);
+
+            if (request == null)
             {
-                _context.Add(serviceRequest);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
+                return NotFound();
             }
-            return View(serviceRequest);
+
+            var currentUser = await _userManager.GetUserAsync(User);
+
+            if (request.AcceptedRequest?.ProviderId != currentUser.Id &&
+                request.RequesterId != currentUser.Id)
+            {
+                return Unauthorized();
+            }
+
+            request.Status = "Completed";
+            if (request.AcceptedRequest != null)
+            {
+                request.AcceptedRequest.Status = "Completed";
+            }
+
+            await _dbContext.SaveChangesAsync();
+            return RedirectToAction(nameof(Index));
         }
 
         // GET: ServiceRequest/Edit/5
+        [Authorize(Roles = "Requester")]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -73,36 +189,64 @@ namespace ServiceRequestApp.Controllers
                 return NotFound();
             }
 
-            var serviceRequest = await _context.ServiceRequests.FindAsync(id);
-            if (serviceRequest == null)
+            var currentUser = await _userManager.GetUserAsync(User);
+            var request = await _dbContext.ServiceRequests.FindAsync(id);
+
+            if (request == null)
             {
                 return NotFound();
             }
-            return View(serviceRequest);
+
+            // Only allow editing if the request belongs to the current user and is still pending
+            if (request.RequesterId != currentUser.Id || request.Status != "Pending")
+            {
+                return Unauthorized();
+            }
+
+            return View(request);
         }
 
         // POST: ServiceRequest/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Title,Description,RequestedBy,RequestedAt,IsCompleted")] ServiceRequest serviceRequest)
+        [Authorize(Roles = "Requester")]
+        public async Task<IActionResult> Edit(int id, ServiceRequest request)
         {
-            if (id != serviceRequest.Id)
+            if (id != request.Id)
             {
                 return NotFound();
+            }
+
+            var currentUser = await _userManager.GetUserAsync(User);
+            var existingRequest = await _dbContext.ServiceRequests.FindAsync(id);
+
+            if (existingRequest == null)
+            {
+                return NotFound();
+            }
+
+            // Only allow editing if the request belongs to the current user and is still pending
+            if (existingRequest.RequesterId != currentUser.Id || existingRequest.Status != "Pending")
+            {
+                return Unauthorized();
             }
 
             if (ModelState.IsValid)
             {
                 try
                 {
-                    _context.Update(serviceRequest);
-                    await _context.SaveChangesAsync();
+                    // Update only allowed fields
+                    existingRequest.Title = request.Title;
+                    existingRequest.Description = request.Description;
+                    existingRequest.ServiceType = request.ServiceType;
+                    existingRequest.Latitude = request.Latitude;
+                    existingRequest.Longitude = request.Longitude;
+
+                    await _dbContext.SaveChangesAsync();
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!ServiceRequestExists(serviceRequest.Id))
+                    if (!ServiceRequestExists(request.Id))
                     {
                         return NotFound();
                     }
@@ -113,10 +257,11 @@ namespace ServiceRequestApp.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            return View(serviceRequest);
+            return View(request);
         }
 
         // GET: ServiceRequest/Delete/5
+        [Authorize(Roles = "Requester")]
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
@@ -124,34 +269,53 @@ namespace ServiceRequestApp.Controllers
                 return NotFound();
             }
 
-            var serviceRequest = await _context.ServiceRequests
+            var currentUser = await _userManager.GetUserAsync(User);
+            var request = await _dbContext.ServiceRequests
+                .Include(r => r.Requester)
                 .FirstOrDefaultAsync(m => m.Id == id);
-            if (serviceRequest == null)
+
+            if (request == null)
             {
                 return NotFound();
             }
 
-            return View(serviceRequest);
+            // Only allow deletion if the request belongs to the current user and is still pending
+            if (request.RequesterId != currentUser.Id || request.Status != "Pending")
+            {
+                return Unauthorized();
+            }
+
+            return View(request);
         }
 
         // POST: ServiceRequest/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Requester")]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var serviceRequest = await _context.ServiceRequests.FindAsync(id);
-            if (serviceRequest != null)
+            var currentUser = await _userManager.GetUserAsync(User);
+            var request = await _dbContext.ServiceRequests.FindAsync(id);
+
+            if (request == null)
             {
-                _context.ServiceRequests.Remove(serviceRequest);
+                return NotFound();
             }
 
-            await _context.SaveChangesAsync();
+            // Only allow deletion if the request belongs to the current user and is still pending
+            if (request.RequesterId != currentUser.Id || request.Status != "Pending")
+            {
+                return Unauthorized();
+            }
+
+            _dbContext.ServiceRequests.Remove(request);
+            await _dbContext.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
 
         private bool ServiceRequestExists(int id)
         {
-            return _context.ServiceRequests.Any(e => e.Id == id);
+            return _dbContext.ServiceRequests.Any(e => e.Id == id);
         }
     }
 }

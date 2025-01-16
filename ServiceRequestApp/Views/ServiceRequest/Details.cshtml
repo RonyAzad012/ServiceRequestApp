@@ -1,57 +1,83 @@
-﻿@model ServiceRequestApp.Models.ServiceRequest
+﻿@using Microsoft.AspNetCore.Identity
+@using ServiceRequestApp.Models
+@model ServiceRequestApp.Models.ServiceRequest
+@inject UserManager<ApplicationUser> UserManager
 
 @{
-    Layout = null;
+    ViewData["Title"] = "Request Details";
+    var currentUser = await UserManager.GetUserAsync(User);
 }
 
-<!DOCTYPE html>
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-body">
+                    <h2 class="card-title">@Model.Title</h2>
+                    <h6 class="card-subtitle mb-3 text-muted">@Model.ServiceType</h6>
 
-<html>
-<head>
-    <meta name="viewport" content="width=device-width" />
-    <title>Details</title>
-</head>
-<body>
+                    <dl class="row">
+                        <dt class="col-sm-3">Description</dt>
+                        <dd class="col-sm-9">@Model.Description</dd>
 
-<div>
-    <h4>ServiceRequest</h4>
-    <hr />
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Title)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Title)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Description)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Description)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.RequestedBy)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.RequestedBy)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.RequestedAt)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.RequestedAt)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.IsCompleted)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.IsCompleted)
-        </dd>
-    </dl>
+                        <dt class="col-sm-3">Status</dt>
+                        <dd class="col-sm-9">@Model.Status</dd>
+
+                        <dt class="col-sm-3">Created At</dt>
+                        <dd class="col-sm-9">@Model.CreatedAt.ToString("g")</dd>
+
+                        <dt class="col-sm-3">Requester</dt>
+                        <dd class="col-sm-9">@($"{Model.Requester.FirstName} {Model.Requester.LastName}")</dd>
+
+                        @if (Model.AcceptedRequest != null)
+                        {
+                            <dt class="col-sm-3">Provider</dt>
+                            <dd class="col-sm-9">@($"{Model.AcceptedRequest.Provider.FirstName} {Model.AcceptedRequest.Provider.LastName}")</dd>
+
+                            <dt class="col-sm-3">Accepted At</dt>
+                            <dd class="col-sm-9">@Model.AcceptedRequest.AcceptedAt.ToString("g")</dd>
+                        }
+                    </dl>
+
+                    <div id="map" style="height: 400px;" class="mb-3"></div>
+
+                    <div class="d-flex justify-content-between">
+                        <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+
+                        @if (currentUser.UserType == "Provider" && Model.Status == "Pending")
+                        {
+                            <form asp-action="Accept" asp-route-id="@Model.Id" method="post" style="display: inline;">
+                                <button type="submit" class="btn btn-success">Accept Request</button>
+                            </form>
+                        }
+
+                        @if (Model.Status == "Accepted" &&
+                        (Model.RequesterId == currentUser.Id ||
+                        Model.AcceptedRequest?.ProviderId == currentUser.Id))
+                        {
+                            <form asp-action="Complete" asp-route-id="@Model.Id" method="post" style="display: inline;">
+                                <button type="submit" class="btn btn-primary">Mark as Completed</button>
+                            </form>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
-<div>
-    <a asp-action="Edit" asp-route-id="@Model?.Id">Edit</a> |
-    <a asp-action="Index">Back to List</a>
-</div>
-</body>
-</html>
+
+@section Scripts {
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+
+    <script>
+        // Initialize the map
+        var map = L.map('map').setView([@Model.Latitude, @Model.Longitude], 13);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        // Add marker for the request location
+        L.marker([@Model.Latitude, @Model.Longitude]).addTo(map);
+    </script>
+} 

@@ -1,8 +1,23 @@
 ﻿@{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "Home";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
-</div>
+<div class="container">
+    <div class="text-center">
+        <h1 class="display-4">Welcome to Service Request App</h1>
+        <p class="lead">Connect with local service providers or find service requests in your area.</p>
+
+        <div class="row justify-content-center mt-5">
+            <div class="col-md-4">
+                <h3>Looking for Services?</h3>
+                <p>Create a service request and find qualified providers in your area.</p>
+                <a asp-controller="ServiceRequest" asp-action="Create" class="btn btn-primary">Create Request</a>
+            </div>
+            <div class="col-md-4">
+                <h3>Service Provider?</h3>
+                <p>Browse available service requests in your area.</p>
+                <a asp-controller="ServiceRequest" asp-action="Index" class="btn btn-success">View Requests</a>
+            </div>
+        </div>
+    </div>
+</div> 

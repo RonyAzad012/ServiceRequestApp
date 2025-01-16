@@ -1,26 +1,21 @@
 ﻿using System.ComponentModel.DataAnnotations;
-
+using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity;
 namespace ServiceRequestApp.Models
 {
     public class ServiceRequest
     {
-        [Key]
         public int Id { get; set; }
-
-        [Required]
-        [StringLength(100)]
         public string Title { get; set; }
-
-        [Required]
         public string Description { get; set; }
+        public string ServiceType { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public string Status { get; set; } // Pending, Accepted, Completed
+        public double Latitude { get; set; }
+        public double Longitude { get; set; }
+        public string RequesterId { get; set; }
+        public virtual ApplicationUser? Requester { get; set; }
+        public virtual AcceptedRequest? AcceptedRequest { get; set; }
 
-        [Required]
-        public string RequestedBy { get; set; }
-
-        [Required]
-        [DataType(DataType.DateTime)]
-        public DateTime RequestedAt { get; set; }
-
-        public bool IsCompleted { get; set; } = false;
     }
 }
