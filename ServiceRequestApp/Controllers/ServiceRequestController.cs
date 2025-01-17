@@ -164,15 +164,45 @@ namespace ServiceRequestApp.Controllers
 
             var currentUser = await _userManager.GetUserAsync(User);
 
-            if (request.AcceptedRequest?.ProviderId != currentUser.Id &&
-                request.RequesterId != currentUser.Id)
+            // Check if the current user is either the provider or requester
+            bool isProvider = request.AcceptedRequest?.ProviderId == currentUser.Id;
+            bool isRequester = request.RequesterId == currentUser.Id;
+
+            if (!isProvider && !isRequester)
             {
                 return Unauthorized();
             }
 
-            request.Status = "Completed";
-            if (request.AcceptedRequest != null)
+            // Only allow completion if the request is in "Accepted" status or partially completed
+            if (request.Status != "Accepted" &&
+                request.Status != "ProviderCompleted" &&
+                request.Status != "RequesterCompleted")
             {
+                return BadRequest("Request cannot be completed at this time.");
+            }
+
+            if (isProvider && request.Status != "RequesterCompleted")
+            {
+                request.Status = "ProviderCompleted";
+                if (request.AcceptedRequest != null)
+                {
+                    request.AcceptedRequest.Status = "ProviderCompleted";
+                }
+            }
+            else if (isRequester && request.Status != "ProviderCompleted")
+            {
+                request.Status = "RequesterCompleted";
+                if (request.AcceptedRequest != null)
+                {
+                    request.AcceptedRequest.Status = "RequesterCompleted";
+                }
+            }
+
+            // Check if both parties have marked it as complete
+            if ((request.Status == "ProviderCompleted" && request.AcceptedRequest?.Status == "RequesterCompleted") ||
+                (request.Status == "RequesterCompleted" && request.AcceptedRequest?.Status == "ProviderCompleted"))
+            {
+                request.Status = "Completed";
                 request.AcceptedRequest.Status = "Completed";
             }
 
@@ -203,18 +233,24 @@ namespace ServiceRequestApp.Controllers
                 return Unauthorized();
             }
 
-            return View(request);
+            var viewModel = new EditServiceRequestViewModel
+            {
+                Title = request.Title,
+                Description = request.Description
+            };
+
+            return View(viewModel);
         }
 
         // POST: ServiceRequest/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = "Requester")]
-        public async Task<IActionResult> Edit(int id, ServiceRequest request)
+        public async Task<IActionResult> Edit(int id, EditServiceRequestViewModel model)
         {
-            if (id != request.Id)
+            if (!ModelState.IsValid)
             {
-                return NotFound();
+                return View(model);
             }
 
             var currentUser = await _userManager.GetUserAsync(User);
@@ -225,39 +261,27 @@ namespace ServiceRequestApp.Controllers
                 return NotFound();
             }
 
-            // Only allow editing if the request belongs to the current user and is still pending
             if (existingRequest.RequesterId != currentUser.Id || existingRequest.Status != "Pending")
             {
                 return Unauthorized();
             }
 
-            if (ModelState.IsValid)
+            try
             {
-                try
-                {
-                    // Update only allowed fields
-                    existingRequest.Title = request.Title;
-                    existingRequest.Description = request.Description;
-                    existingRequest.ServiceType = request.ServiceType;
-                    existingRequest.Latitude = request.Latitude;
-                    existingRequest.Longitude = request.Longitude;
+                existingRequest.Title = model.Title;
+                existingRequest.Description = model.Description;
 
-                    await _dbContext.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!ServiceRequestExists(request.Id))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
-                }
+                await _dbContext.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
-            return View(request);
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!ServiceRequestExists(id))
+                {
+                    return NotFound();
+                }
+                throw;
+            }
         }
 
         // GET: ServiceRequest/Delete/5
