@@ -8,21 +8,28 @@ using ServiceRequestApp.ViewModels;
 
 namespace ServiceRequestApp.Controllers
 {
+    //Authorize attribute is used to restrict access to the controller or its actions to only authenticated users.
     [Authorize]
     public class ServiceRequestController : Controller
     {
+        //The ApplicationDbContext and UserManager<ApplicationUser> services are injected into the controller.
         private readonly ApplicationDbContext _dbContext;
         private readonly UserManager<ApplicationUser> _userManager;
 
+        //Dependency injection is used to inject the ApplicationDbContext and UserManager<ApplicationUser> services into the controller.
         public ServiceRequestController(
-            ApplicationDbContext context,
-            UserManager<ApplicationUser> userManager)
+            ApplicationDbContext context,//For database operations
+            UserManager<ApplicationUser> userManager)//For user management
         {
             _dbContext = context;
             _userManager = userManager;
         }
 
         // GET: ServiceRequest
+        // The Index action method returns a list of service requests based on the user type.
+        // If the user is a provider, the action method returns a list of available requests and accepted requests.
+        // If the user is a requester, the action method returns a list of requests created by the user.
+       
         public async Task<IActionResult> Index()
         {
             var currentUser = await _userManager.GetUserAsync(User);
@@ -53,6 +60,7 @@ namespace ServiceRequestApp.Controllers
         }
 
         // GET: ServiceRequest/Create
+        //return views for a new service request
         [Authorize(Roles = "Requester")]
         public IActionResult Create()
         {
@@ -60,11 +68,13 @@ namespace ServiceRequestApp.Controllers
         }
 
         // POST: ServiceRequest/Create
+        //Process form submission if the model is valid and the user is a requester create a new service request and save it to the database.
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = "Requester")]
         public async Task<IActionResult> Create(CreateServiceRequestViewModel model)
         {
+            
             if (ModelState.IsValid)
             {
                 var currentUser = await _userManager.GetUserAsync(User);
@@ -88,6 +98,7 @@ namespace ServiceRequestApp.Controllers
         }
 
         // POST: ServiceRequest/Accept/5
+        //Allows a provider to accept a service request if the request is still pending provider can accept the request and change the status to accepted.
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = "Provider")]
@@ -127,6 +138,7 @@ namespace ServiceRequestApp.Controllers
         }
 
         // GET: ServiceRequest/Details/5
+        //Returns the details of a service request based on the request ID.
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
@@ -149,6 +161,7 @@ namespace ServiceRequestApp.Controllers
         }
 
         // POST: ServiceRequest/Complete/5
+        //Allows the provider or requester to mark a service request as completed.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Complete(int id)
@@ -211,6 +224,7 @@ namespace ServiceRequestApp.Controllers
         }
 
         // GET: ServiceRequest/Edit/5
+        //Returns the view for editing a service request based on the request ID.
         [Authorize(Roles = "Requester")]
         public async Task<IActionResult> Edit(int? id)
         {
@@ -243,6 +257,7 @@ namespace ServiceRequestApp.Controllers
         }
 
         // POST: ServiceRequest/Edit/5
+        //Process form submission if the model is valid and the user is a requester update the service request and save it to the database.
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = "Requester")]
@@ -285,6 +300,7 @@ namespace ServiceRequestApp.Controllers
         }
 
         // GET: ServiceRequest/Delete/5
+        //Returns the view for deleting a service request based on the request ID.
         [Authorize(Roles = "Requester")]
         public async Task<IActionResult> Delete(int? id)
         {
@@ -313,6 +329,7 @@ namespace ServiceRequestApp.Controllers
         }
 
         // POST: ServiceRequest/Delete/5
+        //Process form submission if the user is a requester delete the service request and save it to the database.
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = "Requester")]
@@ -337,6 +354,7 @@ namespace ServiceRequestApp.Controllers
             return RedirectToAction(nameof(Index));
         }
 
+        //Check if a service request exists based on the request ID.
         private bool ServiceRequestExists(int id)
         {
             return _dbContext.ServiceRequests.Any(e => e.Id == id);
