@@ -10,6 +10,8 @@ namespace ServiceRequestApp.Controllers
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly SignInManager<ApplicationUser> _signInManager;
 
+        //Dependency Injection. These are services provided by ASP.NET core Identity.
+        //for managing users and handling sign-ins.
         public AccountController(
             UserManager<ApplicationUser> userManager,
             SignInManager<ApplicationUser> signInManager)
@@ -23,7 +25,7 @@ namespace ServiceRequestApp.Controllers
         {
             return View();
         }
-
+        //Process the registration form. If the form is valid, create a new ApplicationUser object
         [HttpPost]
         public async Task<IActionResult> Register(RegisterViewModel model)
         {
@@ -47,7 +49,7 @@ namespace ServiceRequestApp.Controllers
                     await _signInManager.SignInAsync(user, isPersistent: false);
                     return RedirectToAction("Index", "Home");
                 }
-
+                //If the registration fails, add the errors to the ModelState object.
                 foreach (var error in result.Errors)
                 {
                     ModelState.AddModelError("", error.Description);
@@ -62,7 +64,11 @@ namespace ServiceRequestApp.Controllers
             return View();
         }
 
+        //Process the login form. If the form is valid, attempt to sign in the user.
         [HttpPost]
+        //async keyword allows the method to use the await keyword.
+        //Task<IActionResult> is the return type of the method. It represents an asynchronous operation that returns an IActionResult object.
+        //The await keyword is used to pause the execution of the method until the awaited task is complete.
         public async Task<IActionResult> Login(LoginViewModel model)
         {
             if (ModelState.IsValid)
@@ -77,7 +83,7 @@ namespace ServiceRequestApp.Controllers
                 {
                     return RedirectToAction("Index", "Home");
                 }
-
+                //If the login fails, add an error to the ModelState object.
                 ModelState.AddModelError(string.Empty, "Invalid login attempt.");
             }
             return View(model);
