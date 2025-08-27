@@ -71,6 +71,15 @@ namespace ServiceRequestApp.Controllers
         {
             var user = await _userManager.FindByIdAsync(id);
             if (user == null) return NotFound();
+
+            // Delete all service requests where this user is the requester
+            var requests = _dbContext.ServiceRequests.Where(r => r.RequesterId == user.Id).ToList();
+            if (requests.Any())
+            {
+                _dbContext.ServiceRequests.RemoveRange(requests);
+                await _dbContext.SaveChangesAsync();
+            }
+
             await _userManager.DeleteAsync(user);
             return RedirectToAction("Users");
         }
