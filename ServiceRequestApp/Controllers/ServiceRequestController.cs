@@ -46,6 +46,14 @@ namespace ServiceRequestApp.Controllers
                             r.AcceptedRequest.ProviderId == currentUser.Id))
                     .ToListAsync();
             }
+            else if (currentUser.UserType == "Admin")
+            {
+                // Admins see all requests
+                requests = await _dbContext.ServiceRequests
+                    .Include(r => r.Requester)
+                    .Include(r => r.AcceptedRequest)
+                    .ToListAsync();
+            }
             else
             {
                 // Requesters see only their own requests

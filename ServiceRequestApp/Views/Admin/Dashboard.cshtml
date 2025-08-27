@@ -19,6 +19,9 @@
             <div class="card-body">
                 <h5 class="card-title">Service Requests</h5>
                 <p class="card-text display-4">@Model.ServiceRequestCount</p>
+                <a asp-controller="Admin" asp-action="ServiceRequests" class="btn btn-light mt-3">
+                    <i class="fas fa-tasks me-2"></i>View Requests
+                </a>
             </div>
         </div>
     </div>
