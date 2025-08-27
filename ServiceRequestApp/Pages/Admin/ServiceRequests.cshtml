@@ -1,0 +1,29 @@
+@page
+@model ServiceRequestApp.Pages.Admin.ServiceRequestsModel
+@{
+    ViewData["Title"] = "Manage Service Requests";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<h1>Manage Service Requests</h1>
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Title</th>
+            <th>Type</th>
+            <th>Status</th>
+            <th>Created</th>
+        </tr>
+    </thead>
+    <tbody>
+    @foreach (var req in Model.Requests)
+    {
+        <tr>
+            <td>@req.Title</td>
+            <td>@req.ServiceType</td>
+            <td>@req.Status</td>
+            <td>@req.CreatedAt.ToString("g")</td>
+        </tr>
+    }
+    </tbody>
+</table>

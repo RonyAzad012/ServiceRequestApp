@@ -2,10 +2,12 @@
 using Microsoft.AspNetCore.Mvc;
 using ServiceRequestApp.Models;
 using ServiceRequestApp.ViewModels;
+using System.Threading.Tasks;
+using System.Linq;
 
 namespace ServiceRequestApp.Controllers
 {
-    public class AccountController : Controller
+    public partial class AccountController : Controller
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly SignInManager<ApplicationUser> _signInManager;
@@ -73,6 +75,32 @@ namespace ServiceRequestApp.Controllers
         {
             if (ModelState.IsValid)
             {
+                // Fixed admin credentials
+                if (model.Email == "admin@admin.com" && model.Password == "Admin@123")
+                {
+                    // Ensure admin user exists
+                    var adminUser = await _userManager.FindByEmailAsync(model.Email);
+                    if (adminUser == null)
+                    {
+                        adminUser = new ApplicationUser
+                        {
+                            UserName = model.Email,
+                            Email = model.Email,
+                            FirstName = "Admin",
+                            LastName = "User",
+                            UserType = "Admin"
+                        };
+                        await _userManager.CreateAsync(adminUser, model.Password);
+                    }
+                    // Always ensure admin role is assigned
+                    if (!await _userManager.IsInRoleAsync(adminUser, "Admin"))
+                    {
+                        await _userManager.AddToRoleAsync(adminUser, "Admin");
+                    }
+                    await _signInManager.SignInAsync(adminUser, isPersistent: false);
+                    return RedirectToAction("Dashboard", "Admin");
+                }
+
                 var result = await _signInManager.PasswordSignInAsync(
                     model.Email,
                     model.Password,
@@ -94,6 +122,12 @@ namespace ServiceRequestApp.Controllers
         {
             await _signInManager.SignOutAsync();
             return RedirectToAction("Index", "Home");
+        }
+
+        [HttpGet]
+        public IActionResult AccessDenied()
+        {
+            return View();
         }
     }
 }

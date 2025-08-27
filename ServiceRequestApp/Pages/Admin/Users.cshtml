@@ -1,0 +1,27 @@
+@page
+@model ServiceRequestApp.Pages.Admin.UsersModel
+@{
+    ViewData["Title"] = "Manage Users";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<h1>Manage Users</h1>
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Email</th>
+            <th>Name</th>
+            <th>User Type</th>
+        </tr>
+    </thead>
+    <tbody>
+    @foreach (var user in Model.Users)
+    {
+        <tr>
+            <td>@user.Email</td>
+            <td>@user.FirstName @user.LastName</td>
+            <td>@user.UserType</td>
+        </tr>
+    }
+    </tbody>
+</table>

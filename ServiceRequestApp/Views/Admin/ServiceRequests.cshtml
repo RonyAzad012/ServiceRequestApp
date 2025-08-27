@@ -1,0 +1,33 @@
+@model IEnumerable<ServiceRequestApp.Models.ServiceRequest>
+@{
+    ViewData["Title"] = "Manage Service Requests";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<h1>Manage Service Requests</h1>
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Title</th>
+            <th>Type</th>
+            <th>Status</th>
+            <th>Created</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+    @foreach (var req in Model)
+    {
+        <tr>
+            <td>@req.Title</td>
+            <td>@req.ServiceType</td>
+            <td>@req.Status</td>
+            <td>@req.CreatedAt.ToString("g")</td>
+            <td>
+                <a asp-action="EditRequest" asp-route-id="@req.Id" class="btn btn-sm btn-primary">Edit</a>
+                <a asp-action="DeleteRequest" asp-route-id="@req.Id" class="btn btn-sm btn-danger">Delete</a>
+            </td>
+        </tr>
+    }
+    </tbody>
+</table>
