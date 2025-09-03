@@ -1,0 +1,18 @@
+@{
+    ViewData["Title"] = "Pay for Service Request";
+}
+<h2>Pay for Service Request</h2>
+<p>Amount to pay: <strong>@ViewBag.Amount.ToString("C")</strong></p>
+<form asp-action="Pay" method="post">
+    <input type="hidden" name="id" value="@ViewBag.RequestId" />
+    <div class="form-group mb-3">
+        <label for="gateway">Select Payment Gateway:</label>
+        <select name="gateway" id="gateway" class="form-control" required>
+            <option value="SSLCommerce">SSL Commerce</option>
+            <option value="Bkash">Bkash</option>
+            <option value="Nagad">Nagad</option>
+        </select>
+    </div>
+    <button type="submit" class="btn btn-success">Proceed to Pay</button>
+    <a asp-action="Details" asp-route-id="@ViewBag.RequestId" class="btn btn-secondary">Cancel</a>
+</form>

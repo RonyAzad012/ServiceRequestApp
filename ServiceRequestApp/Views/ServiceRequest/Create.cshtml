@@ -8,7 +8,7 @@
     <div class="row justify-content-center">
         <div class="col-md-8">
             <h2>Create Service Request</h2>
-            <form asp-action="Create">
+            <form asp-action="Create" enctype="multipart/form-data">
                 <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
                 <div class="form-group mb-3">
@@ -41,6 +41,42 @@
                     <div id="map" style="height: 400px;" class="mb-2"></div>
                     <input type="hidden" asp-for="Latitude" id="Latitude" />
                     <input type="hidden" asp-for="Longitude" id="Longitude" />
+                </div>
+
+                <div class="form-group mb-3">
+                    <label asp-for="Address" class="control-label"></label>
+                    <input asp-for="Address" class="form-control" />
+                    <span asp-validation-for="Address" class="text-danger"></span>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label asp-for="Zipcode" class="control-label"></label>
+                    <input asp-for="Zipcode" class="form-control" />
+                    <span asp-validation-for="Zipcode" class="text-danger"></span>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label asp-for="Price" class="control-label"></label>
+                    <input asp-for="Price" class="form-control" />
+                    <span asp-validation-for="Price" class="text-danger"></span>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label asp-for="PhoneNumber" class="control-label"></label>
+                    <input asp-for="PhoneNumber" class="form-control" />
+                    <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label asp-for="Deadline" class="control-label"></label>
+                    <input asp-for="Deadline" class="form-control" type="date" />
+                    <span asp-validation-for="Deadline" class="text-danger"></span>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label asp-for="Images" class="control-label">Upload Images</label>
+                    <input asp-for="Images" class="form-control" type="file" multiple />
+                    <span asp-validation-for="Images" class="text-danger"></span>
                 </div>
 
                 <div class="form-group">
@@ -104,4 +140,4 @@
             document.getElementById('Longitude').value = lng;
         }
     </script>
-} 
+}

@@ -1,0 +1,35 @@
+@using ServiceRequestApp.Models
+@model List<Review>
+@{
+    ViewData["Title"] = "Provider Reviews";
+    var provider = ViewBag.Provider as ApplicationUser;
+    var avgRating = (double)ViewBag.AvgRating;
+}
+<h2>Reviews for @provider?.FirstName @provider?.LastName</h2>
+@if (Model.Count > 0)
+{
+    <div class="mb-3">
+        <strong>Average Rating:</strong>
+        <span class="badge bg-warning text-dark">@avgRating.ToString("0.0") / 5</span>
+    </div>
+    <ul class="list-group mb-4">
+        @foreach (var review in Model)
+        {
+            <li class="list-group-item">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong>@review.Reviewer?.FirstName @review.Reviewer?.LastName</strong>
+                        <span class="badge bg-primary">@review.Rating</span>
+                        <small class="text-muted">@review.CreatedAt.ToString("g")</small>
+                    </div>
+                </div>
+                <div>@review.Comment</div>
+            </li>
+        }
+    </ul>
+}
+else
+{
+    <div class="alert alert-info">No reviews for this provider yet.</div>
+}
+<a asp-action="Index" class="btn btn-secondary">Back to Requests</a>

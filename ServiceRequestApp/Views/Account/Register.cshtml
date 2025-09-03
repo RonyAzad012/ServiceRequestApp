@@ -35,12 +35,42 @@
             </div>
 
             <div class="form-group mb-3">
+                <label asp-for="PhoneNumber"></label>
+                <input asp-for="PhoneNumber" class="form-control" />
+                <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+            </div>
+
+            <div class="form-group mb-3">
+                <label asp-for="Zipcode"></label>
+                <input asp-for="Zipcode" class="form-control" />
+                <span asp-validation-for="Zipcode" class="text-danger"></span>
+            </div>
+
+            <div class="form-group mb-3">
+                <label asp-for="NationalId"></label>
+                <input asp-for="NationalId" class="form-control" />
+                <span asp-validation-for="NationalId" class="text-danger"></span>
+            </div>
+
+            <div class="form-group mb-3">
                 <label asp-for="UserType"></label>
                 <select asp-for="UserType" class="form-control">
                     <option value="Requester">Requester</option>
                     <option value="Provider">Provider</option>
                 </select>
                 <span asp-validation-for="UserType" class="text-danger"></span>
+            </div>
+
+            <div class="form-group mb-3">
+                <label asp-for="BusinessCredentials"></label>
+                <input asp-for="BusinessCredentials" class="form-control" />
+                <span asp-validation-for="BusinessCredentials" class="text-danger"></span>
+            </div>
+
+            <div class="form-group mb-3">
+                <label asp-for="BusinessImagePath"></label>
+                <input asp-for="BusinessImagePath" class="form-control" />
+                <span asp-validation-for="BusinessImagePath" class="text-danger"></span>
             </div>
 
             <div class="form-group mb-3">
@@ -64,4 +94,4 @@
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
-} 
+}

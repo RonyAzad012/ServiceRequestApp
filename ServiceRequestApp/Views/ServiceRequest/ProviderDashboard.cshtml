@@ -1,0 +1,31 @@
+@model ServiceRequestApp.ViewModels.ProviderDashboardViewModel
+@{
+    ViewData["Title"] = "Provider Dashboard";
+}
+<h2>Provider Dashboard</h2>
+<div class="row">
+    <div class="col-md-4">
+        <div class="card text-white bg-success mb-3">
+            <div class="card-body">
+                <h5 class="card-title">Accepted Requests</h5>
+                <p class="card-text display-4">@Model.AcceptedCount</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-white bg-info mb-3">
+            <div class="card-body">
+                <h5 class="card-title">Completed Requests</h5>
+                <p class="card-text display-4">@Model.CompletedCount</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-white bg-warning mb-3">
+            <div class="card-body">
+                <h5 class="card-title">Total Earnings</h5>
+                <p class="card-text display-4">@Model.TotalEarnings.ToString("C")</p>
+            </div>
+        </div>
+    </div>
+</div>

@@ -82,10 +82,30 @@ namespace ServiceRequestApp.Controllers
         [Authorize(Roles = "Requester")]
         public async Task<IActionResult> Create(CreateServiceRequestViewModel model)
         {
-            
             if (ModelState.IsValid)
             {
                 var currentUser = await _userManager.GetUserAsync(User);
+                string imagePaths = null;
+                if (model.Images != null && model.Images.Count > 0)
+                {
+                    var uploads = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/images/requests");
+                    Directory.CreateDirectory(uploads);
+                    var fileNames = new List<string>();
+                    foreach (var file in model.Images)
+                    {
+                        if (file.Length > 0)
+                        {
+                            var fileName = Guid.NewGuid() + Path.GetExtension(file.FileName);
+                            var filePath = Path.Combine(uploads, fileName);
+                            using (var stream = new FileStream(filePath, FileMode.Create))
+                            {
+                                await file.CopyToAsync(stream);
+                            }
+                            fileNames.Add("/images/requests/" + fileName);
+                        }
+                    }
+                    imagePaths = string.Join(",", fileNames);
+                }
                 var request = new ServiceRequest
                 {
                     Title = model.Title,
@@ -95,9 +115,14 @@ namespace ServiceRequestApp.Controllers
                     Status = "Pending",
                     Latitude = model.Latitude,
                     Longitude = model.Longitude,
-                    RequesterId = currentUser.Id
+                    RequesterId = currentUser.Id,
+                    Address = model.Address,
+                    Zipcode = model.Zipcode,
+                    Price = model.Price,
+                    PhoneNumber = model.PhoneNumber,
+                    Deadline = model.Deadline,
+                    ImagePaths = imagePaths
                 };
-
                 _dbContext.Add(request);
                 await _dbContext.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
@@ -366,6 +391,173 @@ namespace ServiceRequestApp.Controllers
         private bool ServiceRequestExists(int id)
         {
             return _dbContext.ServiceRequests.Any(e => e.Id == id);
+        }
+
+        // GET: ServiceRequest/Pay/5
+        //Initiate payment for a service request
+        [Authorize]
+        public async Task<IActionResult> Pay(int id)
+        {
+            var request = await _dbContext.ServiceRequests.FindAsync(id);
+            if (request == null || request.Status != "Accepted" || request.PaymentStatus == "Paid")
+            {
+                return BadRequest("Payment not allowed.");
+            }
+            // Show payment options (stub)
+            ViewBag.RequestId = id;
+            ViewBag.Amount = request.Price;
+            return View();
+        }
+
+        // POST: ServiceRequest/Pay/5
+        //Process payment using the selected gateway
+        [HttpPost]
+        [Authorize]
+        public async Task<IActionResult> Pay(int id, string gateway)
+        {
+            var request = await _dbContext.ServiceRequests.FindAsync(id);
+            if (request == null || request.Status != "Accepted" || request.PaymentStatus == "Paid")
+            {
+                return BadRequest("Payment not allowed.");
+            }
+            // Simulate payment gateway redirect
+            // In real integration, redirect to gateway and handle callback
+            // For stub, redirect to callback with simulated transaction
+            return RedirectToAction("PaymentCallback", new { id = id, gateway = gateway });
+        }
+
+        // GET: ServiceRequest/PaymentCallback
+        //Simulate payment callback from the gateway
+        [Authorize]
+        public async Task<IActionResult> PaymentCallback(int id, string gateway)
+        {
+            var request = await _dbContext.ServiceRequests.FindAsync(id);
+            if (request == null || request.Status != "Accepted" || request.PaymentStatus == "Paid")
+            {
+                return BadRequest("Payment not allowed.");
+            }
+            // Simulate payment success
+            request.PaymentStatus = "Paid";
+            request.PaymentTransactionId = $"{gateway.ToUpper()}-{Guid.NewGuid()}";
+            request.PaymentAmount = request.Price;
+            request.PaymentDate = DateTime.UtcNow;
+            await _dbContext.SaveChangesAsync();
+            TempData["PaymentSuccess"] = $"Payment successful via {gateway}.";
+            return RedirectToAction("Details", new { id = id });
+        }
+
+        // GET: ServiceRequest/AddReview/5
+        [Authorize(Roles = "Requester")]
+        public async Task<IActionResult> AddReview(int id)
+        {
+            var request = await _dbContext.ServiceRequests
+                .Include(r => r.AcceptedRequest)
+                .FirstOrDefaultAsync(r => r.Id == id);
+            var currentUser = await _userManager.GetUserAsync(User);
+            if (request == null || request.Status != "Completed" || request.RequesterId != currentUser.Id)
+            {
+                return BadRequest("Review not allowed.");
+            }
+            // Prevent duplicate review
+            var existingReview = await _dbContext.Reviews.FirstOrDefaultAsync(r => r.ServiceRequestId == id);
+            if (existingReview != null)
+            {
+                TempData["ReviewMessage"] = "You have already submitted a review.";
+                return RedirectToAction("Details", new { id });
+            }
+            ViewBag.RequestId = id;
+            ViewBag.ProviderName = request.AcceptedRequest?.Provider?.FirstName + " " + request.AcceptedRequest?.Provider?.LastName;
+            return View();
+        }
+
+        // POST: ServiceRequest/AddReview/5
+        [HttpPost]
+        [Authorize(Roles = "Requester")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AddReview(int id, int rating, string comment)
+        {
+            var request = await _dbContext.ServiceRequests
+                .Include(r => r.AcceptedRequest)
+                .FirstOrDefaultAsync(r => r.Id == id);
+            var currentUser = await _userManager.GetUserAsync(User);
+            if (request == null || request.Status != "Completed" || request.RequesterId != currentUser.Id)
+            {
+                return BadRequest("Review not allowed.");
+            }
+            // Prevent duplicate review
+            var existingReview = await _dbContext.Reviews.FirstOrDefaultAsync(r => r.ServiceRequestId == id);
+            if (existingReview != null)
+            {
+                TempData["ReviewMessage"] = "You have already submitted a review.";
+                return RedirectToAction("Details", new { id });
+            }
+            var review = new Review
+            {
+                ServiceRequestId = id,
+                ReviewerId = currentUser.Id,
+                RevieweeId = request.AcceptedRequest.ProviderId,
+                Rating = rating,
+                Comment = comment,
+                CreatedAt = DateTime.UtcNow
+            };
+            _dbContext.Reviews.Add(review);
+            await _dbContext.SaveChangesAsync();
+            TempData["ReviewMessage"] = "Review submitted successfully.";
+            return RedirectToAction("Details", new { id });
+        }
+
+        // GET: ServiceRequest/ProviderReviews/{providerId}
+        [AllowAnonymous]
+        public async Task<IActionResult> ProviderReviews(string providerId)
+        {
+            if (string.IsNullOrEmpty(providerId))
+                return NotFound();
+            var provider = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == providerId && u.UserType == "Provider");
+            if (provider == null)
+                return NotFound();
+            var reviews = await _dbContext.Reviews
+                .Where(r => r.RevieweeId == providerId)
+                .OrderByDescending(r => r.CreatedAt)
+                .Include(r => r.Reviewer)
+                .ToListAsync();
+            double avgRating = reviews.Count > 0 ? reviews.Average(r => r.Rating) : 0;
+            ViewBag.Provider = provider;
+            ViewBag.AvgRating = avgRating;
+            return View(reviews);
+        }
+
+        // GET: ServiceRequest/ProviderDashboard
+        [Authorize(Roles = "Provider")]
+        public async Task<IActionResult> ProviderDashboard()
+        {
+            var currentUser = await _userManager.GetUserAsync(User);
+            var acceptedCount = await _dbContext.AcceptedRequests.CountAsync(ar => ar.ProviderId == currentUser.Id);
+            var completedCount = await _dbContext.AcceptedRequests.CountAsync(ar => ar.ProviderId == currentUser.Id && ar.Status == "Completed");
+            var totalEarnings = await _dbContext.ServiceRequests.Where(r => r.AcceptedRequest != null && r.AcceptedRequest.ProviderId == currentUser.Id && r.Status == "Completed" && r.PaymentStatus == "Paid" && r.PaymentAmount.HasValue).SumAsync(r => r.PaymentAmount.Value);
+            var model = new ProviderDashboardViewModel
+            {
+                AcceptedCount = acceptedCount,
+                CompletedCount = completedCount,
+                TotalEarnings = totalEarnings
+            };
+            return View(model);
+        }
+
+        // GET: ServiceRequest/RequesterDashboard
+        [Authorize(Roles = "Requester")]
+        public async Task<IActionResult> RequesterDashboard()
+        {
+            var currentUser = await _userManager.GetUserAsync(User);
+            var createdCount = await _dbContext.ServiceRequests.CountAsync(r => r.RequesterId == currentUser.Id);
+            var completedCount = await _dbContext.ServiceRequests.CountAsync(r => r.RequesterId == currentUser.Id && r.Status == "Completed");
+            var totalSpent = await _dbContext.ServiceRequests.Where(r => r.RequesterId == currentUser.Id && r.Status == "Completed" && r.PaymentStatus == "Paid" && r.PaymentAmount.HasValue).SumAsync(r => r.PaymentAmount.Value);
+            var model = new RequesterDashboardViewModel
+            {
+                CreatedCount = createdCount,
+                CompletedCount = completedCount,
+                TotalSpent = totalSpent
+            };
+            return View(model);
         }
     }
 }

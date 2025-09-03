@@ -1,0 +1,22 @@
+@{
+    ViewData["Title"] = "Submit Review";
+}
+<h2>Submit Review for @ViewBag.ProviderName</h2>
+<form asp-action="AddReview" method="post">
+    <input type="hidden" name="id" value="@ViewBag.RequestId" />
+    <div class="mb-3">
+        <label for="rating" class="form-label">Rating (1-5):</label>
+        <select name="rating" id="rating" class="form-select" required>
+            <option value="">Select rating</option>
+            @for (int i = 1; i <= 5; i++) {
+                <option value="@i">@i</option>
+            }
+        </select>
+    </div>
+    <div class="mb-3">
+        <label for="comment" class="form-label">Comment:</label>
+        <textarea name="comment" id="comment" class="form-control" rows="4" maxlength="500"></textarea>
+    </div>
+    <button type="submit" class="btn btn-primary">Submit Review</button>
+    <a asp-action="Details" asp-route-id="@ViewBag.RequestId" class="btn btn-secondary">Cancel</a>
+</form>

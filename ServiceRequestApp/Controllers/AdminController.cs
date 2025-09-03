@@ -26,7 +26,12 @@ namespace ServiceRequestApp.Controllers
             var model = new AdminDashboardViewModel
             {
                 UserCount = _userManager.Users.Count(),
-                ServiceRequestCount = _dbContext.ServiceRequests.Count()
+                ServiceRequestCount = _dbContext.ServiceRequests.Count(),
+                CompletedRequestCount = _dbContext.ServiceRequests.Count(r => r.Status == "Completed"),
+                PaidRequestCount = _dbContext.ServiceRequests.Count(r => r.PaymentStatus == "Paid"),
+                TotalPayments = _dbContext.ServiceRequests.Where(r => r.PaymentStatus == "Paid" && r.PaymentAmount.HasValue).Sum(r => r.PaymentAmount.Value),
+                ProviderCount = _userManager.Users.Count(u => u.UserType == "Provider"),
+                RequesterCount = _userManager.Users.Count(u => u.UserType == "Requester")
             };
             return View(model);
         }

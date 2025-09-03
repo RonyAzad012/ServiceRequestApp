@@ -6,7 +6,7 @@
 
 <h1>Admin Dashboard</h1>
 <div class="row">
-    <div class="col-md-4">
+    <div class="col-md-3">
         <div class="card text-white bg-primary mb-3">
             <div class="card-body">
                 <h5 class="card-title">Total Users</h5>
@@ -14,7 +14,7 @@
             </div>
         </div>
     </div>
-    <div class="col-md-4">
+    <div class="col-md-3">
         <div class="card text-white bg-success mb-3">
             <div class="card-body">
                 <h5 class="card-title">Service Requests</h5>
@@ -22,6 +22,41 @@
                 <a asp-controller="Admin" asp-action="ServiceRequests" class="btn btn-light mt-3">
                     <i class="fas fa-tasks me-2"></i>View Requests
                 </a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-info mb-3">
+            <div class="card-body">
+                <h5 class="card-title">Completed Requests</h5>
+                <p class="card-text display-4">@Model.CompletedRequestCount</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-warning mb-3">
+            <div class="card-body">
+                <h5 class="card-title">Paid Requests</h5>
+                <p class="card-text display-4">@Model.PaidRequestCount</p>
+                <div><strong>Total Payments:</strong> @Model.TotalPayments.ToString("C")</div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-6">
+        <div class="card mb-3">
+            <div class="card-body">
+                <h5 class="card-title">Providers</h5>
+                <p class="card-text display-4">@Model.ProviderCount</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card mb-3">
+            <div class="card-body">
+                <h5 class="card-title">Requesters</h5>
+                <p class="card-text display-4">@Model.RequesterCount</p>
             </div>
         </div>
     </div>

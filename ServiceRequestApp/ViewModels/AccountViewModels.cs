@@ -8,7 +8,6 @@ namespace ServiceRequestApp.ViewModels
         [EmailAddress]
         public string Email { get; set; }
 
-        
         [StringLength(100, MinimumLength = 8)]
         [DataType(DataType.Password)]
         public string Password { get; set; }
@@ -27,6 +26,19 @@ namespace ServiceRequestApp.ViewModels
 
         [Required]
         public string UserType { get; set; } // "Provider" or "Requester"
+
+        [Required]
+        public string PhoneNumber { get; set; }
+
+        [Required]
+        public string Zipcode { get; set; }
+
+        [Required]
+        public string NationalId { get; set; }
+
+        // Only for providers
+        public string? BusinessCredentials { get; set; }
+        public string? BusinessImagePath { get; set; }
     }
 
     public class LoginViewModel

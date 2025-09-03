@@ -29,13 +29,59 @@
                         <dt class="col-sm-3">Requester</dt>
                         <dd class="col-sm-9">@($"{Model.Requester.FirstName} {Model.Requester.LastName}")</dd>
 
+                        <dt class="col-sm-3">Address</dt>
+                        <dd class="col-sm-9">@Model.Address</dd>
+
+                        <dt class="col-sm-3">Zipcode</dt>
+                        <dd class="col-sm-9">@Model.Zipcode</dd>
+
+                        <dt class="col-sm-3">Price</dt>
+                        <dd class="col-sm-9">@Model.Price.ToString("C")</dd>
+
+                        <dt class="col-sm-3">Phone Number</dt>
+                        <dd class="col-sm-9">@Model.PhoneNumber</dd>
+
+                        <dt class="col-sm-3">Deadline</dt>
+                        <dd class="col-sm-9">@(Model.Deadline?.ToString("d") ?? "N/A")</dd>
+
+                        @if (!string.IsNullOrEmpty(Model.ImagePaths))
+                        {
+                            <dt class="col-sm-3">Images</dt>
+                            <dd class="col-sm-9">
+                                @foreach (var img in Model.ImagePaths.Split(','))
+                                {
+                                    <img src="@img" alt="Request Image" style="max-width:120px;max-height:120px;margin-right:10px;" />
+                                }
+                            </dd>
+                        }
+
                         @if (Model.AcceptedRequest != null)
                         {
                             <dt class="col-sm-3">Provider</dt>
-                            <dd class="col-sm-9">@($"{Model.AcceptedRequest.Provider.FirstName} {Model.AcceptedRequest.Provider.LastName}")</dd>
+                            <dd class="col-sm-9">
+                                @($"{Model.AcceptedRequest.Provider.FirstName} {Model.AcceptedRequest.Provider.LastName}")
+                                <a asp-action="ProviderReviews" asp-route-providerId="@Model.AcceptedRequest.ProviderId" class="ms-2 btn btn-link btn-sm">View Reviews</a>
+                            </dd>
 
                             <dt class="col-sm-3">Accepted At</dt>
                             <dd class="col-sm-9">@Model.AcceptedRequest.AcceptedAt.ToString("g")</dd>
+                        }
+
+                        <dt class="col-sm-3">Payment Status</dt>
+                        <dd class="col-sm-9">@Model.PaymentStatus ?? "Pending"</dd>
+                        @if (Model.PaymentStatus == "Paid")
+                        {
+                            <dt class="col-sm-3">Payment Date</dt>
+                            <dd class="col-sm-9">@Model.PaymentDate?.ToString("g")</dd>
+                            <dt class="col-sm-3">Transaction ID</dt>
+                            <dd class="col-sm-9">@Model.PaymentTransactionId</dd>
+                        }
+                        @if (Model.Status == "Accepted" && Model.PaymentStatus != "Paid" && currentUser.UserType == "Requester")
+                        {
+                            <dt class="col-sm-3">Action</dt>
+                            <dd class="col-sm-9">
+                                <a asp-action="Pay" asp-route-id="@Model.Id" class="btn btn-warning">Pay Now</a>
+                            </dd>
                         }
                     </dl>
 
@@ -60,6 +106,19 @@
                             </form>
                         }
                     </div>
+
+                    @if (TempData["ReviewMessage"] != null)
+                    {
+                        <div class="alert alert-info">@TempData["ReviewMessage"]</div>
+                    }
+                    @{
+                        var canReview = Model.Status == "Completed" && currentUser.UserType == "Requester" && Model.RequesterId == currentUser.Id;
+                    }
+                    @if (canReview)
+                    {
+                        // For now, link to review form
+                        <a asp-action="AddReview" asp-route-id="@Model.Id" class="btn btn-outline-primary">Submit Review</a>
+                    }
                 </div>
             </div>
         </div>
@@ -80,4 +139,4 @@
         // Add marker for the request location
         L.marker([@Model.Latitude, @Model.Longitude]).addTo(map);
     </script>
-} 
+}

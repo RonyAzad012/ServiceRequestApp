@@ -40,7 +40,12 @@ namespace ServiceRequestApp.Controllers
                     FirstName = model.FirstName,
                     LastName = model.LastName,
                     Address = model.Address,
-                    UserType = model.UserType
+                    UserType = model.UserType,
+                    PhoneNumber = model.PhoneNumber,
+                    Zipcode = model.Zipcode,
+                    NationalId = model.NationalId,
+                    BusinessCredentials = model.UserType == "Provider" ? model.BusinessCredentials : null,
+                    BusinessImagePath = model.UserType == "Provider" ? model.BusinessImagePath : null
                 };
 
                 var result = await _userManager.CreateAsync(user, model.Password);

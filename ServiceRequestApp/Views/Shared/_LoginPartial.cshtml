@@ -17,6 +17,18 @@
                 <a class="nav-link text-dark" asp-controller="Admin" asp-action="Dashboard">Admin Dashboard</a>
             </li>
         }
+        else if (roles.Contains("Provider"))
+        {
+            <li class="nav-item">
+                <a class="nav-link text-dark" asp-controller="ServiceRequest" asp-action="ProviderDashboard">Provider Dashboard</a>
+            </li>
+        }
+        else if (roles.Contains("Requester"))
+        {
+            <li class="nav-item">
+                <a class="nav-link text-dark" asp-controller="ServiceRequest" asp-action="RequesterDashboard">Requester Dashboard</a>
+            </li>
+        }
         <li class="nav-item">
             <form class="form-inline" asp-controller="Account" asp-action="Logout" method="post">
                 <button type="submit" class="nav-link btn btn-link text-dark">Logout</button>

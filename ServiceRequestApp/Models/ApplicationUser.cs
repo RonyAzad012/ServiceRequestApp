@@ -8,6 +8,10 @@ namespace ServiceRequestApp.Models
         public string? LastName { get; set; }
         public string? Address { get; set; }
         public string UserType { get; set; } // "Provider" or "Requester"
+        public string? Zipcode { get; set; }
+        public string? NationalId { get; set; }
+        public string? BusinessCredentials { get; set; } // For providers
+        public string? BusinessImagePath { get; set; } // For providers
         public virtual ICollection<ServiceRequest>? Requests { get; set; }
         public virtual ICollection<AcceptedRequest>? AcceptedRequests { get; set; }
     }
