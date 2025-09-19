@@ -1,11 +1,143 @@
 ﻿@{
     ViewData["Title"] = "Home";
+    var categories = ViewBag.Categories as List<ServiceRequestApp.Models.Category>;
 }
 
-<div class="hero-section text-center py-5 mb-5">
+<style>
+    .location-autocomplete-wrapper {
+        position: relative;
+        width: 35%;
+    }
+    #locationSuggestions {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        z-index: 1000;
+        max-height: 220px;
+        overflow-y: auto;
+        border: 1px solid #ddd;
+        border-top: none;
+        background: #fff;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        width: 100%;
+    }
+    #locationSuggestions .dropdown-item {
+        white-space: normal;
+        font-size: 1rem;
+        padding: 0.5rem 1rem;
+    }
+    .location-geolocate-btn {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        color: #007bff;
+        font-size: 1.2rem;
+        cursor: pointer;
+        z-index: 1100;
+    }
+</style>
+
+<div class="hero-section text-center py-5 mb-5" style="background: url('/images/service-illustration.svg') center/cover no-repeat; min-height: 400px;">
     <div class="container">
-        <h1 class="display-3 fw-bold mb-4">Welcome to Online Service Request Website</h1>
-        <p class="lead mb-4">Connect with trusted service providers or find clients in your area</p>
+        <h1 class="display-3 fw-bold mb-4">Find the Service You Need</h1>
+        <form asp-action="Search" asp-controller="Home" method="get" class="d-flex justify-content-center align-items-center gap-2 mb-4" style="max-width: 700px; margin: 0 auto;">
+            <div class="input-group" style="width: 40%;">
+                <input id="categoryInput" name="category" class="form-control" placeholder="Select a category..." autocomplete="off" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" />
+                <ul class="dropdown-menu w-100" id="categoryDropdown">
+                    @if (categories != null)
+                    {
+                        foreach (var cat in categories)
+                        {
+                            <li><a class="dropdown-item" href="#" onclick="selectCategory('@cat.Name')">@cat.Name</a></li>
+                        }
+                    }
+                </ul>
+            </div>
+            <div class="location-autocomplete-wrapper">
+                <input id="locationInput" name="location" class="form-control" placeholder="Enter your address or area..." autocomplete="off" />
+                <button type="button" class="location-geolocate-btn" title="Use my current location" onclick="getCurrentLocation()">
+                    <i class="fas fa-crosshairs"></i>
+                </button>
+                <div id="locationSuggestions" class="dropdown-menu"></div>
+            </div>
+            <button type="submit" class="btn btn-danger px-4"><i class="fas fa-search me-2"></i>Search</button>
+        </form>
+        <script>
+            function selectCategory(name) {
+                document.getElementById('categoryInput').value = name;
+                document.getElementById('categoryDropdown').classList.remove('show');
+            }
+            document.getElementById('categoryInput').addEventListener('focus', function () {
+                document.getElementById('categoryDropdown').classList.add('show');
+            });
+            document.addEventListener('click', function (e) {
+                if (!document.getElementById('categoryInput').contains(e.target)) {
+                    document.getElementById('categoryDropdown').classList.remove('show');
+                }
+            });
+            // Location autocomplete using Nominatim
+            const locationInput = document.getElementById('locationInput');
+            const locationSuggestions = document.getElementById('locationSuggestions');
+            locationInput.addEventListener('input', function () {
+                const query = this.value;
+                if (query.length < 3) {
+                    locationSuggestions.classList.remove('show');
+                    return;
+                }
+                fetch('https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(query))
+                    .then(res => res.json())
+                    .then(data => {
+                        locationSuggestions.innerHTML = '';
+                        data.slice(0, 5).forEach(function (item) {
+                            const li = document.createElement('a');
+                            li.className = 'dropdown-item';
+                            li.href = '#';
+                            li.textContent = item.display_name;
+                            li.onclick = function () {
+                                locationInput.value = item.display_name;
+                                locationSuggestions.classList.remove('show');
+                                return false;
+                            };
+                            locationSuggestions.appendChild(li);
+                        });
+                        if (data.length > 0) {
+                            locationSuggestions.classList.add('show');
+                        } else {
+                            locationSuggestions.classList.remove('show');
+                        }
+                    });
+            });
+            document.addEventListener('click', function (e) {
+                if (!locationInput.contains(e.target) && !locationSuggestions.contains(e.target)) {
+                    locationSuggestions.classList.remove('show');
+                }
+            });
+            // Geolocation
+            function getCurrentLocation() {
+                if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(function (position) {
+                        const lat = position.coords.latitude;
+                        const lon = position.coords.longitude;
+                        fetch('https://nominatim.openstreetmap.org/reverse?format=json&lat=' + lat + '&lon=' + lon)
+                            .then(res => res.json())
+                            .then(data => {
+                                if (data && data.display_name) {
+                                    locationInput.value = data.display_name;
+                                }
+                            });
+                    }, function (err) {
+                        alert('Could not get your location.');
+                    });
+                } else {
+                    alert('Geolocation is not supported by your browser.');
+                }
+            }
+        </script>
+        <p class="lead mb-4">Search for trusted service providers by category and location</p>
         <div class="d-flex justify-content-center gap-3">
             @if (!User.Identity.IsAuthenticated)
             {
@@ -92,4 +224,4 @@
             <img src="~/images/service-illustration.svg" alt="How it works" class="img-fluid" />
         </div>
     </div>
-</div> 
+</div>

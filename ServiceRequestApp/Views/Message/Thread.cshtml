@@ -1,0 +1,33 @@
+@model IEnumerable<ServiceRequestApp.Models.Message>
+@{
+    ViewData["Title"] = "Messages";
+    var serviceRequestId = ViewBag.ServiceRequestId;
+    var withUser = ViewBag.WithUser as ServiceRequestApp.Models.ApplicationUser;
+    var withUserId = ViewBag.WithUserId as string;
+}
+
+<h2>Conversation with @withUser?.FirstName @withUser?.LastName</h2>
+@if (TempData["MessageError"] != null)
+{
+    <div class="alert alert-danger">@TempData["MessageError"]</div>
+}
+<div class="card mb-3">
+    <div class="card-body" style="max-height:400px;overflow-y:auto;">
+        @foreach (var msg in Model)
+        {
+            <div class="mb-2 @(msg.SenderId == User.FindFirst("sub")?.Value ? "text-end" : "text-start")">
+                <span class="badge bg-secondary">@msg.SentAt.ToString("g")</span><br />
+                <span class="p-2 rounded @(msg.SenderId == User.FindFirst("sub")?.Value ? "bg-primary text-white" : "bg-light text-dark")">
+                    @msg.Content
+                </span>
+            </div>
+        }
+    </div>
+</div>
+<form asp-action="Send" method="post" class="d-flex gap-2">
+    <input type="hidden" name="serviceRequestId" value="@serviceRequestId" />
+    <input type="hidden" name="receiverId" value="@withUserId" />
+    <input type="text" name="content" class="form-control" placeholder="Type your message..." autocomplete="off" />
+    <button type="submit" class="btn btn-primary">Send</button>
+</form>
+<a asp-action="Details" asp-controller="ServiceRequest" asp-route-id="@serviceRequestId" class="btn btn-secondary mt-3">Back to Request</a>

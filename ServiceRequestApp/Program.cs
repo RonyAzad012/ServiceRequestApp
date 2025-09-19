@@ -62,7 +62,7 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
-// Seed Roles
+// Seed Roles and Categories
 using (var scope = app.Services.CreateScope())
 {
     var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
@@ -74,6 +74,20 @@ using (var scope = app.Services.CreateScope())
         {
             await roleManager.CreateAsync(new IdentityRole(role));
         }
+    }
+
+    // Seed default categories if none exist
+    var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    if (!dbContext.Categories.Any())
+    {
+        dbContext.Categories.AddRange(
+            new Category { Name = "Cleaning" },
+            new Category { Name = "Plumbing" },
+            new Category { Name = "Electrical" },
+            new Category { Name = "Moving" },
+            new Category { Name = "Handyman" }
+        );
+        await dbContext.SaveChangesAsync();
     }
 }
 

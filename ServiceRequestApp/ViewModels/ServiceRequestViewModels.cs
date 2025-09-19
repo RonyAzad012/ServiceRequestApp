@@ -1,4 +1,6 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Http;
+using System.Collections.Generic;
 
 namespace ServiceRequestApp.ViewModels
 {
@@ -34,6 +36,11 @@ namespace ServiceRequestApp.ViewModels
         public DateTime? Deadline { get; set; }
 
         public List<IFormFile>? Images { get; set; }
+
+        // Category selection
+        [Display(Name = "Category")]
+        public int? CategoryId { get; set; }
+        public IEnumerable<ServiceRequestApp.Models.Category>? Categories { get; set; }
     }
 
     public class ProviderDashboardViewModel

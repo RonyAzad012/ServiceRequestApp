@@ -1,0 +1,51 @@
+@model IEnumerable<ServiceRequestApp.Models.ServiceRequestApplication>
+@{
+    ViewData["Title"] = "Applicants";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var requestId = ViewBag.RequestId;
+}
+
+<h2>Applicants</h2>
+@if (TempData["ApplicantMessage"] != null)
+{
+    <div class="alert alert-info">@TempData["ApplicantMessage"]</div>
+}
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>Provider</th>
+            <th>Message</th>
+            <th>Offered Price</th>
+            <th>Status</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+    @foreach (var app in Model)
+    {
+        <tr>
+            <td>@app.Provider.FirstName @app.Provider.LastName</td>
+            <td>@app.Message</td>
+            <td>@(app.OfferedPrice.HasValue ? app.OfferedPrice.Value.ToString("C") : "-")</td>
+            <td>@app.Status</td>
+            <td>
+                @if (app.Status == "Pending")
+                {
+                    <a asp-action="AcceptApplicant" asp-route-applicationId="@app.Id" class="btn btn-success btn-sm">Accept</a>
+                    <a asp-action="RejectApplicant" asp-route-applicationId="@app.Id" class="btn btn-danger btn-sm">Reject</a>
+                    <a asp-controller="Message" asp-action="Thread" asp-route-serviceRequestId="@requestId" asp-route-withUserId="@app.ProviderId" class="btn btn-info btn-sm">Negotiate/Message</a>
+                }
+                else if (app.Status == "Accepted")
+                {
+                    <span class="badge bg-success">Accepted</span>
+                }
+                else if (app.Status == "Rejected")
+                {
+                    <span class="badge bg-danger">Rejected</span>
+                }
+            </td>
+        </tr>
+    }
+    </tbody>
+</table>
+<a asp-action="Details" asp-route-id="@requestId" class="btn btn-secondary">Back to Request</a>

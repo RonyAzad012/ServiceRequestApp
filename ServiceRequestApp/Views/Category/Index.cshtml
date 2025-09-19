@@ -1,0 +1,31 @@
+@model IEnumerable<ServiceRequestApp.Models.Category>
+@{
+    ViewData["Title"] = "Categories";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<h1>Categories</h1>
+@if (TempData["CategoryMessage"] != null)
+{
+    <div class="alert alert-info">@TempData["CategoryMessage"]</div>
+}
+<a asp-action="Create" class="btn btn-primary mb-3">Add Category</a>
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+    @foreach (var cat in Model)
+    {
+        <tr>
+            <td>@cat.Name</td>
+            <td>
+                <a asp-action="Delete" asp-route-id="@cat.Id" class="btn btn-danger btn-sm" onclick="return confirm('Delete this category?');">Delete</a>
+            </td>
+        </tr>
+    }
+    </tbody>
+</table>

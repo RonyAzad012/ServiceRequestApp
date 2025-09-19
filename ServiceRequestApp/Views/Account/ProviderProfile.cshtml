@@ -1,0 +1,36 @@
+@model ServiceRequestApp.Models.ApplicationUser
+@{
+    ViewData["Title"] = "Provider Profile";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2>Provider Profile</h2>
+<div class="card mb-3">
+    <div class="row g-0">
+        <div class="col-md-4">
+            @if (!string.IsNullOrEmpty(Model.BusinessImagePath))
+            {
+                <img src="@Model.BusinessImagePath" class="img-fluid rounded-start" alt="Business Image" />
+            }
+            else
+            {
+                <img src="/images/default-business.png" class="img-fluid rounded-start" alt="Business Image" />
+            }
+        </div>
+        <div class="col-md-8">
+            <div class="card-body">
+                <h4 class="card-title">@Model.ShopName</h4>
+                <p class="card-text"><strong>Provider Name:</strong> @Model.FirstName @Model.LastName</p>
+                <p class="card-text"><strong>Shop Description:</strong> @Model.ShopDescription</p>
+                <p class="card-text"><strong>Shop Address:</strong> @Model.ShopAddress</p>
+                <p class="card-text"><strong>Shop Phone:</strong> @Model.ShopPhone</p>
+                <p class="card-text"><strong>Business Credentials:</strong> @Model.BusinessCredentials</p>
+                <p class="card-text"><strong>Email:</strong> @Model.Email</p>
+                <p class="card-text"><strong>Phone:</strong> @Model.PhoneNumber</p>
+                <p class="card-text"><strong>Address:</strong> @Model.Address</p>
+                <p class="card-text"><strong>Zipcode:</strong> @Model.Zipcode</p>
+            </div>
+        </div>
+    </div>
+</div>
+<a asp-action="Index" asp-controller="ServiceRequest" class="btn btn-secondary">Back to Requests</a>

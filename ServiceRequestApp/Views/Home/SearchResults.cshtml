@@ -1,0 +1,73 @@
+@model IEnumerable<ServiceRequestApp.Models.ApplicationUser>
+@{
+    ViewData["Title"] = "Search Results";
+    var category = ViewBag.Category as string;
+    var location = ViewBag.Location as string;
+}
+
+<h2>Providers Matching Your Search</h2>
+@if (!string.IsNullOrEmpty(category) || !string.IsNullOrEmpty(location))
+{
+    <p class="text-muted">Showing results for
+        @if (!string.IsNullOrEmpty(category)) { <b>Category:</b> @category } 
+        @if (!string.IsNullOrEmpty(location)) { <b>Location:</b> @location }
+    </p>
+}
+@if (!Model.Any())
+{
+    <div class="alert alert-warning">No providers found matching your criteria.</div>
+}
+<div id="providers-map" style="height: 350px; margin-bottom: 2rem;"></div>
+<div class="row g-4">
+    @foreach (var provider in Model)
+    {
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">@provider.ShopName</h5>
+                    <h6 class="card-subtitle mb-2 text-muted">@provider.FirstName @provider.LastName</h6>
+                    <p class="card-text">@provider.ShopDescription</p>
+                    <p class="card-text"><b>Address:</b> @provider.ShopAddress</p>
+                    <p class="card-text"><b>Phone:</b> @provider.ShopPhone</p>
+                    <a asp-controller="Account" asp-action="ProviderProfile" asp-route-id="@provider.Id" class="btn btn-outline-primary btn-sm">View Profile</a>
+                </div>
+            </div>
+        </div>
+    }
+}
+</div>
+<a asp-action="Index" class="btn btn-secondary mt-4">Back to Home</a>
+
+@section Scripts {
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script>
+        var map = L.map('providers-map').setView([23.8103, 90.4125], 11); // Default to Dhaka
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+        var providers = [
+            @foreach (var provider in Model)
+            {
+                if (!string.IsNullOrEmpty(provider.Address))
+                {
+                    <text>{ name: '@provider.ShopName', address: '@provider.ShopAddress', lat: null, lng: null },</text>
+                }
+            }
+        ];
+        // Geocode addresses (simple demo, production should cache results)
+        providers.forEach(function (p, i) {
+            if (p.address) {
+                fetch('https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(p.address))
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data && data.length > 0) {
+                            var lat = parseFloat(data[0].lat);
+                            var lon = parseFloat(data[0].lon);
+                            L.marker([lat, lon]).addTo(map).bindPopup('<b>' + p.name + '</b><br>' + p.address);
+                        }
+                    });
+            }
+        });
+    </script>
+}

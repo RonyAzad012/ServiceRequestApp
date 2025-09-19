@@ -72,7 +72,11 @@ namespace ServiceRequestApp.Controllers
         [Authorize(Roles = "Requester")]
         public IActionResult Create()
         {
-            return View();
+            var model = new CreateServiceRequestViewModel
+            {
+                Categories = _dbContext.Categories.ToList()
+            };
+            return View(model);
         }
 
         // POST: ServiceRequest/Create
@@ -82,6 +86,7 @@ namespace ServiceRequestApp.Controllers
         [Authorize(Roles = "Requester")]
         public async Task<IActionResult> Create(CreateServiceRequestViewModel model)
         {
+            model.Categories = _dbContext.Categories.ToList();
             if (ModelState.IsValid)
             {
                 var currentUser = await _userManager.GetUserAsync(User);
@@ -121,7 +126,8 @@ namespace ServiceRequestApp.Controllers
                     Price = model.Price,
                     PhoneNumber = model.PhoneNumber,
                     Deadline = model.Deadline,
-                    ImagePaths = imagePaths
+                    ImagePaths = imagePaths,
+                    CategoryId = model.CategoryId
                 };
                 _dbContext.Add(request);
                 await _dbContext.SaveChangesAsync();
@@ -283,7 +289,9 @@ namespace ServiceRequestApp.Controllers
             var viewModel = new EditServiceRequestViewModel
             {
                 Title = request.Title,
-                Description = request.Description
+                Description = request.Description,
+                CategoryId = request.CategoryId,
+                Categories = _dbContext.Categories.ToList()
             };
 
             return View(viewModel);
@@ -296,6 +304,7 @@ namespace ServiceRequestApp.Controllers
         [Authorize(Roles = "Requester")]
         public async Task<IActionResult> Edit(int id, EditServiceRequestViewModel model)
         {
+            model.Categories = _dbContext.Categories.ToList();
             if (!ModelState.IsValid)
             {
                 return View(model);
@@ -318,6 +327,7 @@ namespace ServiceRequestApp.Controllers
             {
                 existingRequest.Title = model.Title;
                 existingRequest.Description = model.Description;
+                existingRequest.CategoryId = model.CategoryId;
 
                 await _dbContext.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
@@ -558,6 +568,111 @@ namespace ServiceRequestApp.Controllers
                 TotalSpent = totalSpent
             };
             return View(model);
+        }
+
+        // POST: ServiceRequest/Apply/5
+        //Allows a provider to apply for a service request if the request is still pending
+        [HttpPost]
+        [Authorize(Roles = "Provider")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Apply(int id, string? message, decimal? offeredPrice)
+        {
+            var currentUser = await _userManager.GetUserAsync(User);
+            var request = await _dbContext.ServiceRequests.FindAsync(id);
+            if (request == null || request.Status != "Pending")
+            {
+                return NotFound();
+            }
+            // Prevent duplicate application
+            bool alreadyApplied = await _dbContext.ServiceRequestApplications.AnyAsync(a => a.ServiceRequestId == id && a.ProviderId == currentUser.Id);
+            if (alreadyApplied)
+            {
+                TempData["ApplicationMessage"] = "You have already applied for this request.";
+                return RedirectToAction("Details", new { id });
+            }
+            var application = new ServiceRequestApplication
+            {
+                ServiceRequestId = id,
+                ProviderId = currentUser.Id,
+                Message = message,
+                OfferedPrice = offeredPrice,
+                Status = "Pending"
+            };
+            _dbContext.ServiceRequestApplications.Add(application);
+            await _dbContext.SaveChangesAsync();
+            TempData["ApplicationMessage"] = "Application submitted successfully.";
+            return RedirectToAction("Details", new { id });
+        }
+
+        [Authorize(Roles = "Requester")]
+        public async Task<IActionResult> Applicants(int id)
+        {
+            var currentUser = await _userManager.GetUserAsync(User);
+            var request = await _dbContext.ServiceRequests.Include(r => r.Requester).FirstOrDefaultAsync(r => r.Id == id);
+            if (request == null || request.RequesterId != currentUser.Id)
+            {
+                return Unauthorized();
+            }
+            var applicants = await _dbContext.ServiceRequestApplications
+                .Include(a => a.Provider)
+                .Where(a => a.ServiceRequestId == id)
+                .ToListAsync();
+            ViewBag.RequestId = id;
+            return View(applicants);
+        }
+
+        [Authorize(Roles = "Requester")]
+        public async Task<IActionResult> AcceptApplicant(int applicationId)
+        {
+            var application = await _dbContext.ServiceRequestApplications.Include(a => a.ServiceRequest).FirstOrDefaultAsync(a => a.Id == applicationId);
+            if (application == null || application.ServiceRequest.RequesterId != (await _userManager.GetUserAsync(User)).Id)
+            {
+                return Unauthorized();
+            }
+            // Mark this application as accepted, others as rejected
+            var allApps = _dbContext.ServiceRequestApplications.Where(a => a.ServiceRequestId == application.ServiceRequestId);
+            foreach (var app in allApps)
+            {
+                app.Status = app.Id == applicationId ? "Accepted" : "Rejected";
+            }
+            // Assign provider to the request
+            var request = application.ServiceRequest;
+            if (request.Status == "Pending")
+            {
+                request.Status = "Accepted";
+                // Optionally set price to agreed price
+                if (application.OfferedPrice.HasValue)
+                    request.Price = application.OfferedPrice.Value;
+                // Create AcceptedRequest if needed
+                if (request.AcceptedRequest == null)
+                {
+                    var accepted = new AcceptedRequest
+                    {
+                        ServiceRequestId = request.Id,
+                        ProviderId = application.ProviderId,
+                        AcceptedAt = DateTime.UtcNow,
+                        Status = "InProgress"
+                    };
+                    _dbContext.AcceptedRequests.Add(accepted);
+                }
+            }
+            await _dbContext.SaveChangesAsync();
+            TempData["ApplicantMessage"] = "Provider assigned successfully.";
+            return RedirectToAction("Applicants", new { id = request.Id });
+        }
+
+        [Authorize(Roles = "Requester")]
+        public async Task<IActionResult> RejectApplicant(int applicationId)
+        {
+            var application = await _dbContext.ServiceRequestApplications.Include(a => a.ServiceRequest).FirstOrDefaultAsync(a => a.Id == applicationId);
+            if (application == null || application.ServiceRequest.RequesterId != (await _userManager.GetUserAsync(User)).Id)
+            {
+                return Unauthorized();
+            }
+            application.Status = "Rejected";
+            await _dbContext.SaveChangesAsync();
+            TempData["ApplicantMessage"] = "Application rejected.";
+            return RedirectToAction("Applicants", new { id = application.ServiceRequestId });
         }
     }
 }

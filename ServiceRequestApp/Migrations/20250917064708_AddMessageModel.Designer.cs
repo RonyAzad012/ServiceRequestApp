@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using ServiceRequestApp.Data;
 
@@ -11,9 +12,11 @@ using ServiceRequestApp.Data;
 namespace ServiceRequestApp.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250917064708_AddMessageModel")]
+    partial class AddMessageModel
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -254,18 +257,6 @@ namespace ServiceRequestApp.Migrations
                         .HasColumnType("bit");
 
                     b.Property<string>("SecurityStamp")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ShopAddress")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ShopDescription")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ShopName")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ShopPhone")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("TwoFactorEnabled")

@@ -1,11 +1,17 @@
 ﻿@using Microsoft.AspNetCore.Identity
 @using ServiceRequestApp.Models
-@model ServiceRequestApp.Models.ServiceRequest
 @inject UserManager<ApplicationUser> UserManager
+@inject ServiceRequestApp.Data.ApplicationDbContext DbContext
+@model ServiceRequestApp.Models.ServiceRequest
 
 @{
     ViewData["Title"] = "Request Details";
     var currentUser = await UserManager.GetUserAsync(User);
+    var hasApplied = false;
+    if (currentUser != null && currentUser.UserType == "Provider")
+    {
+        hasApplied = DbContext.ServiceRequestApplications.Any(a => a.ServiceRequestId == Model.Id && a.ProviderId == currentUser.Id);
+    }
 }
 
 <div class="container">
@@ -83,6 +89,8 @@
                                 <a asp-action="Pay" asp-route-id="@Model.Id" class="btn btn-warning">Pay Now</a>
                             </dd>
                         }
+                        <dt class="col-sm-3">Category</dt>
+                        <dd class="col-sm-9">@(Model.Category?.Name ?? "N/A")</dd>
                     </dl>
 
                     <div id="map" style="height: 400px;" class="mb-3"></div>
@@ -118,6 +126,36 @@
                     {
                         // For now, link to review form
                         <a asp-action="AddReview" asp-route-id="@Model.Id" class="btn btn-outline-primary">Submit Review</a>
+                    }
+
+                    @if (TempData["ApplicationMessage"] != null)
+                    {
+                        <div class="alert alert-info">@TempData["ApplicationMessage"]</div>
+                    }
+                    @if (currentUser.UserType == "Provider" && Model.Status == "Pending" && !hasApplied)
+                    {
+                        <form asp-action="Apply" asp-route-id="@Model.Id" method="post" class="d-inline">
+                            <input type="text" name="message" class="form-control mb-2" placeholder="Optional message to requester" />
+                            <input type="number" name="offeredPrice" class="form-control mb-2" placeholder="Your price offer (optional)" step="0.01" min="0" />
+                            <button type="submit" class="btn btn-success">Apply for Request</button>
+                        </form>
+                    }
+                    else if (currentUser.UserType == "Provider" && Model.Status == "Pending" && hasApplied)
+                    {
+                        <span class="badge bg-info">You have applied for this request</span>
+                    }
+
+                    @if (currentUser.UserType == "Requester" && Model.Status == "Pending")
+                    {
+                        <a asp-action="Applicants" asp-route-id="@Model.Id" class="btn btn-outline-info">View Applicants</a>
+                    }
+                    @if (currentUser.UserType == "Requester" && Model.AcceptedRequest != null)
+                    {
+                        <a asp-controller="Message" asp-action="Thread" asp-route-serviceRequestId="@Model.Id" asp-route-withUserId="@Model.AcceptedRequest.ProviderId" class="btn btn-outline-primary">Message Provider</a>
+                    }
+                    @if (currentUser.UserType == "Provider" && Model.AcceptedRequest != null && Model.AcceptedRequest.ProviderId == currentUser.Id)
+                    {
+                        <a asp-controller="Message" asp-action="Thread" asp-route-serviceRequestId="@Model.Id" asp-route-withUserId="@Model.RequesterId" class="btn btn-outline-primary">Message Requester</a>
                     }
                 </div>
             </div>

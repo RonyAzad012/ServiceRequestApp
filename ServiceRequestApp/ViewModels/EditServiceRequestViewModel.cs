@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Collections.Generic;
 
 namespace ServiceRequestApp.ViewModels
 {
@@ -10,5 +11,10 @@ namespace ServiceRequestApp.ViewModels
 
         [Required]
         public string Description { get; set; }
+
+        // Category selection
+        [Display(Name = "Category")]
+        public int? CategoryId { get; set; }
+        public IEnumerable<ServiceRequestApp.Models.Category>? Categories { get; set; }
     }
 }

@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using ServiceRequestApp.Data;
 
@@ -11,9 +12,11 @@ using ServiceRequestApp.Data;
 namespace ServiceRequestApp.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250917060047_AdminCategoryManagement")]
+    partial class AdminCategoryManagement
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -256,18 +259,6 @@ namespace ServiceRequestApp.Migrations
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("ShopAddress")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ShopDescription")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ShopName")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ShopPhone")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<bool>("TwoFactorEnabled")
                         .HasColumnType("bit");
 
@@ -310,46 +301,6 @@ namespace ServiceRequestApp.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Categories");
-                });
-
-            modelBuilder.Entity("ServiceRequestApp.Models.Message", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Content")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("IsRead")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("ReceiverId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("SenderId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<DateTime>("SentAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("ServiceRequestId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ReceiverId");
-
-                    b.HasIndex("SenderId");
-
-                    b.HasIndex("ServiceRequestId");
-
-                    b.ToTable("Messages");
                 });
 
             modelBuilder.Entity("ServiceRequestApp.Models.Review", b =>
@@ -474,44 +425,6 @@ namespace ServiceRequestApp.Migrations
                     b.ToTable("ServiceRequests");
                 });
 
-            modelBuilder.Entity("ServiceRequestApp.Models.ServiceRequestApplication", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("AppliedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Message")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<decimal?>("OfferedPrice")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<string>("ProviderId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<int>("ServiceRequestId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ProviderId");
-
-                    b.HasIndex("ServiceRequestId", "ProviderId")
-                        .IsUnique();
-
-                    b.ToTable("ServiceRequestApplications");
-                });
-
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
@@ -582,33 +495,6 @@ namespace ServiceRequestApp.Migrations
                     b.Navigation("ServiceRequest");
                 });
 
-            modelBuilder.Entity("ServiceRequestApp.Models.Message", b =>
-                {
-                    b.HasOne("ServiceRequestApp.Models.ApplicationUser", "Receiver")
-                        .WithMany()
-                        .HasForeignKey("ReceiverId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("ServiceRequestApp.Models.ApplicationUser", "Sender")
-                        .WithMany()
-                        .HasForeignKey("SenderId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("ServiceRequestApp.Models.ServiceRequest", "ServiceRequest")
-                        .WithMany()
-                        .HasForeignKey("ServiceRequestId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Receiver");
-
-                    b.Navigation("Sender");
-
-                    b.Navigation("ServiceRequest");
-                });
-
             modelBuilder.Entity("ServiceRequestApp.Models.Review", b =>
                 {
                     b.HasOne("ServiceRequestApp.Models.ApplicationUser", "Reviewee")
@@ -652,25 +538,6 @@ namespace ServiceRequestApp.Migrations
                     b.Navigation("Category");
 
                     b.Navigation("Requester");
-                });
-
-            modelBuilder.Entity("ServiceRequestApp.Models.ServiceRequestApplication", b =>
-                {
-                    b.HasOne("ServiceRequestApp.Models.ApplicationUser", "Provider")
-                        .WithMany()
-                        .HasForeignKey("ProviderId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("ServiceRequestApp.Models.ServiceRequest", "ServiceRequest")
-                        .WithMany()
-                        .HasForeignKey("ServiceRequestId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Provider");
-
-                    b.Navigation("ServiceRequest");
                 });
 
             modelBuilder.Entity("ServiceRequestApp.Models.ApplicationUser", b =>

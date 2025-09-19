@@ -12,6 +12,10 @@ namespace ServiceRequestApp.Models
         public string? NationalId { get; set; }
         public string? BusinessCredentials { get; set; } // For providers
         public string? BusinessImagePath { get; set; } // For providers
+        public string? ShopName { get; set; } // For providers
+        public string? ShopDescription { get; set; } // For providers
+        public string? ShopPhone { get; set; } // For providers
+        public string? ShopAddress { get; set; } // For providers
         public virtual ICollection<ServiceRequest>? Requests { get; set; }
         public virtual ICollection<AcceptedRequest>? AcceptedRequests { get; set; }
     }

@@ -29,5 +29,7 @@ namespace ServiceRequestApp.Models
         public string? PaymentTransactionId { get; set; }
         public decimal? PaymentAmount { get; set; }
         public DateTime? PaymentDate { get; set; }
+        public int? CategoryId { get; set; }
+        public virtual Category? Category { get; set; }
     }
 }

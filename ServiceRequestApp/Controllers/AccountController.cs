@@ -4,6 +4,8 @@ using ServiceRequestApp.Models;
 using ServiceRequestApp.ViewModels;
 using System.Threading.Tasks;
 using System.Linq;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.EntityFrameworkCore;
 
 namespace ServiceRequestApp.Controllers
 {
@@ -133,6 +135,24 @@ namespace ServiceRequestApp.Controllers
         public IActionResult AccessDenied()
         {
             return View();
+        }
+
+        [Authorize]
+        public async Task<IActionResult> ProviderProfile(string id)
+        {
+            if (string.IsNullOrEmpty(id)) return NotFound();
+            var user = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == id && u.UserType == "Provider");
+            if (user == null) return NotFound();
+            return View(user);
+        }
+
+        [Authorize]
+        public async Task<IActionResult> RequesterProfile(string id)
+        {
+            if (string.IsNullOrEmpty(id)) return NotFound();
+            var user = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == id && u.UserType == "Requester");
+            if (user == null) return NotFound();
+            return View(user);
         }
     }
 }
