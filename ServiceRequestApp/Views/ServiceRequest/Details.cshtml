@@ -124,7 +124,6 @@
                     }
                     @if (canReview)
                     {
-                        // For now, link to review form
                         <a asp-action="AddReview" asp-route-id="@Model.Id" class="btn btn-outline-primary">Submit Review</a>
                     }
 
@@ -177,4 +176,4 @@
         // Add marker for the request location
         L.marker([@Model.Latitude, @Model.Longitude]).addTo(map);
     </script>
-}
+}}

@@ -1,0 +1,37 @@
+@model IEnumerable<ServiceRequestApp.Models.ServiceRequest>
+@{
+    ViewData["Title"] = "My Messages";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<h2>My Conversations</h2>
+@if (!Model.Any())
+{
+    <div class="alert alert-info">You have no conversations yet.</div>
+}
+else
+{
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Request Title</th>
+                <th>Requester</th>
+                <th>Last Message</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+        @foreach (var req in Model)
+        {
+            var lastMsg = req.Messages?.OrderByDescending(m => m.SentAt).FirstOrDefault();
+            <tr>
+                <td>@req.Title</td>
+                <td>@(req.Requester?.FirstName) @(req.Requester?.LastName)</td>
+                <td>@lastMsg?.Content <br /><small class="text-muted">@lastMsg?.SentAt.ToString("g")</small></td>
+                <td>
+                    <a asp-controller="Message" asp-action="Thread" asp-route-serviceRequestId="@req.Id" asp-route-withUserId="@req.RequesterId" class="btn btn-outline-primary btn-sm">View Thread</a>
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+}

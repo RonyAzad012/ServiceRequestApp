@@ -674,5 +674,44 @@ namespace ServiceRequestApp.Controllers
             TempData["ApplicantMessage"] = "Application rejected.";
             return RedirectToAction("Applicants", new { id = application.ServiceRequestId });
         }
+
+        // GET: ServiceRequest/TaskerDashboard
+        [Authorize(Roles = "Tasker")]
+        public async Task<IActionResult> TaskerDashboard()
+        {
+            var currentUser = await _userManager.GetUserAsync(User);
+            var acceptedCount = await _dbContext.AcceptedRequests.CountAsync(ar => ar.ProviderId == currentUser.Id);
+            var completedCount = await _dbContext.AcceptedRequests.CountAsync(ar => ar.ProviderId == currentUser.Id && ar.Status == "Completed");
+            var totalEarnings = await _dbContext.ServiceRequests.Where(r => r.AcceptedRequest != null && r.AcceptedRequest.ProviderId == currentUser.Id && r.Status == "Completed" && r.PaymentStatus == "Paid" && r.PaymentAmount.HasValue).SumAsync(r => r.PaymentAmount.Value);
+            // Show all pending requests for taskers
+            var availableRequests = await _dbContext.ServiceRequests
+                .Include(r => r.Category)
+                .Where(r => r.Status == "Pending")
+                .OrderByDescending(r => r.CreatedAt)
+                .ToListAsync();
+            ViewBag.AvailableRequests = availableRequests;
+            var model = new ProviderDashboardViewModel
+            {
+                AcceptedCount = acceptedCount,
+                CompletedCount = completedCount,
+                TotalEarnings = totalEarnings
+            };
+            return View("TaskerDashboard", model);
+        }
+
+        [Authorize(Roles = "Provider")]
+        public async Task<IActionResult> ProviderConversations()
+        {
+            var currentUser = await _userManager.GetUserAsync(User);
+            // Get all requests where this provider is the accepted provider and there are messages
+            var requests = await _dbContext.ServiceRequests
+                .Include(r => r.Requester)
+                .Include(r => r.Messages)
+                .Include(r => r.AcceptedRequest)
+                .Where(r => r.AcceptedRequest != null && r.AcceptedRequest.ProviderId == currentUser.Id && r.Messages.Any())
+                .OrderByDescending(r => r.Messages.Max(m => m.SentAt))
+                .ToListAsync();
+            return View("~/Views/Message/ProviderConversations.cshtml", requests);
+        }
     }
 }

@@ -34,3 +34,21 @@
     </div>
 </div>
 <a asp-action="Index" asp-controller="ServiceRequest" class="btn btn-secondary">Back to Requests</a>
+@if (Model != null)
+{
+    <div class="card mb-3">
+        <div class="card-body">
+            <h4 class="card-title">@Model.FirstName @Model.LastName</h4>
+            <p class="card-text"><strong>Email:</strong> @Model.Email</p>
+            <p class="card-text"><strong>Phone:</strong> @Model.PhoneNumber</p>
+            <p class="card-text"><strong>Address:</strong> @Model.Address</p>
+            <p class="card-text"><strong>Zipcode:</strong> @Model.Zipcode</p>
+            <p class="card-text"><strong>National ID:</strong> @Model.NationalId</p>
+            <p class="card-text"><strong>Shop Name:</strong> @Model.ShopName</p>
+            <p class="card-text"><strong>Shop Description:</strong> @Model.ShopDescription</p>
+            <p class="card-text"><strong>Shop Address:</strong> @Model.ShopAddress</p>
+            <p class="card-text"><strong>Shop Phone:</strong> @Model.ShopPhone</p>
+            <a asp-action="ProviderReviews" asp-controller="ServiceRequest" asp-route-providerId="@Model.Id" class="btn btn-outline-info mt-2">View Reviews</a>
+        </div>
+    </div>
+}
