@@ -16,6 +16,12 @@ namespace ServiceRequestApp.Models
         public string? ShopDescription { get; set; } // For providers
         public string? ShopPhone { get; set; } // For providers
         public string? ShopAddress { get; set; } // For providers
+
+        // Tasker-specific fields
+        public string? Skills { get; set; } // Comma-separated skills
+        public string? PortfolioUrl { get; set; }
+        public string? ProfileDescription { get; set; }
+
         public virtual ICollection<ServiceRequest>? Requests { get; set; }
         public virtual ICollection<AcceptedRequest>? AcceptedRequests { get; set; }
     }

@@ -147,6 +147,12 @@
                 <a asp-controller="Account" asp-action="Login" class="btn btn-outline-primary btn-lg">
                     <i class="fas fa-sign-in-alt me-2"></i>Sign In
                 </a>
+                <a asp-controller="Account" asp-action="Register" asp-route-userType="Provider" class="btn btn-success btn-lg">
+                    <i class="fas fa-briefcase me-2"></i>For Business
+                </a>
+                <a asp-controller="Account" asp-action="TaskerRegister" class="btn btn-info btn-lg">
+                    <i class="fas fa-user-cog me-2"></i>Become a Tasker
+                </a>
             }
             else
             {

@@ -35,9 +35,9 @@ namespace ServiceRequestApp.Controllers
             var currentUser = await _userManager.GetUserAsync(User);
             var requests = new List<ServiceRequest>();
 
-            if (currentUser.UserType == "Provider")
+            if (currentUser.UserType == "Provider" || currentUser.UserType == "Tasker")
             {
-                // Providers see available requests and their accepted requests
+                // Providers and Taskers see available requests and their accepted requests
                 requests = await _dbContext.ServiceRequests
                     .Include(r => r.Requester)
                     .Include(r => r.AcceptedRequest)

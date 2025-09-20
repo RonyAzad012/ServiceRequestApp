@@ -29,3 +29,9 @@
         </div>
     </div>
 </div>
+<div class="mt-4">
+    <a asp-controller="Account" asp-action="EditRequesterProfile" class="btn btn-outline-primary">
+        <i class="fas fa-user-edit me-2"></i>Edit Profile
+    </a>
+    <a asp-controller="Account" asp-action="RequesterProfile" asp-route-id="@User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value" class="btn btn-link">View Profile</a>
+</div>

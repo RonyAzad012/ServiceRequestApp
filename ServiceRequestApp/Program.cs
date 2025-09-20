@@ -66,7 +66,7 @@ app.MapControllerRoute(
 using (var scope = app.Services.CreateScope())
 {
     var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
-    var roles = new[] { "Provider", "Requester", "Admin" };
+    var roles = new[] { "Provider", "Requester", "Admin", "Tasker" };
 
     foreach (var role in roles)
     {

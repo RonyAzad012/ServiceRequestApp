@@ -1,0 +1,68 @@
+@model ServiceRequestApp.ViewModels.EditProviderProfileViewModel
+@{
+    ViewData["Title"] = "Edit Profile";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<h2>Edit Provider Profile</h2>
+<form asp-action="EditProviderProfile" method="post">
+    <div class="mb-3">
+        <label asp-for="FirstName" class="form-label"></label>
+        <input asp-for="FirstName" class="form-control" />
+        <span asp-validation-for="FirstName" class="text-danger"></span>
+    </div>
+    <div class="mb-3">
+        <label asp-for="LastName" class="form-label"></label>
+        <input asp-for="LastName" class="form-control" />
+        <span asp-validation-for="LastName" class="text-danger"></span>
+    </div>
+    <div class="mb-3">
+        <label asp-for="Address" class="form-label"></label>
+        <input asp-for="Address" class="form-control" />
+        <span asp-validation-for="Address" class="text-danger"></span>
+    </div>
+    <div class="mb-3">
+        <label asp-for="PhoneNumber" class="form-label"></label>
+        <input asp-for="PhoneNumber" class="form-control" />
+        <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+    </div>
+    <div class="mb-3">
+        <label asp-for="Zipcode" class="form-label"></label>
+        <input asp-for="Zipcode" class="form-control" />
+        <span asp-validation-for="Zipcode" class="text-danger"></span>
+    </div>
+    <div class="mb-3">
+        <label asp-for="ShopName" class="form-label"></label>
+        <input asp-for="ShopName" class="form-control" />
+        <span asp-validation-for="ShopName" class="text-danger"></span>
+    </div>
+    <div class="mb-3">
+        <label asp-for="ShopDescription" class="form-label"></label>
+        <textarea asp-for="ShopDescription" class="form-control" rows="3"></textarea>
+        <span asp-validation-for="ShopDescription" class="text-danger"></span>
+    </div>
+    <div class="mb-3">
+        <label asp-for="ShopAddress" class="form-label"></label>
+        <input asp-for="ShopAddress" class="form-control" />
+        <span asp-validation-for="ShopAddress" class="text-danger"></span>
+    </div>
+    <div class="mb-3">
+        <label asp-for="ShopPhone" class="form-label"></label>
+        <input asp-for="ShopPhone" class="form-control" />
+        <span asp-validation-for="ShopPhone" class="text-danger"></span>
+    </div>
+    <div class="mb-3">
+        <label asp-for="BusinessCredentials" class="form-label"></label>
+        <input asp-for="BusinessCredentials" class="form-control" />
+        <span asp-validation-for="BusinessCredentials" class="text-danger"></span>
+    </div>
+    <div class="mb-3">
+        <label asp-for="BusinessImagePath" class="form-label"></label>
+        <input asp-for="BusinessImagePath" class="form-control" />
+        <span asp-validation-for="BusinessImagePath" class="text-danger"></span>
+    </div>
+    <button type="submit" class="btn btn-primary">Save Changes</button>
+    <a asp-action="ProviderProfile" asp-route-id="@User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value" class="btn btn-secondary">Cancel</a>
+</form>
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

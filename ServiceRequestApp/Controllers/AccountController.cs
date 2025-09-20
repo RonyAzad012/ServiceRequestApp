@@ -154,5 +154,174 @@ namespace ServiceRequestApp.Controllers
             if (user == null) return NotFound();
             return View(user);
         }
+
+        [HttpGet]
+        [AllowAnonymous]
+        public async Task<IActionResult> AllProviders()
+        {
+            var providers = await _userManager.Users
+                .Where(u => u.UserType == "Provider")
+                .ToListAsync();
+            return View(providers);
+        }
+
+        [HttpGet]
+        public IActionResult TaskerRegister()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> TaskerRegister(TaskerRegisterViewModel model)
+        {
+            if (ModelState.IsValid)
+            {
+                var user = new ApplicationUser
+                {
+                    UserName = model.Email,
+                    Email = model.Email,
+                    FirstName = model.FirstName,
+                    LastName = model.LastName,
+                    Address = model.Address,
+                    UserType = "Tasker",
+                    PhoneNumber = model.PhoneNumber,
+                    Zipcode = model.Zipcode,
+                    NationalId = model.NationalId,
+                    // Tasker-specific fields (store in custom fields or extend ApplicationUser if needed)
+                    Skills = model.Skills,
+                    PortfolioUrl = model.PortfolioUrl,
+                    ProfileDescription = model.ProfileDescription
+                };
+                var result = await _userManager.CreateAsync(user, model.Password);
+                if (result.Succeeded)
+                {
+                    await _userManager.AddToRoleAsync(user, "Tasker");
+                    await _signInManager.SignInAsync(user, isPersistent: false);
+                    return RedirectToAction("Index", "Home");
+                }
+                foreach (var error in result.Errors)
+                {
+                    ModelState.AddModelError("", error.Description);
+                }
+            }
+            return View(model);
+        }
+
+        [Authorize]
+        public async Task<IActionResult> EditRequesterProfile()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null || user.UserType != "Requester") return NotFound();
+            var model = new EditRequesterProfileViewModel
+            {
+                FirstName = user.FirstName,
+                LastName = user.LastName,
+                Address = user.Address,
+                PhoneNumber = user.PhoneNumber,
+                Zipcode = user.Zipcode
+            };
+            return View(model);
+        }
+
+        [HttpPost]
+        [Authorize]
+        public async Task<IActionResult> EditRequesterProfile(EditRequesterProfileViewModel model)
+        {
+            if (!ModelState.IsValid) return View(model);
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null || user.UserType != "Requester") return NotFound();
+            user.FirstName = model.FirstName;
+            user.LastName = model.LastName;
+            user.Address = model.Address;
+            user.PhoneNumber = model.PhoneNumber;
+            user.Zipcode = model.Zipcode;
+            await _userManager.UpdateAsync(user);
+            TempData["ProfileMessage"] = "Profile updated successfully.";
+            return RedirectToAction("RequesterProfile", new { id = user.Id });
+        }
+
+        [Authorize]
+        public async Task<IActionResult> EditProviderProfile()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null || user.UserType != "Provider") return NotFound();
+            var model = new EditProviderProfileViewModel
+            {
+                FirstName = user.FirstName,
+                LastName = user.LastName,
+                Address = user.Address,
+                PhoneNumber = user.PhoneNumber,
+                Zipcode = user.Zipcode,
+                ShopName = user.ShopName,
+                ShopDescription = user.ShopDescription,
+                ShopAddress = user.ShopAddress,
+                ShopPhone = user.ShopPhone,
+                BusinessCredentials = user.BusinessCredentials,
+                BusinessImagePath = user.BusinessImagePath
+            };
+            return View(model);
+        }
+
+        [HttpPost]
+        [Authorize]
+        public async Task<IActionResult> EditProviderProfile(EditProviderProfileViewModel model)
+        {
+            if (!ModelState.IsValid) return View(model);
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null || user.UserType != "Provider") return NotFound();
+            user.FirstName = model.FirstName;
+            user.LastName = model.LastName;
+            user.Address = model.Address;
+            user.PhoneNumber = model.PhoneNumber;
+            user.Zipcode = model.Zipcode;
+            user.ShopName = model.ShopName;
+            user.ShopDescription = model.ShopDescription;
+            user.ShopAddress = model.ShopAddress;
+            user.ShopPhone = model.ShopPhone;
+            user.BusinessCredentials = model.BusinessCredentials;
+            user.BusinessImagePath = model.BusinessImagePath;
+            await _userManager.UpdateAsync(user);
+            TempData["ProfileMessage"] = "Profile updated successfully.";
+            return RedirectToAction("ProviderProfile", new { id = user.Id });
+        }
+
+        [Authorize]
+        public async Task<IActionResult> EditTaskerProfile()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null || user.UserType != "Tasker") return NotFound();
+            var model = new EditTaskerProfileViewModel
+            {
+                FirstName = user.FirstName,
+                LastName = user.LastName,
+                Address = user.Address,
+                PhoneNumber = user.PhoneNumber,
+                Zipcode = user.Zipcode,
+                Skills = user.Skills,
+                PortfolioUrl = user.PortfolioUrl,
+                ProfileDescription = user.ProfileDescription
+            };
+            return View(model);
+        }
+
+        [HttpPost]
+        [Authorize]
+        public async Task<IActionResult> EditTaskerProfile(EditTaskerProfileViewModel model)
+        {
+            if (!ModelState.IsValid) return View(model);
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null || user.UserType != "Tasker") return NotFound();
+            user.FirstName = model.FirstName;
+            user.LastName = model.LastName;
+            user.Address = model.Address;
+            user.PhoneNumber = model.PhoneNumber;
+            user.Zipcode = model.Zipcode;
+            user.Skills = model.Skills;
+            user.PortfolioUrl = model.PortfolioUrl;
+            user.ProfileDescription = model.ProfileDescription;
+            await _userManager.UpdateAsync(user);
+            TempData["ProfileMessage"] = "Profile updated successfully.";
+            return RedirectToAction("TaskerProfile", new { id = user.Id });
+        }
     }
 }
