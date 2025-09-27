@@ -29,9 +29,15 @@ namespace ServiceRequestApp.Controllers
         {
             return View();
         }
-        //Process the registration form. If the form is valid, create a new ApplicationUser object
+
+        [HttpGet]
+        public IActionResult RequesterRegister()
+        {
+            return View();
+        }
+
         [HttpPost]
-        public async Task<IActionResult> Register(RegisterViewModel model)
+        public async Task<IActionResult> RequesterRegister(RequesterRegisterViewModel model)
         {
             if (ModelState.IsValid)
             {
@@ -42,29 +48,74 @@ namespace ServiceRequestApp.Controllers
                     FirstName = model.FirstName,
                     LastName = model.LastName,
                     Address = model.Address,
-                    UserType = model.UserType,
+                    UserType = "Requester",
                     PhoneNumber = model.PhoneNumber,
                     Zipcode = model.Zipcode,
-                    NationalId = model.NationalId,
-                    BusinessCredentials = model.UserType == "Provider" ? model.BusinessCredentials : null,
-                    BusinessImagePath = model.UserType == "Provider" ? model.BusinessImagePath : null
+                    NationalId = model.NationalId
                 };
 
                 var result = await _userManager.CreateAsync(user, model.Password);
 
                 if (result.Succeeded)
                 {
-                    await _userManager.AddToRoleAsync(user, model.UserType);
+                    await _userManager.AddToRoleAsync(user, "Requester");
                     await _signInManager.SignInAsync(user, isPersistent: false);
-                    return RedirectToAction("Index", "Home");
+                    return Json(new { success = true, message = "Registration successful! Welcome to our platform." });
                 }
-                //If the registration fails, add the errors to the ModelState object.
+                
                 foreach (var error in result.Errors)
                 {
                     ModelState.AddModelError("", error.Description);
                 }
             }
-            return View(model);
+            return Json(new { success = false, errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage) });
+        }
+
+        [HttpGet]
+        public IActionResult ProviderRegister()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> ProviderRegister(ProviderRegisterViewModel model)
+        {
+            if (ModelState.IsValid)
+            {
+                var user = new ApplicationUser
+                {
+                    UserName = model.Email,
+                    Email = model.Email,
+                    FirstName = model.FirstName,
+                    LastName = model.LastName,
+                    Address = model.Address,
+                    UserType = "Provider",
+                    PhoneNumber = model.PhoneNumber,
+                    Zipcode = model.Zipcode,
+                    NationalId = model.NationalId,
+                    ShopName = model.ShopName,
+                    ShopDescription = model.ShopDescription,
+                    ShopAddress = model.ShopAddress,
+                    ShopPhone = model.ShopPhone,
+                    BusinessCredentials = model.BusinessCredentials,
+                    BusinessImagePath = model.BusinessImagePath
+                };
+
+                var result = await _userManager.CreateAsync(user, model.Password);
+
+                if (result.Succeeded)
+                {
+                    await _userManager.AddToRoleAsync(user, "Provider");
+                    await _signInManager.SignInAsync(user, isPersistent: false);
+                    return Json(new { success = true, message = "Registration successful! Welcome to our business platform." });
+                }
+                
+                foreach (var error in result.Errors)
+                {
+                    ModelState.AddModelError("", error.Description);
+                }
+            }
+            return Json(new { success = false, errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage) });
         }
 
         [HttpGet]
@@ -187,7 +238,7 @@ namespace ServiceRequestApp.Controllers
                     PhoneNumber = model.PhoneNumber,
                     Zipcode = model.Zipcode,
                     NationalId = model.NationalId,
-                    // Tasker-specific fields (store in custom fields or extend ApplicationUser if needed)
+                    // Tasker-specific fields
                     Skills = model.Skills,
                     PortfolioUrl = model.PortfolioUrl,
                     ProfileDescription = model.ProfileDescription
@@ -197,14 +248,14 @@ namespace ServiceRequestApp.Controllers
                 {
                     await _userManager.AddToRoleAsync(user, "Tasker");
                     await _signInManager.SignInAsync(user, isPersistent: false);
-                    return RedirectToAction("Index", "Home");
+                    return Json(new { success = true, message = "Registration successful! Welcome to our tasker platform." });
                 }
                 foreach (var error in result.Errors)
                 {
                     ModelState.AddModelError("", error.Description);
                 }
             }
-            return View(model);
+            return Json(new { success = false, errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage) });
         }
 
         [Authorize]
