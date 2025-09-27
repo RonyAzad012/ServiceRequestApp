@@ -9,59 +9,136 @@
 }
 
 <div class="container py-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="display-4">Service Requests</h1>
-        @if (currentUser.UserType == "Requester")
-        {
-            <a asp-action="Create" class="btn btn-primary btn-lg">
-                <i class="fas fa-plus"></i> Create New Request
-            </a>
-        }
+    <!-- Header Section -->
+    <div class="row align-items-center mb-5">
+        <div class="col-lg-8">
+            <h1 class="display-5 fw-bold text-gradient mb-2">Service Requests</h1>
+            <p class="lead text-muted">Browse and manage service requests in your area</p>
+        </div>
+        <div class="col-lg-4 text-lg-end">
+            @if (currentUser.UserType == "Requester")
+            {
+                <a asp-action="Create" class="btn btn-primary btn-lg">
+                    <i class="fas fa-plus me-2"></i>Create New Request
+                </a>
+            }
+        </div>
     </div>
 
-    <div class="row g-4">
+    <!-- Filters Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 bg-light">
+                <div class="card-body p-4">
+                    <div class="row g-3 align-items-center">
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold">
+                                <i class="fas fa-filter me-2 text-primary"></i>Filter by Status
+                            </label>
+                            <select class="form-select" id="statusFilter">
+                                <option value="">All Statuses</option>
+                                <option value="Pending">Pending</option>
+                                <option value="Accepted">Accepted</option>
+                                <option value="Completed">Completed</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold">
+                                <i class="fas fa-search me-2 text-primary"></i>Search
+                            </label>
+                            <input type="text" class="form-control" id="searchInput" placeholder="Search requests...">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold">
+                                <i class="fas fa-sort me-2 text-primary"></i>Sort by
+                            </label>
+                            <select class="form-select" id="sortFilter">
+                                <option value="newest">Newest First</option>
+                                <option value="oldest">Oldest First</option>
+                                <option value="price-high">Price: High to Low</option>
+                                <option value="price-low">Price: Low to High</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3 d-flex align-items-end">
+                            <button class="btn btn-outline-primary w-100" onclick="clearFilters()">
+                                <i class="fas fa-times me-2"></i>Clear Filters
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Service Requests Grid -->
+    <div class="row g-4" id="requestsContainer">
         @foreach (var item in Model)
         {
-            <div class="col-md-6">
-                <div class="card h-100 shadow-sm hover-shadow">
-                    <div class="card-header bg-light">
+            <div class="col-lg-6 col-xl-4 request-card" data-status="@item.Status.ToLower()" data-title="@item.Title.ToLower()" data-price="@item.Price">
+                <div class="card h-100 shadow-sm border-0">
+                    <div class="card-header bg-gradient-primary text-white">
                         <div class="d-flex justify-content-between align-items-center">
-                            <h5 class="card-title mb-0">@item.Title</h5>
+                            <h5 class="card-title mb-0 text-white">@item.Title</h5>
                             <span class="badge @(item.Status switch {
                                 "Pending" => "bg-warning",
                                 "Accepted" => "bg-info",
                                 "Completed" => "bg-success",
                                 _ => "bg-secondary"
-                            })">@item.Status</span>
+                            }) text-white">@item.Status</span>
                         </div>
                     </div>
                     <div class="card-body">
-                        <h6 class="card-subtitle mb-3 text-primary">
-                            <i class="fas fa-tools me-2"></i>@item.ServiceType
-                        </h6>
-                        <p class="card-text">@item.Description</p>
-                        <div class="mb-2">
-                            <strong>Category:</strong> @(item.Category?.Name ?? "N/A") <br />
-                            <strong>Address:</strong> @item.Address <br />
-                            <strong>Zipcode:</strong> @item.Zipcode <br />
-                            <strong>Price:</strong> @item.Price.ToString("C") <br />
-                            <strong>Deadline:</strong> @(item.Deadline?.ToString("d") ?? "N/A")
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="service-type-icon me-3">
+                                <i class="fas fa-tools text-primary"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-0 text-primary fw-bold">@item.ServiceType</h6>
+                                <small class="text-muted">@(item.Category?.Name ?? "General")</small>
+                            </div>
                         </div>
-                        <div class="text-muted small mb-3">
-                            <i class="far fa-clock me-1"></i>
-                            Created: @item.CreatedAt.ToString("MMM dd, yyyy HH:mm")
+                        
+                        <p class="card-text text-muted mb-3">@item.Description</p>
+                        
+                        <div class="request-details mb-3">
+                            <div class="row g-2">
+                                <div class="col-6">
+                                    <div class="detail-item">
+                                        <i class="fas fa-map-marker-alt text-danger me-2"></i>
+                                        <small class="text-muted">@item.Address</small>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="detail-item">
+                                        <i class="fas fa-dollar-sign text-success me-2"></i>
+                                        <small class="fw-bold text-success">@item.Price.ToString("C")</small>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="detail-item">
+                                        <i class="fas fa-calendar text-info me-2"></i>
+                                        <small class="text-muted">@(item.Deadline?.ToString("MMM dd") ?? "No deadline")</small>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="detail-item">
+                                        <i class="fas fa-clock text-secondary me-2"></i>
+                                        <small class="text-muted">@item.CreatedAt.ToString("MMM dd")</small>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
+                        
                         <div class="d-flex gap-2 flex-wrap">
-                            <a asp-action="Details" asp-route-id="@item.Id"
-                               class="btn btn-outline-info">
-                                <i class="fas fa-info-circle"></i> Details
+                            <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-info-circle me-1"></i>Details
                             </a>
 
                             @if (currentUser.UserType == "Provider" && item.Status == "Pending")
                             {
                                 <form asp-action="Accept" asp-route-id="@item.Id" method="post" class="d-inline">
-                                    <button type="submit" class="btn btn-success">
-                                        <i class="fas fa-check"></i> Accept Request
+                                    <button type="submit" class="btn btn-success btn-sm">
+                                        <i class="fas fa-check me-1"></i>Accept
                                     </button>
                                 </form>
                             }
@@ -71,21 +148,19 @@
                            item.AcceptedRequest?.ProviderId == currentUser.Id))
                             {
                                 <form asp-action="Complete" asp-route-id="@item.Id" method="post" class="d-inline">
-                                    <button type="submit" class="btn btn-outline-success">
-                                        <i class="fas fa-check-circle"></i> Mark Complete
+                                    <button type="submit" class="btn btn-outline-success btn-sm">
+                                        <i class="fas fa-check-circle me-1"></i>Complete
                                     </button>
                                 </form>
                             }
 
                             @if (item.Status == "Pending" && item.RequesterId == currentUser.Id)
                             {
-                                <a asp-action="Edit" asp-route-id="@item.Id"
-                                   class="btn btn-outline-primary">
-                                    <i class="fas fa-edit"></i> Edit
+                                <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-outline-warning btn-sm">
+                                    <i class="fas fa-edit me-1"></i>Edit
                                 </a>
-                                <a asp-action="Delete" asp-route-id="@item.Id"
-                                   class="btn btn-outline-danger">
-                                    <i class="fas fa-trash"></i> Delete
+                                <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-outline-danger btn-sm">
+                                    <i class="fas fa-trash me-1"></i>Delete
                                 </a>
                             }
                         </div>
@@ -94,38 +169,200 @@
             </div>
         }
     </div>
+    
+    <!-- Empty State -->
+    <div id="emptyState" class="text-center py-5" style="display: none;">
+        <div class="empty-state-icon mb-4">
+            <i class="fas fa-search fa-4x text-muted"></i>
+        </div>
+        <h4 class="text-muted mb-3">No requests found</h4>
+        <p class="text-muted mb-4">Try adjusting your filters or search terms</p>
+        <button class="btn btn-primary" onclick="clearFilters()">
+            <i class="fas fa-refresh me-2"></i>Clear Filters
+        </button>
+    </div>
 </div>
 
 <style>
-    .hover-shadow {
+    .service-type-icon {
+        width: 40px;
+        height: 40px;
+        background: rgba(37, 99, 235, 0.1);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .service-type-icon i {
+        font-size: 1.2rem;
+    }
+    
+    .detail-item {
+        display: flex;
+        align-items: center;
+        margin-bottom: 0.5rem;
+    }
+    
+    .request-card {
         transition: all 0.3s ease;
     }
-
-        .hover-shadow:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
-        }
-
+    
+    .request-card:hover {
+        transform: translateY(-5px);
+    }
+    
     .card {
-        border-radius: 10px;
-        border: none;
+        border-radius: 1rem;
+        overflow: hidden;
     }
-
+    
     .card-header {
-        border-radius: 10px 10px 0 0 !important;
-        border-bottom: 1px solid rgba(0,0,0,.125);
+        border-radius: 1rem 1rem 0 0 !important;
     }
-
-    .btn {
-        border-radius: 6px;
+    
+    .btn-sm {
+        border-radius: 0.5rem;
+        font-weight: 500;
     }
-
-    .badge {
-        padding: 0.5em 1em;
-        border-radius: 6px;
+    
+    .empty-state-icon {
+        opacity: 0.5;
+    }
+    
+    .form-select, .form-control {
+        border-radius: 0.5rem;
+        border: 2px solid var(--gray-200);
+        transition: all 0.3s ease;
+    }
+    
+    .form-select:focus, .form-control:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+    
+    .filter-card {
+        background: var(--gray-50);
+        border: 1px solid var(--gray-200);
     }
 </style>
 
-@section Scripts {
-    <script src="https://kit.fontawesome.com/your-font-awesome-kit.js"></script>
-}
+<script>
+    // Filter and search functionality
+    document.addEventListener('DOMContentLoaded', function() {
+        const statusFilter = document.getElementById('statusFilter');
+        const searchInput = document.getElementById('searchInput');
+        const sortFilter = document.getElementById('sortFilter');
+        const requestsContainer = document.getElementById('requestsContainer');
+        const emptyState = document.getElementById('emptyState');
+        
+        function filterRequests() {
+            const statusValue = statusFilter.value.toLowerCase();
+            const searchValue = searchInput.value.toLowerCase();
+            const cards = document.querySelectorAll('.request-card');
+            let visibleCount = 0;
+            
+            cards.forEach(card => {
+                const cardStatus = card.dataset.status;
+                const cardTitle = card.dataset.title;
+                const cardPrice = parseFloat(card.dataset.price);
+                
+                let showCard = true;
+                
+                // Status filter
+                if (statusValue && cardStatus !== statusValue) {
+                    showCard = false;
+                }
+                
+                // Search filter
+                if (searchValue && !cardTitle.includes(searchValue)) {
+                    showCard = false;
+                }
+                
+                if (showCard) {
+                    card.style.display = 'block';
+                    visibleCount++;
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+            
+            // Show/hide empty state
+            if (visibleCount === 0) {
+                requestsContainer.style.display = 'none';
+                emptyState.style.display = 'block';
+            } else {
+                requestsContainer.style.display = 'block';
+                emptyState.style.display = 'none';
+            }
+            
+            // Sort requests
+            sortRequests();
+        }
+        
+        function sortRequests() {
+            const sortValue = sortFilter.value;
+            const cards = Array.from(document.querySelectorAll('.request-card'));
+            const container = requestsContainer;
+            
+            cards.sort((a, b) => {
+                switch(sortValue) {
+                    case 'newest':
+                        return 0; // Already in creation order
+                    case 'oldest':
+                        return 0; // Would need to reverse, but keeping simple
+                    case 'price-high':
+                        return parseFloat(b.dataset.price) - parseFloat(a.dataset.price);
+                    case 'price-low':
+                        return parseFloat(a.dataset.price) - parseFloat(b.dataset.price);
+                    default:
+                        return 0;
+                }
+            });
+            
+            // Re-append sorted cards
+            cards.forEach(card => {
+                container.appendChild(card);
+            });
+        }
+        
+        function clearFilters() {
+            statusFilter.value = '';
+            searchInput.value = '';
+            sortFilter.value = 'newest';
+            filterRequests();
+        }
+        
+        // Event listeners
+        statusFilter.addEventListener('change', filterRequests);
+        searchInput.addEventListener('input', filterRequests);
+        sortFilter.addEventListener('change', sortRequests);
+        
+        // Make clearFilters available globally
+        window.clearFilters = clearFilters;
+        
+        // Initial filter
+        filterRequests();
+    });
+    
+    // Add loading states to form submissions
+    document.addEventListener('DOMContentLoaded', function() {
+        const forms = document.querySelectorAll('form');
+        forms.forEach(form => {
+            form.addEventListener('submit', function() {
+                const submitBtn = form.querySelector('button[type="submit"]');
+                if (submitBtn) {
+                    const originalText = submitBtn.innerHTML;
+                    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Processing...';
+                    submitBtn.disabled = true;
+                    
+                    // Re-enable after 3 seconds (in case of errors)
+                    setTimeout(() => {
+                        submitBtn.innerHTML = originalText;
+                        submitBtn.disabled = false;
+                    }, 3000);
+                }
+            });
+        });
+    });
+</script>
