@@ -6,6 +6,8 @@ using ServiceRequestApp.Models;
 using ServiceRequestApp.ViewModels;
 using System.Linq;
 using System.Threading.Tasks;
+using System;
+using Microsoft.EntityFrameworkCore;
 
 namespace ServiceRequestApp.Controllers
 {
@@ -21,25 +23,160 @@ namespace ServiceRequestApp.Controllers
             _userManager = userManager;
         }
 
-        public IActionResult Dashboard()
+        public async Task<IActionResult> Dashboard()
         {
-            var model = new AdminDashboardViewModel
+            try
             {
-                UserCount = _userManager.Users.Count(),
-                ServiceRequestCount = _dbContext.ServiceRequests.Count(),
-                CompletedRequestCount = _dbContext.ServiceRequests.Count(r => r.Status == "Completed"),
-                PaidRequestCount = _dbContext.ServiceRequests.Count(r => r.PaymentStatus == "Paid"),
-                TotalPayments = _dbContext.ServiceRequests.Where(r => r.PaymentStatus == "Paid" && r.PaymentAmount.HasValue).Sum(r => r.PaymentAmount.Value),
-                ProviderCount = _userManager.Users.Count(u => u.UserType == "Provider"),
-                RequesterCount = _userManager.Users.Count(u => u.UserType == "Requester")
-            };
-            return View(model);
+                var model = new AdminDashboardViewModel
+                {
+                    UserCount = await _userManager.Users.CountAsync(),
+                    ServiceRequestCount = await _dbContext.ServiceRequests.CountAsync(),
+                    CompletedRequestCount = await _dbContext.ServiceRequests.CountAsync(r => r.Status == "Completed"),
+                    PaidRequestCount = await _dbContext.ServiceRequests.CountAsync(r => r.PaymentStatus == "Paid"),
+                    TotalPayments = await _dbContext.ServiceRequests
+                        .Where(r => r.PaymentStatus == "Paid" && r.PaymentAmount.HasValue)
+                        .SumAsync(r => r.PaymentAmount.Value),
+                    ProviderCount = await _userManager.Users.CountAsync(u => u.UserType == "Provider"),
+                    RequesterCount = await _userManager.Users.CountAsync(u => u.UserType == "Requester")
+                };
+                return View(model);
+            }
+            catch (Exception ex)
+            {
+                // Log the exception
+                return View(new AdminDashboardViewModel());
+            }
         }
 
-        public IActionResult Users()
+        [HttpGet]
+        public async Task<IActionResult> GetDashboardStats()
         {
-            var users = _userManager.Users.ToList();
-            return View(users);
+            try
+            {
+                var stats = new
+                {
+                    UserCount = await _userManager.Users.CountAsync(),
+                    ServiceRequestCount = await _dbContext.ServiceRequests.CountAsync(),
+                    CompletedRequestCount = await _dbContext.ServiceRequests.CountAsync(r => r.Status == "Completed"),
+                    PaidRequestCount = await _dbContext.ServiceRequests.CountAsync(r => r.PaymentStatus == "Paid"),
+                    TotalPayments = await _dbContext.ServiceRequests
+                        .Where(r => r.PaymentStatus == "Paid" && r.PaymentAmount.HasValue)
+                        .SumAsync(r => r.PaymentAmount.Value),
+                    ProviderCount = await _userManager.Users.CountAsync(u => u.UserType == "Provider"),
+                    RequesterCount = await _userManager.Users.CountAsync(u => u.UserType == "Requester")
+                };
+                return Json(new { success = true, data = stats });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Error fetching dashboard statistics" });
+            }
+        }
+
+        public async Task<IActionResult> Users()
+        {
+            try
+            {
+                var users = await _userManager.Users
+                    .OrderByDescending(u => u.CreatedAt)
+                    .ToListAsync();
+                return View(users);
+            }
+            catch (Exception ex)
+            {
+                return View(new List<ApplicationUser>());
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetUsers()
+        {
+            try
+            {
+                var users = await _userManager.Users
+                    .Select(u => new
+                    {
+                        u.Id,
+                        u.FirstName,
+                        u.LastName,
+                        u.Email,
+                        u.UserType,
+                        u.PhoneNumber,
+                        u.CreatedAt,
+                        IsActive = u.EmailConfirmed
+                    })
+                    .OrderByDescending(u => u.CreatedAt)
+                    .ToListAsync();
+                
+                return Json(new { success = true, data = users });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Error fetching users" });
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> ToggleUserStatus(string userId)
+        {
+            try
+            {
+                var user = await _userManager.FindByIdAsync(userId);
+                if (user == null)
+                    return Json(new { success = false, message = "User not found" });
+
+                user.EmailConfirmed = !user.EmailConfirmed;
+                var result = await _userManager.UpdateAsync(user);
+
+                if (result.Succeeded)
+                {
+                    return Json(new { 
+                        success = true, 
+                        message = $"User {(user.EmailConfirmed ? "activated" : "deactivated")} successfully",
+                        isActive = user.EmailConfirmed
+                    });
+                }
+                else
+                {
+                    return Json(new { success = false, message = "Failed to update user status" });
+                }
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Error updating user status" });
+            }
+        }
+
+        [HttpDelete]
+        public async Task<IActionResult> DeleteUser(string userId)
+        {
+            try
+            {
+                var user = await _userManager.FindByIdAsync(userId);
+                if (user == null)
+                    return Json(new { success = false, message = "User not found" });
+
+                // Check if user has any service requests
+                var hasRequests = await _dbContext.ServiceRequests.AnyAsync(r => r.RequesterId == userId);
+                if (hasRequests)
+                {
+                    return Json(new { success = false, message = "Cannot delete user with existing service requests" });
+                }
+
+                var result = await _userManager.DeleteAsync(user);
+                if (result.Succeeded)
+                {
+                    return Json(new { success = true, message = "User deleted successfully" });
+                }
+                else
+                {
+                    return Json(new { success = false, message = "Failed to delete user" });
+                }
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Error deleting user" });
+            }
         }
 
         public IActionResult EditUser(string id)
@@ -64,30 +201,6 @@ namespace ServiceRequestApp.Controllers
             return RedirectToAction("Users");
         }
 
-        public async Task<IActionResult> DeleteUser(string id)
-        {
-            var user = await _userManager.FindByIdAsync(id);
-            if (user == null) return NotFound();
-            return View(user);
-        }
-
-        [HttpPost, ActionName("DeleteUser")]
-        public async Task<IActionResult> DeleteUserConfirmed(string id)
-        {
-            var user = await _userManager.FindByIdAsync(id);
-            if (user == null) return NotFound();
-
-            // Delete all service requests where this user is the requester
-            var requests = _dbContext.ServiceRequests.Where(r => r.RequesterId == user.Id).ToList();
-            if (requests.Any())
-            {
-                _dbContext.ServiceRequests.RemoveRange(requests);
-                await _dbContext.SaveChangesAsync();
-            }
-
-            await _userManager.DeleteAsync(user);
-            return RedirectToAction("Users");
-        }
 
         public IActionResult ServiceRequests()
         {

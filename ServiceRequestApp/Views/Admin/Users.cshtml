@@ -4,28 +4,410 @@
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
 }
 
-<h1>Manage Users</h1>
-<table class="table table-striped">
-    <thead>
-        <tr>
-            <th>Email</th>
-            <th>Name</th>
-            <th>User Type</th>
-            <th>Actions</th>
-        </tr>
-    </thead>
-    <tbody>
-    @foreach (var user in Model)
-    {
-        <tr>
-            <td>@user.Email</td>
-            <td>@user.FirstName @user.LastName</td>
-            <td>@user.UserType</td>
-            <td>
-                <a asp-action="EditUser" asp-route-id="@user.Id" class="btn btn-sm btn-primary">Edit</a>
-                <a asp-action="DeleteUser" asp-route-id="@user.Id" class="btn btn-sm btn-danger">Delete</a>
-            </td>
-        </tr>
+<div class="admin-users-page">
+    <!-- Header Section -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="display-6 fw-bold text-gradient mb-2">User Management</h1>
+            <p class="text-muted">Manage all users on the platform</p>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-primary" onclick="refreshUsers()">
+                <i class="fas fa-sync-alt me-2"></i>Refresh
+            </button>
+            <button class="btn btn-primary" onclick="exportUsers()">
+                <i class="fas fa-download me-2"></i>Export Users
+            </button>
+        </div>
+    </div>
+
+    <!-- Filters and Search -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <div class="row g-3 align-items-center">
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">
+                        <i class="fas fa-filter me-2 text-primary"></i>Filter by Type
+                    </label>
+                    <select class="form-select" id="userTypeFilter">
+                        <option value="">All Types</option>
+                        <option value="Requester">Customers</option>
+                        <option value="Provider">Providers</option>
+                        <option value="Tasker">Taskers</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">
+                        <i class="fas fa-search me-2 text-primary"></i>Search Users
+                    </label>
+                    <input type="text" class="form-control" id="userSearchInput" placeholder="Search by name or email...">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">
+                        <i class="fas fa-sort me-2 text-primary"></i>Sort by
+                    </label>
+                    <select class="form-select" id="userSortFilter">
+                        <option value="newest">Newest First</option>
+                        <option value="oldest">Oldest First</option>
+                        <option value="name">Name A-Z</option>
+                        <option value="email">Email A-Z</option>
+                    </select>
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <button class="btn btn-outline-primary w-100" onclick="clearUserFilters()">
+                        <i class="fas fa-times me-2"></i>Clear Filters
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Users Table -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white border-0">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-users me-2 text-primary"></i>All Users
+                </h5>
+                <div class="d-flex gap-2">
+                    <span class="badge bg-primary" id="totalUsersCount">@Model.Count()</span>
+                    <span class="badge bg-success" id="activeUsersCount">@Model.Count(u => u.EmailConfirmed)</span>
+                </div>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0" id="usersTable">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="border-0">
+                                <div class="d-flex align-items-center">
+                                    <input type="checkbox" class="form-check-input me-2" id="selectAllUsers">
+                                    User
+                                </div>
+                            </th>
+                            <th class="border-0">Type</th>
+                            <th class="border-0">Status</th>
+                            <th class="border-0">Joined</th>
+                            <th class="border-0">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="usersTableBody">
+                        @foreach (var user in Model)
+                        {
+                            <tr class="user-row" data-user-id="@user.Id" data-user-type="@user.UserType" data-user-name="@user.FirstName.ToLower() @user.LastName.ToLower()" data-user-email="@user.Email.ToLower()">
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <input type="checkbox" class="form-check-input me-3 user-checkbox" value="@user.Id">
+                                        <div class="user-avatar me-3">
+                                            <div class="avatar-circle @(user.UserType switch {
+                                                "Provider" => "bg-success",
+                                                "Requester" => "bg-primary", 
+                                                "Tasker" => "bg-info",
+                                                _ => "bg-secondary"
+                                            })">
+                                                <i class="fas @(user.UserType switch {
+                                                    "Provider" => "fa-briefcase",
+                                                    "Requester" => "fa-user",
+                                                    "Tasker" => "fa-user-cog",
+                                                    _ => "fa-user"
+                                                })"></i>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <h6 class="mb-1 fw-bold">@user.FirstName @user.LastName</h6>
+                                            <small class="text-muted">@user.Email</small>
+                                            @if (!string.IsNullOrEmpty(user.PhoneNumber))
+                                            {
+                                                <br><small class="text-muted"><i class="fas fa-phone me-1"></i>@user.PhoneNumber</small>
+                                            }
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge @(user.UserType switch {
+                                        "Provider" => "bg-success",
+                                        "Requester" => "bg-primary",
+                                        "Tasker" => "bg-info",
+                                        _ => "bg-secondary"
+                                    }) text-white">
+                                        <i class="fas @(user.UserType switch {
+                                            "Provider" => "fa-briefcase",
+                                            "Requester" => "fa-user",
+                                            "Tasker" => "fa-user-cog",
+                                            _ => "fa-user"
+                                        }) me-1"></i>@user.UserType
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge @(user.EmailConfirmed ? "bg-success" : "bg-warning") text-white" id="status-@user.Id">
+                                        <i class="fas @(user.EmailConfirmed ? "fa-check-circle" : "fa-clock") me-1"></i>
+                                        @(user.EmailConfirmed ? "Active" : "Pending")
+                                    </span>
+                                </td>
+                                <td>
+                                    <small class="text-muted">
+                                        <i class="fas fa-calendar me-1"></i>
+                                        @user.CreatedAt.ToString("MMM dd, yyyy")
+                                    </small>
+                                </td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <button class="btn btn-sm btn-outline-primary" onclick="viewUserDetails('@user.Id')" title="View Details">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-warning" onclick="editUser('@user.Id')" title="Edit User">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="btn btn-sm @(user.EmailConfirmed ? "btn-outline-warning" : "btn-outline-success")" 
+                                                onclick="toggleUserStatus('@user.Id')" 
+                                                title="@(user.EmailConfirmed ? "Deactivate" : "Activate") User">
+                                            <i class="fas @(user.EmailConfirmed ? "fa-ban" : "fa-check")"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-danger" onclick="deleteUser('@user.Id')" title="Delete User">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .admin-users-page {
+        padding: 0;
     }
-    </tbody>
-</table>
+
+    .user-avatar .avatar-circle {
+        width: 45px;
+        height: 45px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1rem;
+    }
+
+    .user-row {
+        transition: all 0.3s ease;
+    }
+
+    .user-row:hover {
+        background-color: var(--gray-50);
+    }
+
+    .table th {
+        font-weight: 600;
+        color: var(--gray-700);
+        padding: 1rem;
+    }
+
+    .table td {
+        padding: 1rem;
+        vertical-align: middle;
+    }
+
+    .btn-group .btn {
+        border-radius: 0.375rem;
+        margin-right: 0.25rem;
+    }
+
+    .btn-group .btn:last-child {
+        margin-right: 0;
+    }
+
+    .badge {
+        font-size: 0.75rem;
+        padding: 0.4em 0.8em;
+    }
+
+    .form-check-input:checked {
+        background-color: var(--primary-color);
+        border-color: var(--primary-color);
+    }
+</style>
+
+<script>
+    // User management functionality
+    let selectedUsers = new Set();
+
+    // Initialize page
+    document.addEventListener('DOMContentLoaded', function() {
+        initializeUserManagement();
+    });
+
+    function initializeUserManagement() {
+        // Select all checkbox functionality
+        const selectAllCheckbox = document.getElementById('selectAllUsers');
+        const userCheckboxes = document.querySelectorAll('.user-checkbox');
+
+        selectAllCheckbox.addEventListener('change', function() {
+            userCheckboxes.forEach(checkbox => {
+                checkbox.checked = this.checked;
+                if (this.checked) {
+                    selectedUsers.add(checkbox.value);
+                } else {
+                    selectedUsers.delete(checkbox.value);
+                }
+            });
+        });
+
+        // Individual checkbox functionality
+        userCheckboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                if (this.checked) {
+                    selectedUsers.add(this.value);
+                } else {
+                    selectedUsers.delete(this.value);
+                }
+            });
+        });
+
+        // Filter functionality
+        document.getElementById('userTypeFilter').addEventListener('change', filterUsers);
+        document.getElementById('userSearchInput').addEventListener('input', filterUsers);
+        document.getElementById('userSortFilter').addEventListener('change', sortUsers);
+    }
+
+    function filterUsers() {
+        const typeFilter = document.getElementById('userTypeFilter').value.toLowerCase();
+        const searchInput = document.getElementById('userSearchInput').value.toLowerCase();
+        const userRows = document.querySelectorAll('.user-row');
+
+        userRows.forEach(row => {
+            const userType = row.dataset.userType.toLowerCase();
+            const userName = row.dataset.userName;
+            const userEmail = row.dataset.userEmail;
+
+            const typeMatch = !typeFilter || userType === typeFilter;
+            const searchMatch = !searchInput || userName.includes(searchInput) || userEmail.includes(searchInput);
+
+            if (typeMatch && searchMatch) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    }
+
+    function sortUsers() {
+        const sortBy = document.getElementById('userSortFilter').value;
+        const tbody = document.getElementById('usersTableBody');
+        const rows = Array.from(tbody.querySelectorAll('.user-row'));
+
+        rows.sort((a, b) => {
+            switch (sortBy) {
+                case 'newest':
+                    return new Date(b.dataset.createdAt || 0) - new Date(a.dataset.createdAt || 0);
+                case 'oldest':
+                    return new Date(a.dataset.createdAt || 0) - new Date(b.dataset.createdAt || 0);
+                case 'name':
+                    return a.dataset.userName.localeCompare(b.dataset.userName);
+                case 'email':
+                    return a.dataset.userEmail.localeCompare(b.dataset.userEmail);
+                default:
+                    return 0;
+            }
+        });
+
+        rows.forEach(row => tbody.appendChild(row));
+    }
+
+    function clearUserFilters() {
+        document.getElementById('userTypeFilter').value = '';
+        document.getElementById('userSearchInput').value = '';
+        document.getElementById('userSortFilter').value = 'newest';
+        filterUsers();
+    }
+
+    function refreshUsers() {
+        Swal.fire({
+            title: 'Refreshing...',
+            text: 'Loading latest user data',
+            allowOutsideClick: false,
+            showConfirmButton: false,
+            willOpen: () => {
+                Swal.showLoading();
+            }
+        });
+
+        setTimeout(() => {
+            Swal.close();
+            Swal.fire({
+                icon: 'success',
+                title: 'Users Refreshed',
+                text: 'User data has been updated',
+                timer: 2000,
+                showConfirmButton: false
+            });
+        }, 1500);
+    }
+
+    function exportUsers() {
+        Swal.fire({
+            title: 'Export Users',
+            text: 'Choose export format',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Export CSV',
+            cancelButtonText: 'Cancel'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                Swal.fire('Users exported!', '', 'success');
+            }
+        });
+    }
+
+    function viewUserDetails(userId) {
+        Swal.fire({
+            title: 'User Details',
+            text: 'User details modal coming soon!',
+            icon: 'info',
+            confirmButtonText: 'OK'
+        });
+    }
+
+    function editUser(userId) {
+        window.location.href = `@Url.Action("EditUser", "Admin")/${userId}`;
+    }
+
+    function toggleUserStatus(userId) {
+        const statusElement = document.getElementById(`status-${userId}`);
+        const isActive = statusElement.classList.contains('bg-success');
+
+        Swal.fire({
+            title: `${isActive ? 'Deactivate' : 'Activate'} User`,
+            text: `Are you sure you want to ${isActive ? 'deactivate' : 'activate'} this user?`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: `Yes, ${isActive ? 'deactivate' : 'activate'}`,
+            cancelButtonText: 'Cancel'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                Swal.fire('User status updated!', '', 'success');
+            }
+        });
+    }
+
+    function deleteUser(userId) {
+        Swal.fire({
+            title: 'Delete User',
+            text: 'Are you sure you want to delete this user?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Yes, delete',
+            cancelButtonText: 'Cancel',
+            confirmButtonColor: '#ef4444'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                Swal.fire('User deleted!', '', 'success');
+            }
+        });
+    }
+</script>

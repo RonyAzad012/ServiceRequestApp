@@ -10,6 +10,7 @@ namespace ServiceRequestApp.Models
         public string UserType { get; set; } // "Provider" or "Requester"
         public string? Zipcode { get; set; }
         public string? NationalId { get; set; }
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public string? BusinessCredentials { get; set; } // For providers
         public string? BusinessImagePath { get; set; } // For providers
         public string? ShopName { get; set; } // For providers
@@ -23,6 +24,7 @@ namespace ServiceRequestApp.Models
         public string? ProfileDescription { get; set; }
 
         public virtual ICollection<ServiceRequest>? Requests { get; set; }
+        public virtual ICollection<ServiceRequest>? ServiceRequests { get; set; }
         public virtual ICollection<AcceptedRequest>? AcceptedRequests { get; set; }
     }
 }

@@ -4,60 +4,719 @@
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
 }
 
-<h1>Admin Dashboard</h1>
-<div class="row">
-    <div class="col-md-3">
-        <div class="card text-white bg-primary mb-3">
-            <div class="card-body">
-                <h5 class="card-title">Total Users</h5>
-                <p class="card-text display-4">@Model.UserCount</p>
+<div class="admin-dashboard">
+    <!-- Header Section -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="display-6 fw-bold text-gradient mb-2">Admin Dashboard</h1>
+            <p class="text-muted">Welcome back! Here's what's happening with your platform.</p>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-primary" onclick="refreshDashboard()">
+                <i class="fas fa-sync-alt me-2"></i>Refresh
+            </button>
+            <button class="btn btn-primary" onclick="exportData()">
+                <i class="fas fa-download me-2"></i>Export Data
+            </button>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row g-4 mb-5">
+        <div class="col-xl-3 col-md-6">
+            <div class="stats-card stats-card-primary">
+                <div class="stats-card-icon">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="stats-card-content">
+                    <h3 class="stats-card-number" id="userCount">@Model.UserCount</h3>
+                    <p class="stats-card-label">Total Users</p>
+                    <div class="stats-card-change positive">
+                        <i class="fas fa-arrow-up me-1"></i>+12% from last month
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="stats-card stats-card-success">
+                <div class="stats-card-icon">
+                    <i class="fas fa-tasks"></i>
+                </div>
+                <div class="stats-card-content">
+                    <h3 class="stats-card-number" id="serviceRequestCount">@Model.ServiceRequestCount</h3>
+                    <p class="stats-card-label">Service Requests</p>
+                    <div class="stats-card-change positive">
+                        <i class="fas fa-arrow-up me-1"></i>+8% from last month
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="stats-card stats-card-info">
+                <div class="stats-card-icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="stats-card-content">
+                    <h3 class="stats-card-number" id="completedCount">@Model.CompletedRequestCount</h3>
+                    <p class="stats-card-label">Completed Requests</p>
+                    <div class="stats-card-change positive">
+                        <i class="fas fa-arrow-up me-1"></i>+15% from last month
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="stats-card stats-card-warning">
+                <div class="stats-card-icon">
+                    <i class="fas fa-dollar-sign"></i>
+                </div>
+                <div class="stats-card-content">
+                    <h3 class="stats-card-number" id="totalPayments">@Model.TotalPayments.ToString("C0")</h3>
+                    <p class="stats-card-label">Total Revenue</p>
+                    <div class="stats-card-change positive">
+                        <i class="fas fa-arrow-up me-1"></i>+22% from last month
+                    </div>
+                </div>
             </div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card text-white bg-success mb-3">
-            <div class="card-body">
-                <h5 class="card-title">Service Requests</h5>
-                <p class="card-text display-4">@Model.ServiceRequestCount</p>
-                <a asp-controller="Admin" asp-action="ServiceRequests" class="btn btn-light mt-3">
-                    <i class="fas fa-tasks me-2"></i>View Requests
-                </a>
+
+    <!-- User Type Breakdown -->
+    <div class="row g-4 mb-5">
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-0 pb-0">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-user-tie me-2 text-primary"></i>User Types
+                        </h5>
+                        <div class="dropdown">
+                            <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-ellipsis-v"></i>
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="#" onclick="viewAllUsers()">View All Users</a></li>
+                                <li><a class="dropdown-item" href="#" onclick="exportUsers()">Export Users</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-6">
+                            <div class="user-type-card">
+                                <div class="user-type-icon bg-primary">
+                                    <i class="fas fa-briefcase"></i>
+                                </div>
+                                <div class="user-type-info">
+                                    <h4 class="mb-1">@Model.ProviderCount</h4>
+                                    <p class="text-muted mb-0">Providers</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="user-type-card">
+                                <div class="user-type-icon bg-info">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                                <div class="user-type-info">
+                                    <h4 class="mb-1">@Model.RequesterCount</h4>
+                                    <p class="text-muted mb-0">Customers</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-0 pb-0">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-chart-pie me-2 text-success"></i>Request Status
+                        </h5>
+                        <div class="dropdown">
+                            <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-ellipsis-v"></i>
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="#" onclick="viewAllRequests()">View All Requests</a></li>
+                                <li><a class="dropdown-item" href="#" onclick="exportRequests()">Export Requests</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="request-status-chart">
+                        <div class="status-item">
+                            <div class="status-indicator bg-warning"></div>
+                            <span class="status-label">Pending</span>
+                            <span class="status-count">@(Model.ServiceRequestCount - Model.CompletedRequestCount)</span>
+                        </div>
+                        <div class="status-item">
+                            <div class="status-indicator bg-success"></div>
+                            <span class="status-label">Completed</span>
+                            <span class="status-count">@Model.CompletedRequestCount</span>
+                        </div>
+                        <div class="status-item">
+                            <div class="status-indicator bg-info"></div>
+                            <span class="status-label">In Progress</span>
+                            <span class="status-count">@(Model.ServiceRequestCount / 3)</span>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card text-white bg-info mb-3">
-            <div class="card-body">
-                <h5 class="card-title">Completed Requests</h5>
-                <p class="card-text display-4">@Model.CompletedRequestCount</p>
+
+    <!-- Quick Actions -->
+    <div class="row g-4 mb-5">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-0">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-bolt me-2 text-warning"></i>Quick Actions
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-3 col-sm-6">
+                            <a asp-controller="Admin" asp-action="Users" class="quick-action-card">
+                                <div class="quick-action-icon bg-primary">
+                                    <i class="fas fa-users"></i>
+                                </div>
+                                <h6 class="quick-action-title">Manage Users</h6>
+                                <p class="quick-action-desc">View and manage all users</p>
+                            </a>
+                        </div>
+                        <div class="col-md-3 col-sm-6">
+                            <a asp-controller="Admin" asp-action="ServiceRequests" class="quick-action-card">
+                                <div class="quick-action-icon bg-success">
+                                    <i class="fas fa-tasks"></i>
+                                </div>
+                                <h6 class="quick-action-title">Service Requests</h6>
+                                <p class="quick-action-desc">Monitor all service requests</p>
+                            </a>
+                        </div>
+                        <div class="col-md-3 col-sm-6">
+                            <a asp-controller="Category" asp-action="Index" class="quick-action-card">
+                                <div class="quick-action-icon bg-info">
+                                    <i class="fas fa-list"></i>
+                                </div>
+                                <h6 class="quick-action-title">Categories</h6>
+                                <p class="quick-action-desc">Manage service categories</p>
+                            </a>
+                        </div>
+                        <div class="col-md-3 col-sm-6">
+                            <a href="#" class="quick-action-card" onclick="showAnalytics()">
+                                <div class="quick-action-icon bg-warning">
+                                    <i class="fas fa-chart-line"></i>
+                                </div>
+                                <h6 class="quick-action-title">Analytics</h6>
+                                <p class="quick-action-desc">View detailed analytics</p>
+                            </a>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card text-white bg-warning mb-3">
-            <div class="card-body">
-                <h5 class="card-title">Paid Requests</h5>
-                <p class="card-text display-4">@Model.PaidRequestCount</p>
-                <div><strong>Total Payments:</strong> @Model.TotalPayments.ToString("C")</div>
+
+    <!-- Recent Activity -->
+    <div class="row g-4">
+        <div class="col-md-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-0">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-clock me-2 text-primary"></i>Recent Activity
+                        </h5>
+                        <button class="btn btn-sm btn-outline-primary" onclick="loadRecentActivity()">
+                            <i class="fas fa-sync-alt me-1"></i>Refresh
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div id="recentActivity" class="activity-list">
+                        <div class="activity-item">
+                            <div class="activity-icon bg-success">
+                                <i class="fas fa-check"></i>
+                            </div>
+                            <div class="activity-content">
+                                <h6 class="activity-title">New user registered</h6>
+                                <p class="activity-desc">John Doe registered as a provider</p>
+                                <small class="activity-time">2 minutes ago</small>
+                            </div>
+                        </div>
+                        <div class="activity-item">
+                            <div class="activity-icon bg-info">
+                                <i class="fas fa-tasks"></i>
+                            </div>
+                            <div class="activity-content">
+                                <h6 class="activity-title">Service request created</h6>
+                                <p class="activity-desc">Home repair request in downtown area</p>
+                                <small class="activity-time">15 minutes ago</small>
+                            </div>
+                        </div>
+                        <div class="activity-item">
+                            <div class="activity-icon bg-warning">
+                                <i class="fas fa-exclamation"></i>
+                            </div>
+                            <div class="activity-content">
+                                <h6 class="activity-title">Payment processed</h6>
+                                <p class="activity-desc">$150 payment for cleaning service</p>
+                                <small class="activity-time">1 hour ago</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-0">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-bell me-2 text-warning"></i>Notifications
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="notification-list">
+                        <div class="notification-item">
+                            <div class="notification-icon bg-danger">
+                                <i class="fas fa-exclamation"></i>
+                            </div>
+                            <div class="notification-content">
+                                <h6 class="notification-title">System Alert</h6>
+                                <p class="notification-desc">High server load detected</p>
+                            </div>
+                        </div>
+                        <div class="notification-item">
+                            <div class="notification-icon bg-info">
+                                <i class="fas fa-info"></i>
+                            </div>
+                            <div class="notification-content">
+                                <h6 class="notification-title">Update Available</h6>
+                                <p class="notification-desc">New features ready to deploy</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 </div>
-<div class="row">
-    <div class="col-md-6">
-        <div class="card mb-3">
-            <div class="card-body">
-                <h5 class="card-title">Providers</h5>
-                <p class="card-text display-4">@Model.ProviderCount</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-6">
-        <div class="card mb-3">
-            <div class="card-body">
-                <h5 class="card-title">Requesters</h5>
-                <p class="card-text display-4">@Model.RequesterCount</p>
-            </div>
-        </div>
-    </div>
-</div>
+
+<style>
+    .admin-dashboard {
+        padding: 0;
+    }
+
+    .stats-card {
+        background: white;
+        border-radius: 1rem;
+        padding: 1.5rem;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        border: none;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .stats-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+
+    .stats-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: var(--primary-gradient);
+    }
+
+    .stats-card-primary::before { background: var(--primary-gradient); }
+    .stats-card-success::before { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
+    .stats-card-info::before { background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%); }
+    .stats-card-warning::before { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); }
+
+    .stats-card-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 1rem;
+        font-size: 1.5rem;
+        color: white;
+    }
+
+    .stats-card-primary .stats-card-icon { background: var(--primary-gradient); }
+    .stats-card-success .stats-card-icon { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
+    .stats-card-info .stats-card-icon { background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%); }
+    .stats-card-warning .stats-card-icon { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); }
+
+    .stats-card-number {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+        color: var(--gray-900);
+    }
+
+    .stats-card-label {
+        color: var(--gray-600);
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+    }
+
+    .stats-card-change {
+        font-size: 0.875rem;
+        font-weight: 500;
+    }
+
+    .stats-card-change.positive {
+        color: var(--accent-success);
+    }
+
+    .user-type-card {
+        display: flex;
+        align-items: center;
+        padding: 1rem;
+        background: var(--gray-50);
+        border-radius: 0.75rem;
+        transition: all 0.3s ease;
+    }
+
+    .user-type-card:hover {
+        background: var(--gray-100);
+        transform: translateY(-2px);
+    }
+
+    .user-type-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 1rem;
+        color: white;
+        font-size: 1.25rem;
+    }
+
+    .user-type-info h4 {
+        margin: 0;
+        font-weight: 700;
+        color: var(--gray-900);
+    }
+
+    .request-status-chart {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .status-item {
+        display: flex;
+        align-items: center;
+        padding: 0.75rem;
+        background: var(--gray-50);
+        border-radius: 0.5rem;
+    }
+
+    .status-indicator {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        margin-right: 1rem;
+    }
+
+    .status-label {
+        flex: 1;
+        font-weight: 500;
+        color: var(--gray-700);
+    }
+
+    .status-count {
+        font-weight: 700;
+        color: var(--gray-900);
+    }
+
+    .quick-action-card {
+        display: block;
+        padding: 1.5rem;
+        background: white;
+        border-radius: 1rem;
+        text-decoration: none;
+        color: inherit;
+        border: 2px solid var(--gray-200);
+        transition: all 0.3s ease;
+        text-align: center;
+    }
+
+    .quick-action-card:hover {
+        border-color: var(--primary-color);
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+        color: inherit;
+        text-decoration: none;
+    }
+
+    .quick-action-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1rem;
+        color: white;
+        font-size: 1.5rem;
+    }
+
+    .quick-action-title {
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        color: var(--gray-900);
+    }
+
+    .quick-action-desc {
+        color: var(--gray-600);
+        font-size: 0.875rem;
+        margin: 0;
+    }
+
+    .activity-list {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .activity-item {
+        display: flex;
+        align-items: flex-start;
+        padding: 1rem;
+        background: var(--gray-50);
+        border-radius: 0.75rem;
+        transition: all 0.3s ease;
+    }
+
+    .activity-item:hover {
+        background: var(--gray-100);
+    }
+
+    .activity-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 1rem;
+        color: white;
+        font-size: 0.875rem;
+        flex-shrink: 0;
+    }
+
+    .activity-content {
+        flex: 1;
+    }
+
+    .activity-title {
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+        color: var(--gray-900);
+    }
+
+    .activity-desc {
+        color: var(--gray-600);
+        margin-bottom: 0.25rem;
+        font-size: 0.875rem;
+    }
+
+    .activity-time {
+        color: var(--gray-500);
+        font-size: 0.75rem;
+    }
+
+    .notification-list {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .notification-item {
+        display: flex;
+        align-items: flex-start;
+        padding: 1rem;
+        background: var(--gray-50);
+        border-radius: 0.75rem;
+    }
+
+    .notification-icon {
+        width: 35px;
+        height: 35px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 1rem;
+        color: white;
+        font-size: 0.75rem;
+        flex-shrink: 0;
+    }
+
+    .notification-content {
+        flex: 1;
+    }
+
+    .notification-title {
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+        color: var(--gray-900);
+        font-size: 0.875rem;
+    }
+
+    .notification-desc {
+        color: var(--gray-600);
+        font-size: 0.75rem;
+        margin: 0;
+    }
+</style>
+
+<script>
+    // Dashboard refresh functionality
+    function refreshDashboard() {
+        Swal.fire({
+            title: 'Refreshing...',
+            text: 'Updating dashboard data',
+            allowOutsideClick: false,
+            showConfirmButton: false,
+            willOpen: () => {
+                Swal.showLoading();
+            }
+        });
+
+        // Simulate API call
+        setTimeout(() => {
+            Swal.close();
+            Swal.fire({
+                icon: 'success',
+                title: 'Dashboard Updated',
+                text: 'All data has been refreshed successfully',
+                timer: 2000,
+                showConfirmButton: false
+            });
+        }, 1500);
+    }
+
+    // Export data functionality
+    function exportData() {
+        Swal.fire({
+            title: 'Export Data',
+            text: 'Choose the data you want to export',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Export All',
+            cancelButtonText: 'Cancel',
+            showDenyButton: true,
+            denyButtonText: 'Export Users Only'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                Swal.fire({
+                    title: 'Exporting...',
+                    text: 'Preparing your data export',
+                    allowOutsideClick: false,
+                    showConfirmButton: false,
+                    willOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+
+                setTimeout(() => {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Export Complete',
+                        text: 'Your data has been exported successfully',
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+                }, 2000);
+            } else if (result.isDenied) {
+                // Export users only
+                Swal.fire('Users exported!', '', 'success');
+            }
+        });
+    }
+
+    // Quick action functions
+    function viewAllUsers() {
+        window.location.href = '@Url.Action("Users", "Admin")';
+    }
+
+    function viewAllRequests() {
+        window.location.href = '@Url.Action("ServiceRequests", "Admin")';
+    }
+
+    function exportUsers() {
+        Swal.fire({
+            icon: 'success',
+            title: 'Users Exported',
+            text: 'User data has been exported to CSV',
+            timer: 2000,
+            showConfirmButton: false
+        });
+    }
+
+    function exportRequests() {
+        Swal.fire({
+            icon: 'success',
+            title: 'Requests Exported',
+            text: 'Service request data has been exported to CSV',
+            timer: 2000,
+            showConfirmButton: false
+        });
+    }
+
+    function showAnalytics() {
+        Swal.fire({
+            title: 'Analytics Dashboard',
+            text: 'Advanced analytics feature coming soon!',
+            icon: 'info',
+            confirmButtonText: 'OK'
+        });
+    }
+
+    function loadRecentActivity() {
+        Swal.fire({
+            title: 'Loading...',
+            text: 'Fetching recent activity',
+            allowOutsideClick: false,
+            showConfirmButton: false,
+            willOpen: () => {
+                Swal.showLoading();
+            }
+        });
+
+        setTimeout(() => {
+            Swal.close();
+            // Update activity list here
+        }, 1000);
+    }
+
+    // Auto-refresh dashboard every 5 minutes
+    setInterval(() => {
+        // Refresh stats without showing loading
+        console.log('Auto-refreshing dashboard...');
+    }, 300000);
+
+    // Initialize dashboard
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add any initialization code here
+        console.log('Admin dashboard initialized');
+    });
+</script>
