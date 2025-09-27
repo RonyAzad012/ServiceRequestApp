@@ -29,15 +29,9 @@ namespace ServiceRequestApp.Controllers
         {
             return View();
         }
-
-        [HttpGet]
-        public IActionResult RequesterRegister()
-        {
-            return View();
-        }
-
+        //Process the registration form. If the form is valid, create a new ApplicationUser object
         [HttpPost]
-        public async Task<IActionResult> RequesterRegister(RequesterRegisterViewModel model)
+        public async Task<IActionResult> Register(RegisterViewModel model)
         {
             if (ModelState.IsValid)
             {
@@ -48,74 +42,29 @@ namespace ServiceRequestApp.Controllers
                     FirstName = model.FirstName,
                     LastName = model.LastName,
                     Address = model.Address,
-                    UserType = "Requester",
-                    PhoneNumber = model.PhoneNumber,
-                    Zipcode = model.Zipcode,
-                    NationalId = model.NationalId
-                };
-
-                var result = await _userManager.CreateAsync(user, model.Password);
-
-                if (result.Succeeded)
-                {
-                    await _userManager.AddToRoleAsync(user, "Requester");
-                    await _signInManager.SignInAsync(user, isPersistent: false);
-                    return Json(new { success = true, message = "Registration successful! Welcome to our platform." });
-                }
-                
-                foreach (var error in result.Errors)
-                {
-                    ModelState.AddModelError("", error.Description);
-                }
-            }
-            return Json(new { success = false, errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage) });
-        }
-
-        [HttpGet]
-        public IActionResult ProviderRegister()
-        {
-            return View();
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> ProviderRegister(ProviderRegisterViewModel model)
-        {
-            if (ModelState.IsValid)
-            {
-                var user = new ApplicationUser
-                {
-                    UserName = model.Email,
-                    Email = model.Email,
-                    FirstName = model.FirstName,
-                    LastName = model.LastName,
-                    Address = model.Address,
-                    UserType = "Provider",
+                    UserType = model.UserType,
                     PhoneNumber = model.PhoneNumber,
                     Zipcode = model.Zipcode,
                     NationalId = model.NationalId,
-                    ShopName = model.ShopName,
-                    ShopDescription = model.ShopDescription,
-                    ShopAddress = model.ShopAddress,
-                    ShopPhone = model.ShopPhone,
-                    BusinessCredentials = model.BusinessCredentials,
-                    BusinessImagePath = model.BusinessImagePath
+                    BusinessCredentials = model.UserType == "Provider" ? model.BusinessCredentials : null,
+                    BusinessImagePath = model.UserType == "Provider" ? model.BusinessImagePath : null
                 };
 
                 var result = await _userManager.CreateAsync(user, model.Password);
 
                 if (result.Succeeded)
                 {
-                    await _userManager.AddToRoleAsync(user, "Provider");
+                    await _userManager.AddToRoleAsync(user, model.UserType);
                     await _signInManager.SignInAsync(user, isPersistent: false);
-                    return Json(new { success = true, message = "Registration successful! Welcome to our business platform." });
+                    return RedirectToAction("Index", "Home");
                 }
-                
+                //If the registration fails, add the errors to the ModelState object.
                 foreach (var error in result.Errors)
                 {
                     ModelState.AddModelError("", error.Description);
                 }
             }
-            return Json(new { success = false, errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage) });
+            return View(model);
         }
 
         [HttpGet]

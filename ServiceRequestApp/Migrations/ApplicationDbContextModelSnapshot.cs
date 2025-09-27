@@ -224,6 +224,9 @@ namespace ServiceRequestApp.Migrations
                     b.Property<string>("FirstName")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<bool>("IsApproved")
+                        .HasColumnType("bit");
+
                     b.Property<string>("LastName")
                         .HasColumnType("nvarchar(max)");
 
@@ -350,9 +353,6 @@ namespace ServiceRequestApp.Migrations
                     b.Property<int>("ServiceRequestId")
                         .HasColumnType("int");
 
-                    b.Property<int?>("ServiceRequestId1")
-                        .HasColumnType("int");
-
                     b.HasKey("Id");
 
                     b.HasIndex("ReceiverId");
@@ -360,8 +360,6 @@ namespace ServiceRequestApp.Migrations
                     b.HasIndex("SenderId");
 
                     b.HasIndex("ServiceRequestId");
-
-                    b.HasIndex("ServiceRequestId1");
 
                     b.ToTable("Messages");
                 });
@@ -616,10 +614,6 @@ namespace ServiceRequestApp.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("ServiceRequestApp.Models.ServiceRequest", null)
-                        .WithMany("Messages")
-                        .HasForeignKey("ServiceRequestId1");
-
                     b.Navigation("Receiver");
 
                     b.Navigation("Sender");
@@ -706,8 +700,6 @@ namespace ServiceRequestApp.Migrations
             modelBuilder.Entity("ServiceRequestApp.Models.ServiceRequest", b =>
                 {
                     b.Navigation("AcceptedRequest");
-
-                    b.Navigation("Messages");
                 });
 #pragma warning restore 612, 618
         }
