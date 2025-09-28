@@ -259,7 +259,7 @@ namespace ServiceRequestApp.Services
             {
                 if (reviews.Any())
                 {
-                    user.AverageRating = Math.Round(reviews.Average(r => r.Rating), 1);
+                    user.AverageRating = (decimal)Math.Round(reviews.Average(r => r.Rating), 1);
                     user.TotalReviews = reviews.Count;
                 }
                 else

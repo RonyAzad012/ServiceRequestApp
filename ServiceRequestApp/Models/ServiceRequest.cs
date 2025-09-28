@@ -16,6 +16,8 @@ namespace ServiceRequestApp.Models
         public double Longitude { get; set; }
         public string RequesterId { get; set; }
         public virtual ApplicationUser? Requester { get; set; }
+        public string? ProviderId { get; set; }
+        public virtual ApplicationUser? Provider { get; set; }
         public virtual AcceptedRequest? AcceptedRequest { get; set; }
         // New fields
         public string Address { get; set; }

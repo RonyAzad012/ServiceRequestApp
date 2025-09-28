@@ -188,7 +188,7 @@ namespace ServiceRequestApp.Services
                     CategoryName = c.Name,
                     RequestCount = c.ServiceRequests.Count(),
                     ProviderCount = c.Providers.Count(),
-                    AverageRating = c.Providers.Where(p => p.AverageRating.HasValue).Average(p => p.AverageRating.Value)
+                    AverageRating = (double)c.Providers.Where(p => p.AverageRating.HasValue).Average(p => p.AverageRating.Value)
                 })
                 .OrderByDescending(pc => pc.RequestCount)
                 .Take(limit)
@@ -205,7 +205,7 @@ namespace ServiceRequestApp.Services
                     ProviderId = u.Id,
                     ProviderName = u.ShopName ?? $"{u.FirstName} {u.LastName}",
                     CompletedRequests = u.ServiceRequests.Count(sr => sr.Status == "Completed"),
-                    AverageRating = u.AverageRating ?? 0,
+                    AverageRating = (double)(u.AverageRating ?? 0),
                     TotalReviews = u.TotalReviews ?? 0,
                     TotalEarnings = u.ServiceRequests
                         .Where(sr => sr.Status == "Completed" && sr.PaymentStatus == "Paid")

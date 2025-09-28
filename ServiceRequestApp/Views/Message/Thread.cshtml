@@ -48,15 +48,15 @@
                             <small class="text-muted">
                                 @if (withUser?.UserType == "Provider" || withUser?.UserType == "Business")
                                 {
-                                    <i class="fas fa-store me-1"></i>Service Provider
+                                    <i class="fas fa-store me-1"></i>@("Service Provider")
                                 }
                                 else if (withUser?.UserType == "Tasker")
                                 {
-                                    <i class="fas fa-user-tie me-1"></i>Tasker
+                                    <i class="fas fa-user-tie me-1"></i>@("Tasker")
                                 }
                                 else
                                 {
-                                    <i class="fas fa-user me-1"></i>Requester
+                                    <i class="fas fa-user me-1"></i>@("Requester")
                                 }
                             </small>
                         </div>

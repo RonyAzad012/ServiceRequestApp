@@ -57,7 +57,7 @@ namespace ServiceRequestApp.Services
             // Rating filter
             if (criteria.MinRating.HasValue)
             {
-                query = query.Where(u => u.AverageRating >= criteria.MinRating.Value);
+                query = query.Where(u => u.AverageRating >= (decimal)criteria.MinRating.Value);
             }
 
             // Price range filter

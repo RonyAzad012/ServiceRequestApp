@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using ServiceRequestApp.Data;
 using ServiceRequestApp.Models;
 using ServiceRequestApp.Services;
+using ServiceRequestApp.ViewModels;
 using System.Security.Claims;
 
 namespace ServiceRequestApp.Controllers
@@ -315,28 +316,4 @@ namespace ServiceRequestApp.Controllers
         }
     }
 
-    // View Models
-    public class PaymentProcessViewModel
-    {
-        public int ServiceRequestId { get; set; }
-        public decimal Amount { get; set; }
-        public string PaymentMethod { get; set; } = "Card";
-        
-        // Card details
-        public string? CardNumber { get; set; }
-        public string? ExpiryDate { get; set; }
-        public string? CVV { get; set; }
-        public string? CardholderName { get; set; }
-        
-        // Mobile banking details
-        public string? MobileNumber { get; set; }
-        public string? Pin { get; set; }
-    }
-
-    public class RefundRequestViewModel
-    {
-        public string TransactionId { get; set; }
-        public decimal Amount { get; set; }
-        public string Reason { get; set; }
-    }
 }

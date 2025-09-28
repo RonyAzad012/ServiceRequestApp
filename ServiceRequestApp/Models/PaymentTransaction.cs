@@ -36,7 +36,12 @@ namespace ServiceRequestApp.Models
         public decimal? ProviderAmount { get; set; }
         
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime TransactionDate { get; set; } = DateTime.UtcNow;
         public DateTime? CompletedAt { get; set; }
+        
+        public decimal? AdminCommissionAmount { get; set; }
+        public decimal? ProviderReceivedAmount { get; set; }
+        public string? Remarks { get; set; }
         
         public string? FailureReason { get; set; }
         public string? RefundReason { get; set; }

@@ -14,6 +14,7 @@ namespace ServiceRequestApp.Models
         [StringLength(500)]
         public string? Comment { get; set; }
         public DateTime CreatedAt { get; set; }
+        public DateTime? UpdatedAt { get; set; }
 
         public virtual ServiceRequest? ServiceRequest { get; set; }
         public virtual ApplicationUser? Reviewer { get; set; }
