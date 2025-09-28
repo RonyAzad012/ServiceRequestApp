@@ -5,38 +5,223 @@
     var location = ViewBag.Location as string;
 }
 
-<h2>Providers Matching Your Search</h2>
-@if (!string.IsNullOrEmpty(category) || !string.IsNullOrEmpty(location))
-{
-    <p class="text-muted">Showing results for
-        @if (!string.IsNullOrEmpty(category)) { <b>Category:</b> @category } 
-        @if (!string.IsNullOrEmpty(location)) { <b>Location:</b> @location }
-    </p>
-}
-@if (!Model.Any())
-{
-    <div class="alert alert-warning">No providers found matching your criteria.</div>
-}
-<div id="providers-map" style="height: 350px; margin-bottom: 2rem;"></div>
-<div class="row g-4">
-    @foreach (var provider in Model)
+<div class="container-fluid py-4">
+    <!-- Header Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="display-6 fw-bold mb-2">Search Results</h1>
+                    @if (!string.IsNullOrEmpty(category) || !string.IsNullOrEmpty(location))
+                    {
+                        <p class="text-muted mb-0">
+                            Showing results for
+                            @if (!string.IsNullOrEmpty(category)) { <span class="badge bg-primary me-2">@category</span> } 
+                            @if (!string.IsNullOrEmpty(location)) { <span class="badge bg-info me-2">@location</span> }
+                        </p>
+                    }
+                </div>
+                <div>
+                    <a asp-action="Index" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>Back to Home
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (!Model.Any())
     {
-        <div class="col-md-4">
-            <div class="card h-100">
-                <div class="card-body">
-                    <h5 class="card-title">@provider.ShopName</h5>
-                    <h6 class="card-subtitle mb-2 text-muted">@provider.FirstName @provider.LastName</h6>
-                    <p class="card-text">@provider.ShopDescription</p>
-                    <p class="card-text"><b>Address:</b> @provider.ShopAddress</p>
-                    <p class="card-text"><b>Phone:</b> @provider.ShopPhone</p>
-                    <a asp-controller="Account" asp-action="ProviderProfile" asp-route-id="@provider.Id" class="btn btn-outline-primary btn-sm">View Profile</a>
+        <div class="row">
+            <div class="col-12">
+                <div class="text-center py-5">
+                    <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                    <h4 class="text-muted">No providers found</h4>
+                    <p class="text-muted">Try adjusting your search criteria or browse all providers.</p>
+                    <a asp-controller="Provider" asp-action="Index" class="btn btn-primary">Browse All Providers</a>
                 </div>
             </div>
         </div>
     }
-}
+    else
+    {
+        <!-- Map Section -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-map-marker-alt me-2"></i>Provider Locations</h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <div id="providers-map" style="height: 400px;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Section -->
+        <div class="row">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="mb-0">@Model.Count() Providers Found</h5>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-outline-primary btn-sm" onclick="toggleView('grid')" id="gridViewBtn">
+                            <i class="fas fa-th"></i> Grid
+                        </button>
+                        <button class="btn btn-outline-primary btn-sm" onclick="toggleView('list')" id="listViewBtn">
+                            <i class="fas fa-list"></i> List
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Providers Grid -->
+        <div id="providersContainer" class="row">
+            @foreach (var provider in Model)
+            {
+                <div class="col-lg-4 col-md-6 mb-4 provider-card">
+                    <div class="card h-100 shadow-sm hover-card">
+                        <div class="position-relative">
+                            @if (!string.IsNullOrEmpty(provider.BusinessImagePath))
+                            {
+                                <img src="@provider.BusinessImagePath" class="card-img-top" alt="@provider.ShopName" style="height: 200px; object-fit: cover;">
+                            }
+                            else if (!string.IsNullOrEmpty(provider.ProfileImagePath))
+                            {
+                                <img src="@provider.ProfileImagePath" class="card-img-top" alt="@provider.FirstName" style="height: 200px; object-fit: cover;">
+                            }
+                            else
+                            {
+                                <div class="card-img-top bg-gradient-primary d-flex align-items-center justify-content-center" style="height: 200px;">
+                                    <i class="fas fa-user fa-4x text-white"></i>
+                                </div>
+                            }
+                            
+                            <!-- Category Badge -->
+                            @if (provider.PrimaryCategory != null)
+                            {
+                                <div class="position-absolute top-0 start-0 m-2">
+                                    <span class="badge" style="background-color: @provider.PrimaryCategory.Color; color: white;">
+                                        <i class="@provider.PrimaryCategory.Icon"></i> @provider.PrimaryCategory.Name
+                                    </span>
+                                </div>
+                            }
+                            
+                            <!-- Rating Badge -->
+                            @if (provider.AverageRating.HasValue)
+                            {
+                                <div class="position-absolute top-0 end-0 m-2">
+                                    <span class="badge bg-warning text-dark">
+                                        <i class="fas fa-star"></i> @provider.AverageRating.Value.ToString("F1")
+                                    </span>
+                                </div>
+                            }
+                        </div>
+                        
+                        <div class="card-body d-flex flex-column">
+                            <div class="flex-grow-1">
+                                <h5 class="card-title mb-2">
+                                    @if (!string.IsNullOrEmpty(provider.ShopName))
+                                    {
+                                        @provider.ShopName
+                                    }
+                                    else
+                                    {
+                                        @($"{provider.FirstName} {provider.LastName}")
+                                    }
+                                </h5>
+                                
+                                <p class="card-text text-muted small mb-2">
+                                    @if (!string.IsNullOrEmpty(provider.ShopDescription))
+                                    {
+                                        @(provider.ShopDescription.Length > 100 ? provider.ShopDescription.Substring(0, 100) + "..." : provider.ShopDescription)
+                                    }
+                                    else if (!string.IsNullOrEmpty(provider.ProfileDescription))
+                                    {
+                                        @(provider.ProfileDescription.Length > 100 ? provider.ProfileDescription.Substring(0, 100) + "..." : provider.ProfileDescription)
+                                    }
+                                </p>
+                                
+                                <div class="d-flex align-items-center mb-2">
+                                    <i class="fas fa-map-marker-alt text-muted me-2"></i>
+                                    <small class="text-muted">
+                                        @if (!string.IsNullOrEmpty(provider.ShopAddress))
+                                        {
+                                            @provider.ShopAddress
+                                        }
+                                        else
+                                        {
+                                            @provider.Address
+                                        }
+                                    </small>
+                                </div>
+                                
+                                @if (provider.TotalReviews.HasValue && provider.TotalReviews > 0)
+                                {
+                                    <div class="d-flex align-items-center mb-2">
+                                        <div class="me-2">
+                                            @for (int i = 1; i <= 5; i++)
+                                            {
+                                                <i class="fas fa-star @(i <= provider.AverageRating ? "text-warning" : "text-muted")"></i>
+                                            }
+                                        </div>
+                                        <small class="text-muted">(@provider.TotalReviews reviews)</small>
+                                    </div>
+                                }
+                            </div>
+                            
+                            <div class="mt-auto">
+                                <div class="d-flex gap-2">
+                                    <a href="@Url.Action("Details", "Provider", new { id = provider.Id })" class="btn btn-primary btn-sm flex-grow-1">
+                                        <i class="fas fa-eye"></i> View Profile
+                                    </a>
+                                    <button class="btn btn-outline-primary btn-sm" onclick="contactProvider('@provider.Id')">
+                                        <i class="fas fa-envelope"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
 </div>
-<a asp-action="Index" class="btn btn-secondary mt-4">Back to Home</a>
+
+<style>
+    .hover-card {
+        transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    }
+    
+    .hover-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15) !important;
+    }
+    
+    .provider-card {
+        transition: all 0.3s ease;
+    }
+    
+    .list-view .provider-card {
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
+    
+    .list-view .card {
+        flex-direction: row;
+    }
+    
+    .list-view .card-img-top {
+        width: 200px;
+        height: 150px;
+        object-fit: cover;
+    }
+    
+    .bg-gradient-primary {
+        background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+    }
+</style>
 
 @section Scripts {
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
@@ -44,7 +229,7 @@
     <script>
         var map = L.map('providers-map').setView([23.8103, 90.4125], 11); // Default to Dhaka
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap contributors'
+            attribution: 'ï¿½ OpenStreetMap contributors'
         }).addTo(map);
         var providers = [
             @foreach (var provider in Model)
@@ -68,6 +253,189 @@
                         }
                     });
             }
+        });
+
+        // Enhanced map functionality
+        let map;
+        let markers = [];
+        let currentView = 'grid';
+
+        // Initialize map
+        function initMap() {
+            map = L.map('providers-map').setView([23.8103, 90.4125], 11); // Default to Dhaka
+            
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: 'Â© OpenStreetMap contributors'
+            }).addTo(map);
+
+            loadProviderMarkers();
+        }
+
+        function loadProviderMarkers() {
+            const providers = [
+                @foreach (var provider in Model)
+                {
+                    var displayName = !string.IsNullOrEmpty(provider.ShopName) ? provider.ShopName : $"{provider.FirstName} {provider.LastName}";
+                    var address = !string.IsNullOrEmpty(provider.ShopAddress) ? provider.ShopAddress : provider.Address;
+                    var categoryName = provider.PrimaryCategory?.Name ?? "General";
+                    var categoryIcon = provider.PrimaryCategory?.Icon ?? "fas fa-tag";
+                    var categoryColor = provider.PrimaryCategory?.Color ?? "#007bff";
+                    var rating = provider.AverageRating?.ToString("F1") ?? "N/A";
+                    var reviews = provider.TotalReviews?.ToString() ?? "0";
+                    
+                    <text>{
+                        id: '@provider.Id',
+                        name: '@Html.Raw(displayName.Replace("'", "\\'"))',
+                        address: '@Html.Raw(address?.Replace("'", "\\'"))',
+                        category: '@Html.Raw(categoryName.Replace("'", "\\'"))',
+                        categoryIcon: '@categoryIcon',
+                        categoryColor: '@categoryColor',
+                        rating: '@rating',
+                        reviews: '@reviews',
+                        lat: @(provider.Latitude?.ToString() ?? "null"),
+                        lng: @(provider.Longitude?.ToString() ?? "null")
+                    },</text>
+                }
+            ];
+
+            // Clear existing markers
+            markers.forEach(marker => map.removeLayer(marker));
+            markers = [];
+
+            if (providers.length === 0) {
+                return;
+            }
+
+            let bounds = L.latLngBounds();
+            let hasValidCoordinates = false;
+
+            providers.forEach(function(provider) {
+                let lat, lng;
+
+                // Use stored coordinates if available
+                if (provider.lat && provider.lng) {
+                    lat = parseFloat(provider.lat);
+                    lng = parseFloat(provider.lng);
+                    hasValidCoordinates = true;
+                } else if (provider.address) {
+                    // Geocode address
+                    fetch('https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(provider.address) + ', Bangladesh')
+                        .then(res => res.json())
+                        .then(data => {
+                            if (data && data.length > 0) {
+                                lat = parseFloat(data[0].lat);
+                                lng = parseFloat(data[0].lon);
+                                addMarker(provider, lat, lng);
+                                bounds.extend([lat, lng]);
+                                if (markers.length === providers.length) {
+                                    map.fitBounds(bounds, { padding: [20, 20] });
+                                }
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Geocoding error:', error);
+                        });
+                    return; // Skip adding marker for now
+                } else {
+                    return; // Skip if no address
+                }
+
+                addMarker(provider, lat, lng);
+                bounds.extend([lat, lng]);
+            });
+
+            // Fit map to bounds if we have valid coordinates
+            if (hasValidCoordinates && bounds.isValid()) {
+                map.fitBounds(bounds, { padding: [20, 20] });
+            }
+        }
+
+        function addMarker(provider, lat, lng) {
+            // Create custom icon
+            const iconHtml = `
+                <div style="
+                    background-color: ${provider.categoryColor};
+                    width: 30px;
+                    height: 30px;
+                    border-radius: 50%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    color: white;
+                    font-size: 12px;
+                    border: 2px solid white;
+                    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+                ">
+                    <i class="${provider.categoryIcon}"></i>
+                </div>
+            `;
+
+            const customIcon = L.divIcon({
+                html: iconHtml,
+                className: 'custom-marker',
+                iconSize: [30, 30],
+                iconAnchor: [15, 15]
+            });
+
+            const marker = L.marker([lat, lng], { icon: customIcon }).addTo(map);
+            
+            const popupContent = `
+                <div style="min-width: 200px;">
+                    <h6 style="margin: 0 0 8px 0; color: ${provider.categoryColor};">${provider.name}</h6>
+                    <p style="margin: 0 0 8px 0; font-size: 12px; color: #666;">
+                        <i class="${provider.categoryIcon}" style="color: ${provider.categoryColor};"></i> ${provider.category}
+                    </p>
+                    <p style="margin: 0 0 8px 0; font-size: 12px;">
+                        <i class="fas fa-map-marker-alt"></i> ${provider.address}
+                    </p>
+                    <div style="margin: 0 0 8px 0;">
+                        <span style="color: #ffc107;">
+                            <i class="fas fa-star"></i> ${provider.rating}
+                        </span>
+                        <span style="color: #666; font-size: 11px;"> (${provider.reviews} reviews)</span>
+                    </div>
+                    <div style="text-align: center;">
+                        <a href="/Provider/Details/${provider.id}" class="btn btn-primary btn-sm" style="font-size: 11px;">
+                            View Profile
+                        </a>
+                    </div>
+                </div>
+            `;
+
+            marker.bindPopup(popupContent);
+            markers.push(marker);
+        }
+
+        function toggleView(view) {
+            currentView = view;
+            const container = document.getElementById('providersContainer');
+            const gridBtn = document.getElementById('gridViewBtn');
+            const listBtn = document.getElementById('listViewBtn');
+            
+            if (view === 'list') {
+                container.classList.add('list-view');
+                gridBtn.classList.remove('btn-primary');
+                gridBtn.classList.add('btn-outline-primary');
+                listBtn.classList.remove('btn-outline-primary');
+                listBtn.classList.add('btn-primary');
+            } else {
+                container.classList.remove('list-view');
+                listBtn.classList.remove('btn-primary');
+                listBtn.classList.add('btn-outline-primary');
+                gridBtn.classList.remove('btn-outline-primary');
+                gridBtn.classList.add('btn-primary');
+            }
+        }
+
+        function contactProvider(providerId) {
+            // Implement contact functionality
+            alert('Contact functionality will be implemented with messaging system');
+        }
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            initMap();
+            document.getElementById('gridViewBtn').classList.add('btn-primary');
         });
     </script>
 }

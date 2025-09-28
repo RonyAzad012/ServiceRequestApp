@@ -1,6 +1,6 @@
 @model ServiceRequestApp.Models.ApplicationUser
 @{
-    ViewData["Title"] = "Provider Profile";
+    ViewData["Title"] = "Tasker Profile";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
@@ -12,21 +12,21 @@
                 <div class="card-body p-0">
                     <!-- Cover Image -->
                     <div class="position-relative">
-                        <div class="bg-gradient-primary" style="height: 200px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);"></div>
+                        <div class="bg-gradient-warning" style="height: 200px; background: linear-gradient(135deg, #fdcb6e 0%, #e17055 100%);"></div>
                         <div class="position-absolute" style="bottom: -50px; left: 30px;">
                             <div class="d-flex align-items-end">
                                 <!-- Profile Image -->
                                 <div class="position-relative">
-                                    @if (!string.IsNullOrEmpty(Model.BusinessImagePath))
+                                    @if (!string.IsNullOrEmpty(Model.ProfileImagePath))
                                     {
-                                        <img src="@Model.BusinessImagePath" class="rounded-circle border border-4 border-white shadow" 
-                                             style="width: 120px; height: 120px; object-fit: cover;" alt="Business Image" />
+                                        <img src="@Model.ProfileImagePath" class="rounded-circle border border-4 border-white shadow" 
+                                             style="width: 120px; height: 120px; object-fit: cover;" alt="Profile Image" />
                                     }
                                     else
                                     {
                                         <div class="rounded-circle border border-4 border-white shadow d-flex align-items-center justify-content-center bg-light" 
                                              style="width: 120px; height: 120px;">
-                                            <i class="fas fa-store fa-3x text-muted"></i>
+                                            <i class="fas fa-user-tie fa-3x text-muted"></i>
                                         </div>
                                     }
                                     <!-- Status Badge -->
@@ -44,8 +44,8 @@
                                     }
                                 </div>
                                 <div class="ms-4 mb-3">
-                                    <h2 class="text-dark mb-1">@Model.ShopName</h2>
-                                    <p class="text-muted mb-2">@Model.FirstName @Model.LastName</p>
+                                    <h2 class="text-dark mb-1">@Model.FirstName @Model.LastName</h2>
+                                    <p class="text-muted mb-2">Professional Tasker</p>
                                     @if (Model.PrimaryCategory != null)
                                     {
                                         <span class="badge rounded-pill" style="background-color: @Model.PrimaryCategory.Color; color: white;">
@@ -60,10 +60,10 @@
                     <!-- Action Buttons -->
                     <div class="d-flex justify-content-end p-3">
                         <div class="btn-group" role="group">
-                            <a asp-action="EditProviderProfile" class="btn btn-outline-primary">
+                            <a asp-action="EditTaskerProfile" class="btn btn-outline-primary">
                                 <i class="fas fa-edit me-2"></i>Edit Profile
                             </a>
-                            <a asp-action="ProviderReviews" asp-controller="ServiceRequest" asp-route-providerId="@Model.Id" class="btn btn-outline-info">
+                            <a asp-action="TaskerReviews" asp-controller="ServiceRequest" asp-route-taskerId="@Model.Id" class="btn btn-outline-info">
                                 <i class="fas fa-star me-2"></i>Reviews
                             </a>
                         </div>
@@ -93,8 +93,8 @@
                     <div class="text-success mb-2">
                         <i class="fas fa-check-circle fa-2x"></i>
                     </div>
-                    <h4 class="mb-1" id="completedRequests">0</h4>
-                    <p class="text-muted mb-0">Completed</p>
+                    <h4 class="mb-1" id="completedTasks">0</h4>
+                    <p class="text-muted mb-0">Completed Tasks</p>
                     <small class="text-muted">This month</small>
                 </div>
             </div>
@@ -105,9 +105,9 @@
                     <div class="text-warning mb-2">
                         <i class="fas fa-clock fa-2x"></i>
                     </div>
-                    <h4 class="mb-1" id="pendingRequests">0</h4>
-                    <p class="text-muted mb-0">Pending</p>
-                    <small class="text-muted">Awaiting response</small>
+                    <h4 class="mb-1" id="activeTasks">0</h4>
+                    <p class="text-muted mb-0">Active Tasks</p>
+                    <small class="text-muted">In progress</small>
                 </div>
             </div>
         </div>
@@ -129,46 +129,68 @@
     <div class="row">
         <!-- Left Column -->
         <div class="col-lg-8">
-            <!-- Business Information -->
+            <!-- Personal Information -->
             <div class="card border-0 shadow-sm mb-4">
                 <div class="card-header bg-white border-0 py-3">
-                    <h5 class="mb-0"><i class="fas fa-info-circle me-2 text-primary"></i>Business Information</h5>
+                    <h5 class="mb-0"><i class="fas fa-user me-2 text-primary"></i>Personal Information</h5>
                 </div>
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label class="form-label text-muted">Business Name</label>
-                            <p class="fw-bold">@Model.ShopName</p>
+                            <label class="form-label text-muted">Full Name</label>
+                            <p class="fw-bold">@Model.FirstName @Model.LastName</p>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label class="form-label text-muted">Business Phone</label>
-                            <p class="fw-bold">@Model.ShopPhone</p>
+                            <label class="form-label text-muted">Email</label>
+                            <p class="fw-bold">@Model.Email</p>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label text-muted">Phone</label>
+                            <p class="fw-bold">@Model.PhoneNumber</p>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label text-muted">Zipcode</label>
+                            <p class="fw-bold">@Model.Zipcode</p>
                         </div>
                         <div class="col-12 mb-3">
-                            <label class="form-label text-muted">Business Address</label>
-                            <p class="fw-bold">@Model.ShopAddress</p>
+                            <label class="form-label text-muted">Address</label>
+                            <p class="fw-bold">@Model.Address</p>
                         </div>
-                        <div class="col-12 mb-3">
-                            <label class="form-label text-muted">Business Description</label>
-                            <p>@Model.ShopDescription</p>
-                        </div>
-                        @if (!string.IsNullOrEmpty(Model.BusinessCredentials))
+                        @if (!string.IsNullOrEmpty(Model.ProfileDescription))
                         {
                             <div class="col-12 mb-3">
-                                <label class="form-label text-muted">Business Credentials</label>
-                                <p>@Model.BusinessCredentials</p>
+                                <label class="form-label text-muted">Profile Description</label>
+                                <p>@Model.ProfileDescription</p>
                             </div>
                         }
                     </div>
                 </div>
             </div>
 
+            <!-- Skills -->
+            @if (!string.IsNullOrEmpty(Model.Skills))
+            {
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-white border-0 py-3">
+                        <h5 class="mb-0"><i class="fas fa-tools me-2 text-success"></i>Skills & Expertise</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex flex-wrap gap-2">
+                            @foreach (var skill in Model.Skills.Split(','))
+                            {
+                                <span class="badge bg-light text-dark border">@skill.Trim()</span>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+
             <!-- Service Areas -->
             @if (!string.IsNullOrEmpty(Model.ServiceAreas))
             {
                 <div class="card border-0 shadow-sm mb-4">
                     <div class="card-header bg-white border-0 py-3">
-                        <h5 class="mb-0"><i class="fas fa-map-marker-alt me-2 text-success"></i>Service Areas</h5>
+                        <h5 class="mb-0"><i class="fas fa-map-marker-alt me-2 text-warning"></i>Service Areas</h5>
                     </div>
                     <div class="card-body">
                         <div class="d-flex flex-wrap gap-2">
@@ -181,14 +203,14 @@
                 </div>
             }
 
-            <!-- Recent Requests -->
+            <!-- Recent Tasks -->
             <div class="card border-0 shadow-sm">
                 <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0"><i class="fas fa-list me-2 text-info"></i>Recent Requests</h5>
+                    <h5 class="mb-0"><i class="fas fa-list me-2 text-info"></i>Recent Tasks</h5>
                     <a asp-controller="ServiceRequest" asp-action="Index" class="btn btn-sm btn-outline-primary">View All</a>
                 </div>
                 <div class="card-body">
-                    <div id="recentRequests">
+                    <div id="recentTasks">
                         <div class="text-center py-4">
                             <div class="spinner-border text-primary" role="status">
                                 <span class="visually-hidden">Loading...</span>
@@ -201,31 +223,6 @@
 
         <!-- Right Column -->
         <div class="col-lg-4">
-            <!-- Contact Information -->
-            <div class="card border-0 shadow-sm mb-4">
-                <div class="card-header bg-white border-0 py-3">
-                    <h5 class="mb-0"><i class="fas fa-address-book me-2 text-warning"></i>Contact Information</h5>
-                </div>
-                <div class="card-body">
-                    <div class="mb-3">
-                        <label class="form-label text-muted">Email</label>
-                        <p class="fw-bold">@Model.Email</p>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label text-muted">Phone</label>
-                        <p class="fw-bold">@Model.PhoneNumber</p>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label text-muted">Address</label>
-                        <p class="fw-bold">@Model.Address</p>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label text-muted">Zipcode</label>
-                        <p class="fw-bold">@Model.Zipcode</p>
-                    </div>
-                </div>
-            </div>
-
             <!-- Availability Status -->
             <div class="card border-0 shadow-sm mb-4">
                 <div class="card-header bg-white border-0 py-3">
@@ -238,7 +235,7 @@
                             <i class="fas fa-check-circle fa-3x"></i>
                         </div>
                         <h5 class="text-success">Available</h5>
-                        <p class="text-muted">Ready to accept new requests</p>
+                        <p class="text-muted">Ready to accept new tasks</p>
                     }
                     else
                     {
@@ -246,27 +243,58 @@
                             <i class="fas fa-times-circle fa-3x"></i>
                         </div>
                         <h5 class="text-danger">Unavailable</h5>
-                        <p class="text-muted">Not accepting new requests</p>
+                        <p class="text-muted">Not accepting new tasks</p>
                     }
                 </div>
             </div>
 
             <!-- Quick Actions -->
-            <div class="card border-0 shadow-sm">
+            <div class="card border-0 shadow-sm mb-4">
                 <div class="card-header bg-white border-0 py-3">
                     <h5 class="mb-0"><i class="fas fa-bolt me-2 text-primary"></i>Quick Actions</h5>
                 </div>
                 <div class="card-body">
                     <div class="d-grid gap-2">
-                        <a asp-controller="ServiceRequest" asp-action="Create" class="btn btn-primary">
-                            <i class="fas fa-plus me-2"></i>Create Service Request
+                        <a asp-controller="ServiceRequest" asp-action="Index" class="btn btn-primary">
+                            <i class="fas fa-search me-2"></i>Find Tasks
                         </a>
                         <a asp-controller="ServiceRequest" asp-action="Index" class="btn btn-outline-secondary">
-                            <i class="fas fa-list me-2"></i>View All Requests
+                            <i class="fas fa-list me-2"></i>My Tasks
                         </a>
                         <a asp-controller="Message" asp-action="Index" class="btn btn-outline-info">
                             <i class="fas fa-envelope me-2"></i>Messages
                         </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Performance Metrics -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-0 py-3">
+                    <h5 class="mb-0"><i class="fas fa-chart-line me-2 text-info"></i>Performance</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-1">
+                            <small class="text-muted">Response Rate</small>
+                            <small class="text-muted" id="responseRate">0%</small>
+                        </div>
+                        <div class="progress" style="height: 6px;">
+                            <div class="progress-bar bg-success" role="progressbar" style="width: 0%" id="responseRateBar"></div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-1">
+                            <small class="text-muted">Completion Rate</small>
+                            <small class="text-muted" id="completionRate">0%</small>
+                        </div>
+                        <div class="progress" style="height: 6px;">
+                            <div class="progress-bar bg-primary" role="progressbar" style="width: 0%" id="completionRateBar"></div>
+                        </div>
+                    </div>
+                    <div class="text-center mt-3">
+                        <small class="text-muted">Member since</small>
+                        <p class="fw-bold">@Model.CreatedAt.ToString("MMMM yyyy")</p>
                     </div>
                 </div>
             </div>
@@ -278,18 +306,19 @@
     <script>
         $(document).ready(function() {
             loadDashboardStats();
-            loadRecentRequests();
+            loadRecentTasks();
+            loadPerformanceMetrics();
         });
 
         function loadDashboardStats() {
             $.ajax({
-                url: '@Url.Action("GetProviderStats", "Account")',
+                url: '@Url.Action("GetTaskerStats", "Account")',
                 type: 'GET',
-                data: { providerId: '@Model.Id' },
+                data: { taskerId: '@Model.Id' },
                 success: function(data) {
                     if (data.success) {
-                        $('#completedRequests').text(data.completedRequests);
-                        $('#pendingRequests').text(data.pendingRequests);
+                        $('#completedTasks').text(data.completedTasks);
+                        $('#activeTasks').text(data.activeTasks);
                         $('#totalEarnings').text('৳' + data.totalEarnings.toLocaleString());
                     }
                 },
@@ -299,15 +328,15 @@
             });
         }
 
-        function loadRecentRequests() {
+        function loadRecentTasks() {
             $.ajax({
-                url: '@Url.Action("GetRecentRequests", "Account")',
+                url: '@Url.Action("GetRecentTasks", "Account")',
                 type: 'GET',
-                data: { providerId: '@Model.Id' },
+                data: { taskerId: '@Model.Id' },
                 success: function(data) {
-                    if (data.success && data.requests.length > 0) {
+                    if (data.success && data.tasks.length > 0) {
                         let html = '';
-                        data.requests.forEach(function(request) {
+                        data.tasks.forEach(function(task) {
                             html += `
                                 <div class="d-flex align-items-center mb-3 p-3 border rounded">
                                     <div class="flex-shrink-0">
@@ -316,23 +345,42 @@
                                         </div>
                                     </div>
                                     <div class="flex-grow-1 ms-3">
-                                        <h6 class="mb-1">${request.title}</h6>
-                                        <p class="text-muted mb-1 small">${request.description.substring(0, 50)}...</p>
-                                        <span class="badge bg-${getStatusColor(request.status)}">${request.status}</span>
+                                        <h6 class="mb-1">${task.title}</h6>
+                                        <p class="text-muted mb-1 small">${task.description.substring(0, 50)}...</p>
+                                        <span class="badge bg-${getStatusColor(task.status)}">${task.status}</span>
                                     </div>
                                     <div class="flex-shrink-0">
-                                        <small class="text-muted">${formatDate(request.createdAt)}</small>
+                                        <small class="text-muted">${formatDate(task.createdAt)}</small>
                                     </div>
                                 </div>
                             `;
                         });
-                        $('#recentRequests').html(html);
+                        $('#recentTasks').html(html);
                     } else {
-                        $('#recentRequests').html('<div class="text-center py-4 text-muted"><i class="fas fa-inbox fa-2x mb-2"></i><p>No recent requests</p></div>');
+                        $('#recentTasks').html('<div class="text-center py-4 text-muted"><i class="fas fa-inbox fa-2x mb-2"></i><p>No recent tasks</p></div>');
                     }
                 },
                 error: function() {
-                    $('#recentRequests').html('<div class="text-center py-4 text-muted"><i class="fas fa-exclamation-triangle fa-2x mb-2"></i><p>Error loading requests</p></div>');
+                    $('#recentTasks').html('<div class="text-center py-4 text-muted"><i class="fas fa-exclamation-triangle fa-2x mb-2"></i><p>Error loading tasks</p></div>');
+                }
+            });
+        }
+
+        function loadPerformanceMetrics() {
+            $.ajax({
+                url: '@Url.Action("GetTaskerPerformance", "Account")',
+                type: 'GET',
+                data: { taskerId: '@Model.Id' },
+                success: function(data) {
+                    if (data.success) {
+                        $('#responseRate').text(data.responseRate + '%');
+                        $('#responseRateBar').css('width', data.responseRate + '%');
+                        $('#completionRate').text(data.completionRate + '%');
+                        $('#completionRateBar').css('width', data.completionRate + '%');
+                    }
+                },
+                error: function() {
+                    console.log('Error loading performance metrics');
                 }
             });
         }
@@ -353,3 +401,4 @@
         }
     </script>
 }
+

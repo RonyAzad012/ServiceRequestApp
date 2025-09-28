@@ -1,0 +1,353 @@
+@model ServiceRequestApp.Models.ApplicationUser
+@{
+    ViewData["Title"] = Model.ShopName ?? $"{Model.FirstName} {Model.LastName}";
+    var reviews = ViewBag.Reviews as List<ServiceRequestApp.Models.Review>;
+}
+
+<div class="container py-4">
+    <!-- Provider Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-3 text-center">
+                            @if (!string.IsNullOrEmpty(Model.BusinessImagePath))
+                            {
+                                <img src="@Model.BusinessImagePath" class="rounded-circle mb-3" 
+                                     alt="@Model.ShopName" style="width: 150px; height: 150px; object-fit: cover;">
+                            }
+                            else if (!string.IsNullOrEmpty(Model.ProfileImagePath))
+                            {
+                                <img src="@Model.ProfileImagePath" class="rounded-circle mb-3" 
+                                     alt="@Model.FirstName" style="width: 150px; height: 150px; object-fit: cover;">
+                            }
+                            else
+                            {
+                                <div class="rounded-circle bg-gradient-primary d-flex align-items-center justify-content-center mb-3 mx-auto" 
+                                     style="width: 150px; height: 150px;">
+                                    <i class="fas fa-user fa-3x text-white"></i>
+                                </div>
+                            }
+                        </div>
+                        <div class="col-md-6">
+                            <h1 class="display-6 fw-bold mb-2">
+                                @if (!string.IsNullOrEmpty(Model.ShopName))
+                                {
+                                    @Model.ShopName
+                                }
+                                else
+                                {
+                                    @($"{Model.FirstName} {Model.LastName}")
+                                }
+                            </h1>
+                            
+                            @if (Model.PrimaryCategory != null)
+                            {
+                                <span class="badge mb-3" style="background-color: @Model.PrimaryCategory.Color; color: white; font-size: 1rem; padding: 0.5rem 1rem;">
+                                    <i class="@Model.PrimaryCategory.Icon"></i> @Model.PrimaryCategory.Name
+                                </span>
+                            }
+                            
+                            @if (Model.AverageRating.HasValue)
+                            {
+                                <div class="d-flex align-items-center mb-2">
+                                    <div class="me-2">
+                                        @for (int i = 1; i <= 5; i++)
+                                        {
+                                            <i class="fas fa-star @(i <= Model.AverageRating ? "text-warning" : "text-muted")" style="font-size: 1.2rem;"></i>
+                                        }
+                                    </div>
+                                    <span class="fw-bold me-2">@Model.AverageRating.Value.ToString("F1")</span>
+                                    @if (Model.TotalReviews.HasValue)
+                                    {
+                                        <span class="text-muted">(@Model.TotalReviews reviews)</span>
+                                    }
+                                </div>
+                            }
+                            
+                            <div class="d-flex align-items-center mb-2">
+                                <i class="fas fa-map-marker-alt text-muted me-2"></i>
+                                <span>
+                                    @if (!string.IsNullOrEmpty(Model.ShopAddress))
+                                    {
+                                        @Model.ShopAddress
+                                    }
+                                    else
+                                    {
+                                        @Model.Address
+                                    }
+                                </span>
+                            </div>
+                            
+                            <div class="d-flex align-items-center mb-2">
+                                <i class="fas fa-phone text-muted me-2"></i>
+                                <span>
+                                    @if (!string.IsNullOrEmpty(Model.ShopPhone))
+                                    {
+                                        @Model.ShopPhone
+                                    }
+                                    else
+                                    {
+                                        @Model.PhoneNumber
+                                    }
+                                </span>
+                            </div>
+                            
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-user-tag text-muted me-2"></i>
+                                <span class="badge bg-info">@Model.UserType</span>
+                            </div>
+                        </div>
+                        <div class="col-md-3 text-end">
+                            <div class="d-grid gap-2">
+                                <button class="btn btn-primary btn-lg" onclick="contactProvider()">
+                                    <i class="fas fa-envelope"></i> Contact
+                                </button>
+                                <button class="btn btn-outline-primary" onclick="requestService()">
+                                    <i class="fas fa-plus"></i> Request Service
+                                </button>
+                                <button class="btn btn-outline-secondary" onclick="shareProvider()">
+                                    <i class="fas fa-share"></i> Share
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Main Content -->
+        <div class="col-lg-8">
+            <!-- About Section -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>About</h5>
+                </div>
+                <div class="card-body">
+                    @if (!string.IsNullOrEmpty(Model.ShopDescription))
+                    {
+                        <p>@Model.ShopDescription</p>
+                    }
+                    else if (!string.IsNullOrEmpty(Model.ProfileDescription))
+                    {
+                        <p>@Model.ProfileDescription</p>
+                    }
+                    else
+                    {
+                        <p class="text-muted">No description available.</p>
+                    }
+                    
+                    @if (!string.IsNullOrEmpty(Model.Skills))
+                    {
+                        <h6 class="mt-3 mb-2">Skills & Services:</h6>
+                        <div class="d-flex flex-wrap gap-2">
+                            @foreach (var skill in Model.Skills.Split(','))
+                            {
+                                <span class="badge bg-light text-dark border">@skill.Trim()</span>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Reviews Section -->
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-star me-2"></i>Reviews</h5>
+                    @if (Model.TotalReviews.HasValue && Model.TotalReviews > 0)
+                    {
+                        <span class="badge bg-primary">@Model.TotalReviews Reviews</span>
+                    }
+                </div>
+                <div class="card-body">
+                    @if (reviews != null && reviews.Any())
+                    {
+                        @foreach (var review in reviews)
+                        {
+                            <div class="border-bottom pb-3 mb-3">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <div class="d-flex align-items-center">
+                                        <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center me-3" 
+                                             style="width: 40px; height: 40px;">
+                                            <i class="fas fa-user text-white"></i>
+                                        </div>
+                                        <div>
+                                            <h6 class="mb-0">@(review.Reviewer?.FirstName ?? "Anonymous")</h6>
+                                            <small class="text-muted">@review.CreatedAt.ToString("MMM dd, yyyy")</small>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        @for (int i = 1; i <= 5; i++)
+                                        {
+                                            <i class="fas fa-star @(i <= review.Rating ? "text-warning" : "text-muted")"></i>
+                                        }
+                                    </div>
+                                </div>
+                                <p class="mb-0">@review.Comment</p>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="text-center py-4">
+                            <i class="fas fa-star fa-2x text-muted mb-3"></i>
+                            <p class="text-muted">No reviews yet. Be the first to review this provider!</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Contact Info -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-phone me-2"></i>Contact Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <strong>Phone:</strong><br>
+                        @if (!string.IsNullOrEmpty(Model.ShopPhone))
+                        {
+                            <a href="tel:@Model.ShopPhone" class="text-decoration-none">@Model.ShopPhone</a>
+                        }
+                        else
+                        {
+                            <a href="tel:@Model.PhoneNumber" class="text-decoration-none">@Model.PhoneNumber</a>
+                        }
+                    </div>
+                    
+                    <div class="mb-3">
+                        <strong>Email:</strong><br>
+                        <a href="mailto:@Model.Email" class="text-decoration-none">@Model.Email</a>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <strong>Address:</strong><br>
+                        @if (!string.IsNullOrEmpty(Model.ShopAddress))
+                        {
+                            @Model.ShopAddress
+                        }
+                        else
+                        {
+                            @Model.Address
+                        }
+                    </div>
+                    
+                    @if (!string.IsNullOrEmpty(Model.ServiceAreas))
+                    {
+                        <div class="mb-3">
+                            <strong>Service Areas:</strong><br>
+                            <small class="text-muted">@Model.ServiceAreas</small>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Business Hours -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-clock me-2"></i>Availability</h5>
+                </div>
+                <div class="card-body">
+                    @if (Model.IsAvailable)
+                    {
+                        <div class="d-flex align-items-center text-success">
+                            <i class="fas fa-check-circle me-2"></i>
+                            <span>Currently Available</span>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="d-flex align-items-center text-warning">
+                            <i class="fas fa-clock me-2"></i>
+                            <span>Currently Busy</span>
+                        </div>
+                    }
+                    
+                    @if (!string.IsNullOrEmpty(Model.AvailabilitySchedule))
+                    {
+                        <div class="mt-3">
+                            <small class="text-muted">Schedule information available upon contact</small>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-bolt me-2"></i>Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-primary" onclick="contactProvider()">
+                            <i class="fas fa-envelope"></i> Send Message
+                        </button>
+                        <button class="btn btn-outline-primary" onclick="requestService()">
+                            <i class="fas fa-plus"></i> Request Service
+                        </button>
+                        <button class="btn btn-outline-secondary" onclick="shareProvider()">
+                            <i class="fas fa-share"></i> Share Profile
+                        </button>
+                        <button class="btn btn-outline-info" onclick="addToFavorites()">
+                            <i class="fas fa-heart"></i> Add to Favorites
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .bg-gradient-primary {
+        background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+    }
+    
+    .card {
+        border: none;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    
+    .card-header {
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #dee2e6;
+    }
+</style>
+
+<script>
+    function contactProvider() {
+        // Implement messaging functionality
+        alert('Messaging functionality will be implemented');
+    }
+    
+    function requestService() {
+        // Redirect to service request creation with pre-filled provider
+        window.location.href = '@Url.Action("Create", "ServiceRequest")?providerId=@Model.Id';
+    }
+    
+    function shareProvider() {
+        if (navigator.share) {
+            navigator.share({
+                title: '@Model.ShopName',
+                text: 'Check out this service provider',
+                url: window.location.href
+            });
+        } else {
+            // Fallback to copying URL
+            navigator.clipboard.writeText(window.location.href);
+            alert('Profile link copied to clipboard!');
+        }
+    }
+    
+    function addToFavorites() {
+        // Implement favorites functionality
+        alert('Favorites functionality will be implemented');
+    }
+</script>
+

@@ -55,13 +55,14 @@
                         </li>
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" id="servicesDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="fas fa-briefcase me-1"></i>Categories
+                                <i class="fas fa-briefcase me-1"></i>Services
                             </a>
-                            <ul class="dropdown-menu" aria-labelledby="servicesDropdown">
-                                <li><a class="dropdown-item" href="#"><i class="fas fa-tools me-2"></i>Home Repair</a></li>
-                                <li><a class="dropdown-item" href="#"><i class="fas fa-paint-brush me-2"></i>Cleaning</a></li>
-                                <li><a class="dropdown-item" href="#"><i class="fas fa-car me-2"></i>Transportation</a></li>
-                                <li><a class="dropdown-item" href="#"><i class="fas fa-laptop me-2"></i>Tech Support</a></li>
+                            <ul class="dropdown-menu" aria-labelledby="servicesDropdown" id="servicesDropdownMenu">
+                                <li><a class="dropdown-item" asp-controller="Provider" asp-action="Index"><i class="fas fa-users me-2"></i>Browse Providers</a></li>
+                                <li><a class="dropdown-item" asp-controller="ServiceRequest" asp-action="Index"><i class="fas fa-list-alt me-2"></i>All Requests</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><h6 class="dropdown-header">Categories</h6></li>
+                                <!-- Categories will be loaded dynamically -->
                             </ul>
                         </li>
                     </ul>
@@ -207,6 +208,56 @@
                 navbar.style.backdropFilter = 'none';
             }
         });
+
+        // Load categories in navbar dropdown
+        $(document).ready(function() {
+            loadNavbarCategories();
+        });
+
+        function loadNavbarCategories() {
+            fetch('/Category/GetCategories')
+                .then(response => response.json())
+                .then(categories => {
+                    const dropdown = document.getElementById('servicesDropdownMenu');
+                    const categoryHeader = dropdown.querySelector('.dropdown-header');
+                    
+                    // Clear existing category items (keep the first few items)
+                    const existingItems = dropdown.querySelectorAll('.category-item');
+                    existingItems.forEach(item => item.remove());
+                    
+                    // Add categories (limit to 8 for navbar)
+                    categories.slice(0, 8).forEach(category => {
+                        const li = document.createElement('li');
+                        li.className = 'category-item';
+                        li.innerHTML = `
+                            <a class="dropdown-item" href="/Provider/Index?categoryId=${category.id}">
+                                <i class="${category.icon} me-2" style="color: ${category.color}"></i>${category.name}
+                            </a>
+                        `;
+                        dropdown.appendChild(li);
+                    });
+                    
+                    // Add "View All Categories" link if there are more than 8
+                    if (categories.length > 8) {
+                        const li = document.createElement('li');
+                        li.className = 'category-item';
+                        li.innerHTML = '<hr class="dropdown-divider">';
+                        dropdown.appendChild(li);
+                        
+                        const viewAllLi = document.createElement('li');
+                        viewAllLi.className = 'category-item';
+                        viewAllLi.innerHTML = `
+                            <a class="dropdown-item text-primary" href="/Provider/Index">
+                                <i class="fas fa-ellipsis-h me-2"></i>View All Categories
+                            </a>
+                        `;
+                        dropdown.appendChild(viewAllLi);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading navbar categories:', error);
+                });
+        }
     </script>
     
     @await RenderSectionAsync("Scripts", required: false)

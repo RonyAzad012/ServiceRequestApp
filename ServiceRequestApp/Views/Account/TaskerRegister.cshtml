@@ -107,6 +107,27 @@
                         </div>
 
                         <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label for="PrimaryCategoryId" class="form-label fw-semibold">
+                                    <i class="fas fa-tags me-1"></i>Primary Service Category *
+                                </label>
+                                <select id="PrimaryCategoryId" name="PrimaryCategoryId" class="form-select form-select-lg" required>
+                                    <option value="">Select your primary service category</option>
+                                    <!-- Categories will be loaded via JavaScript -->
+                                </select>
+                                <span class="text-danger small" id="categoryError"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="ServiceAreas" class="form-label fw-semibold">
+                                    <i class="fas fa-map-marker-alt me-1"></i>Service Areas
+                                </label>
+                                <input id="ServiceAreas" name="ServiceAreas" class="form-control form-control-lg" 
+                                       placeholder="e.g., Dhaka, Chittagong, Sylhet" />
+                                <div class="form-text">Enter areas where you provide services (comma-separated)</div>
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-4">
                             <div class="col-12">
                                 <label asp-for="Skills" class="form-label fw-semibold">
                                     <i class="fas fa-cogs me-1"></i>Skills & Expertise *
@@ -195,6 +216,27 @@
     
     <script>
         $(document).ready(function() {
+            // Load categories
+            loadCategories();
+            
+            function loadCategories() {
+                fetch('/Category/GetCategories')
+                    .then(response => response.json())
+                    .then(categories => {
+                        const select = document.getElementById('PrimaryCategoryId');
+                        categories.forEach(category => {
+                            const option = document.createElement('option');
+                            option.value = category.id;
+                            option.textContent = category.name;
+                            select.appendChild(option);
+                        });
+                    })
+                    .catch(error => {
+                        console.error('Error loading categories:', error);
+                        document.getElementById('categoryError').textContent = 'Unable to load categories. Please refresh the page.';
+                    });
+            }
+            
             $('#taskerRegisterForm').on('submit', function(e) {
                 e.preventDefault();
                 

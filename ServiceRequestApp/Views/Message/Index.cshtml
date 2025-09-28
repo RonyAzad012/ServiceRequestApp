@@ -1,0 +1,357 @@
+@model IEnumerable<dynamic>
+@{
+    ViewData["Title"] = "Messages";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var currentUser = ViewBag.CurrentUser as ServiceRequestApp.Models.ApplicationUser;
+}
+
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="mb-0">
+                    <i class="fas fa-comments me-2 text-primary"></i>Messages
+                </h2>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-outline-primary" onclick="refreshConversations()">
+                        <i class="fas fa-sync-alt me-1"></i>Refresh
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Conversations List -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white border-0 py-3">
+                    <h5 class="mb-0">
+                        <i class="fas fa-list me-2 text-primary"></i>Conversations
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    @if (Model != null && Model.Any())
+                    {
+                        <div class="list-group list-group-flush">
+                            @foreach (var conversation in Model)
+                            {
+                                <a href="@Url.Action("Thread", new { serviceRequestId = conversation.ServiceRequestId, withUserId = conversation.OtherUserId })" 
+                                   class="list-group-item list-group-item-action border-0 p-3 @(ViewBag.ActiveServiceRequestId == conversation.ServiceRequestId && ViewBag.ActiveWithUserId == conversation.OtherUserId ? "active" : "")">
+                                    <div class="d-flex align-items-start">
+                                        <!-- Avatar -->
+                                        <div class="flex-shrink-0 me-3">
+                                            <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center" 
+                                                 style="width: 45px; height: 45px;">
+                                                <i class="fas fa-user"></i>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Content -->
+                                        <div class="flex-grow-1 min-width-0">
+                                            <div class="d-flex justify-content-between align-items-start mb-1">
+                                                <h6 class="mb-0 text-truncate">@conversation.OtherUser.FirstName @conversation.OtherUser.LastName</h6>
+                                                <small class="text-muted">@conversation.LastMessage.SentAt.ToString("MMM dd")</small>
+                                            </div>
+                                            
+                                            <p class="text-muted mb-1 small text-truncate">
+                                                <strong>@conversation.ServiceRequest.Title</strong>
+                                            </p>
+                                            
+                                            <p class="mb-0 small text-truncate @(conversation.UnreadCount > 0 ? "fw-bold" : "")">
+                                                @conversation.LastMessage.Content
+                                            </p>
+                                            
+                                            @if (conversation.UnreadCount > 0)
+                                            {
+                                                <span class="badge bg-primary rounded-pill position-absolute top-0 end-0 m-2">
+                                                    @conversation.UnreadCount
+                                                </span>
+                                            }
+                                        </div>
+                                    </div>
+                                </a>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-5">
+                            <div class="text-muted mb-3">
+                                <i class="fas fa-comments fa-3x"></i>
+                            </div>
+                            <h5 class="text-muted">No conversations yet</h5>
+                            <p class="text-muted small">Start a conversation by messaging a provider or requester.</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Chat Area -->
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white border-0 py-3">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0 me-3">
+                            <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center" 
+                                 style="width: 40px; height: 40px;">
+                                <i class="fas fa-comments"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1">
+                            <h5 class="mb-0" id="chatTitle">Select a conversation</h5>
+                            <small class="text-muted" id="chatSubtitle">Choose a conversation from the list to start messaging</small>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card-body p-0 d-flex flex-column" style="height: 500px;">
+                    <!-- Messages Area -->
+                    <div class="flex-grow-1 p-3 overflow-auto" id="messagesContainer">
+                        <div class="text-center py-5">
+                            <div class="text-muted mb-3">
+                                <i class="fas fa-comment-dots fa-3x"></i>
+                            </div>
+                            <h5 class="text-muted">Welcome to Messages</h5>
+                            <p class="text-muted small">Select a conversation from the left to start messaging.</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Message Input -->
+                    <div class="border-top p-3" id="messageInputContainer" style="display: none;">
+                        <form id="messageForm" class="d-flex gap-2">
+                            <input type="hidden" id="serviceRequestId" />
+                            <input type="hidden" id="receiverId" />
+                            <div class="flex-grow-1">
+                                <textarea class="form-control" id="messageInput" rows="2" placeholder="Type your message..." 
+                                          style="resize: none;" maxlength="1000"></textarea>
+                            </div>
+                            <div class="flex-shrink-0">
+                                <button type="submit" class="btn btn-primary" id="sendButton">
+                                    <i class="fas fa-paper-plane"></i>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        let currentServiceRequestId = null;
+        let currentWithUserId = null;
+        let messagePollingInterval = null;
+
+        $(document).ready(function() {
+            // Handle message form submission
+            $('#messageForm').on('submit', function(e) {
+                e.preventDefault();
+                sendMessage();
+            });
+
+            // Auto-resize textarea
+            $('#messageInput').on('input', function() {
+                this.style.height = 'auto';
+                this.style.height = (this.scrollHeight) + 'px';
+            });
+
+            // Load conversation if URL parameters exist
+            const urlParams = new URLSearchParams(window.location.search);
+            const serviceRequestId = urlParams.get('serviceRequestId');
+            const withUserId = urlParams.get('withUserId');
+            
+            if (serviceRequestId && withUserId) {
+                loadConversation(serviceRequestId, withUserId);
+            }
+        });
+
+        function loadConversation(serviceRequestId, withUserId) {
+            currentServiceRequestId = serviceRequestId;
+            currentWithUserId = withUserId;
+            
+            // Update UI
+            $('#serviceRequestId').val(serviceRequestId);
+            $('#receiverId').val(withUserId);
+            $('#messageInputContainer').show();
+            
+            // Load messages
+            loadMessages();
+            
+            // Start polling for new messages
+            if (messagePollingInterval) {
+                clearInterval(messagePollingInterval);
+            }
+            messagePollingInterval = setInterval(loadMessages, 3000);
+        }
+
+        function loadMessages() {
+            if (!currentServiceRequestId || !currentWithUserId) return;
+            
+            $.ajax({
+                url: '@Url.Action("GetMessages", "Message")',
+                type: 'GET',
+                data: {
+                    serviceRequestId: currentServiceRequestId,
+                    withUserId: currentWithUserId
+                },
+                success: function(response) {
+                    if (response.success) {
+                        displayMessages(response.messages);
+                        scrollToBottom();
+                    }
+                },
+                error: function() {
+                    console.log('Error loading messages');
+                }
+            });
+        }
+
+        function displayMessages(messages) {
+            const container = $('#messagesContainer');
+            let html = '';
+            
+            if (messages.length === 0) {
+                html = '<div class="text-center py-4 text-muted"><p>No messages yet. Start the conversation!</p></div>';
+            } else {
+                messages.forEach(function(message) {
+                    const isOwn = message.isOwn;
+                    const messageClass = isOwn ? 'text-end' : 'text-start';
+                    const bubbleClass = isOwn ? 'bg-primary text-white' : 'bg-light text-dark';
+                    
+                    html += `
+                        <div class="mb-3 ${messageClass}">
+                            <div class="d-inline-block max-width-75">
+                                <div class="p-3 rounded-3 ${bubbleClass} shadow-sm">
+                                    <p class="mb-1">${escapeHtml(message.content)}</p>
+                                    <small class="opacity-75">${formatTime(message.sentAt)}</small>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+            
+            container.html(html);
+        }
+
+        function sendMessage() {
+            const content = $('#messageInput').val().trim();
+            if (!content) return;
+            
+            const serviceRequestId = $('#serviceRequestId').val();
+            const receiverId = $('#receiverId').val();
+            
+            $.ajax({
+                url: '@Url.Action("SendMessage", "Message")',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    serviceRequestId: parseInt(serviceRequestId),
+                    receiverId: receiverId,
+                    content: content
+                }),
+                success: function(response) {
+                    if (response.success) {
+                        $('#messageInput').val('');
+                        $('#messageInput').css('height', 'auto');
+                        loadMessages();
+                    } else {
+                        alert('Error: ' + response.message);
+                    }
+                },
+                error: function() {
+                    alert('Error sending message');
+                }
+            });
+        }
+
+        function refreshConversations() {
+            location.reload();
+        }
+
+        function scrollToBottom() {
+            const container = $('#messagesContainer');
+            container.scrollTop(container[0].scrollHeight);
+        }
+
+        function formatTime(dateString) {
+            const date = new Date(dateString);
+            const now = new Date();
+            const diff = now - date;
+            
+            if (diff < 60000) { // Less than 1 minute
+                return 'Just now';
+            } else if (diff < 3600000) { // Less than 1 hour
+                return Math.floor(diff / 60000) + 'm ago';
+            } else if (diff < 86400000) { // Less than 1 day
+                return Math.floor(diff / 3600000) + 'h ago';
+            } else {
+                return date.toLocaleDateString();
+            }
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Clean up polling when leaving page
+        $(window).on('beforeunload', function() {
+            if (messagePollingInterval) {
+                clearInterval(messagePollingInterval);
+            }
+        });
+    </script>
+}
+
+<style>
+    .max-width-75 {
+        max-width: 75%;
+    }
+    
+    .min-width-0 {
+        min-width: 0;
+    }
+    
+    .list-group-item.active {
+        background-color: #e3f2fd;
+        border-color: #e3f2fd;
+        color: #1976d2;
+    }
+    
+    .list-group-item:hover {
+        background-color: #f8f9fa;
+    }
+    
+    .list-group-item.active:hover {
+        background-color: #e3f2fd;
+    }
+    
+    #messagesContainer {
+        scrollbar-width: thin;
+        scrollbar-color: #dee2e6 transparent;
+    }
+    
+    #messagesContainer::-webkit-scrollbar {
+        width: 6px;
+    }
+    
+    #messagesContainer::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    
+    #messagesContainer::-webkit-scrollbar-thumb {
+        background-color: #dee2e6;
+        border-radius: 3px;
+    }
+    
+    #messagesContainer::-webkit-scrollbar-thumb:hover {
+        background-color: #adb5bd;
+    }
+</style>
+

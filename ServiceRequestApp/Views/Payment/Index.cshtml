@@ -1,0 +1,256 @@
+@model IEnumerable<ServiceRequestApp.Models.PaymentTransaction>
+@{
+    ViewData["Title"] = "Payment History";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var currentUser = ViewBag.CurrentUser as ServiceRequestApp.Models.ApplicationUser;
+    var totalPaid = ViewBag.TotalPaid as decimal? ?? 0;
+    var totalRefunded = ViewBag.TotalRefunded as decimal? ?? 0;
+}
+
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <h2 class="mb-0">
+                    <i class="fas fa-credit-card me-2 text-primary"></i>Payment History
+                </h2>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-outline-primary" onclick="refreshPayments()">
+                        <i class="fas fa-sync-alt me-1"></i>Refresh
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment Statistics -->
+    <div class="row mb-4">
+        <div class="col-md-4 mb-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center">
+                    <div class="text-success mb-2">
+                        <i class="fas fa-arrow-up fa-2x"></i>
+                    </div>
+                    <h4 class="mb-1">৳@totalPaid.ToString("N2")</h4>
+                    <p class="text-muted mb-0">Total Paid</p>
+                    <small class="text-muted">All transactions</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center">
+                    <div class="text-danger mb-2">
+                        <i class="fas fa-arrow-down fa-2x"></i>
+                    </div>
+                    <h4 class="mb-1">৳@totalRefunded.ToString("N2")</h4>
+                    <p class="text-muted mb-0">Total Refunded</p>
+                    <small class="text-muted">Refunded amount</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center">
+                    <div class="text-info mb-2">
+                        <i class="fas fa-chart-line fa-2x"></i>
+                    </div>
+                    <h4 class="mb-1">৳@((totalPaid - totalRefunded).ToString("N2"))</h4>
+                    <p class="text-muted mb-0">Net Amount</p>
+                    <small class="text-muted">After refunds</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment History -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-0 py-3">
+                    <h5 class="mb-0">
+                        <i class="fas fa-history me-2 text-primary"></i>Recent Transactions
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    @if (Model != null && Model.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Transaction ID</th>
+                                        <th>Service Request</th>
+                                        <th>Amount</th>
+                                        <th>Method</th>
+                                        <th>Status</th>
+                                        <th>Date</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var transaction in Model)
+                                    {
+                                        <tr>
+                                            <td>
+                                                <code class="small">@transaction.TransactionId</code>
+                                            </td>
+                                            <td>
+                                                <div>
+                                                    <strong>@transaction.ServiceRequest?.Title</strong>
+                                                    @if (!string.IsNullOrEmpty(transaction.Remarks))
+                                                    {
+                                                        <br><small class="text-muted">@transaction.Remarks</small>
+                                                    }
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <span class="fw-bold @(transaction.Amount > 0 ? "text-success" : "text-danger")">
+                                                    @(transaction.Amount > 0 ? "+" : "")৳@Math.Abs(transaction.Amount).ToString("N2")
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-light text-dark">
+                                                    <i class="fas fa-credit-card me-1"></i>@transaction.PaymentMethod
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-@(transaction.Status?.ToLower() switch {
+                                                    "completed" => "success",
+                                                    "verified" => "info",
+                                                    "refunded" => "warning",
+                                                    "failed" => "danger",
+                                                    "pending" => "secondary",
+                                                    _ => "secondary"
+                                                })">@transaction.Status</span>
+                                            </td>
+                                            <td>
+                                                <small class="text-muted">@transaction.TransactionDate.ToString("MMM dd, yyyy")</small>
+                                                <br><small class="text-muted">@transaction.TransactionDate.ToString("h:mm tt")</small>
+                                            </td>
+                                            <td>
+                                                <div class="btn-group btn-group-sm" role="group">
+                                                    <button class="btn btn-outline-primary" onclick="viewTransaction('@transaction.TransactionId')">
+                                                        <i class="fas fa-eye"></i>
+                                                    </button>
+                                                    @if (transaction.Amount > 0 && transaction.Status == "Completed" && User.IsInRole("Admin"))
+                                                    {
+                                                        <button class="btn btn-outline-warning" onclick="showRefundModal('@transaction.TransactionId', @transaction.Amount)">
+                                                            <i class="fas fa-undo"></i>
+                                                        </button>
+                                                    }
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-5">
+                            <div class="text-muted mb-3">
+                                <i class="fas fa-credit-card fa-3x"></i>
+                            </div>
+                            <h5 class="text-muted">No payment history</h5>
+                            <p class="text-muted small">You haven't made any payments yet.</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Refund Modal -->
+<div class="modal fade" id="refundModal" tabindex="-1" aria-labelledby="refundModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="refundModalLabel">Process Refund</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="refundForm">
+                <div class="modal-body">
+                    <input type="hidden" id="refundTransactionId" />
+                    <div class="mb-3">
+                        <label for="refundAmount" class="form-label">Refund Amount (BDT)</label>
+                        <input type="number" class="form-control" id="refundAmount" step="0.01" min="0.01" required>
+                        <div class="form-text">Maximum refundable amount: ৳<span id="maxRefundAmount">0.00</span></div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="refundReason" class="form-label">Reason for Refund</label>
+                        <textarea class="form-control" id="refundReason" rows="3" required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-warning">
+                        <i class="fas fa-undo me-1"></i>Process Refund
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function refreshPayments() {
+            location.reload();
+        }
+
+        function viewTransaction(transactionId) {
+            // Implement transaction details view
+            alert('Transaction details for: ' + transactionId);
+        }
+
+        function showRefundModal(transactionId, maxAmount) {
+            $('#refundTransactionId').val(transactionId);
+            $('#refundAmount').val(maxAmount);
+            $('#refundAmount').attr('max', maxAmount);
+            $('#maxRefundAmount').text(maxAmount.toFixed(2));
+            $('#refundReason').val('');
+            $('#refundModal').modal('show');
+        }
+
+        $('#refundForm').on('submit', function(e) {
+            e.preventDefault();
+            
+            const transactionId = $('#refundTransactionId').val();
+            const amount = parseFloat($('#refundAmount').val());
+            const reason = $('#refundReason').val();
+            
+            if (!transactionId || !amount || !reason) {
+                alert('Please fill in all fields');
+                return;
+            }
+            
+            $.ajax({
+                url: '@Url.Action("Refund", "Payment")',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    TransactionId: transactionId,
+                    Amount: amount,
+                    Reason: reason
+                }),
+                success: function(response) {
+                    if (response.success) {
+                        $('#refundModal').modal('hide');
+                        alert('Refund processed successfully! Transaction ID: ' + response.transactionId);
+                        location.reload();
+                    } else {
+                        alert('Error: ' + response.message);
+                    }
+                },
+                error: function() {
+                    alert('Error processing refund');
+                }
+            });
+        });
+    </script>
+}
+

@@ -151,10 +151,97 @@
                     @if (currentUser.UserType == "Requester" && Model.AcceptedRequest != null)
                     {
                         <a asp-controller="Message" asp-action="Thread" asp-route-serviceRequestId="@Model.Id" asp-route-withUserId="@Model.AcceptedRequest.ProviderId" class="btn btn-outline-primary">Message Provider</a>
+                        
+                        @if (Model.PaymentStatus != "Paid" && Model.Status == "In Progress")
+                        {
+                            <a asp-controller="Payment" asp-action="Process" asp-route-serviceRequestId="@Model.Id" class="btn btn-success">
+                                <i class="fas fa-credit-card me-1"></i>Make Payment (৳@Model.Price.ToString("N2"))
+                            </a>
+                        }
+                        else if (Model.PaymentStatus == "Paid")
+                        {
+                            <span class="badge bg-success">
+                                <i class="fas fa-check-circle me-1"></i>Payment Completed
+                            </span>
+                        }
+                        
+                        <!-- Requester Completion Actions -->
+                        @if (Model.Status == "In Progress" && Model.PaymentStatus == "Paid")
+                        {
+                            <form asp-controller="ServiceRequestCompletion" asp-action="RequestCompletion" method="post" class="d-inline">
+                                <input type="hidden" name="serviceRequestId" value="@Model.Id" />
+                                <button type="submit" class="btn btn-success btn-sm">
+                                    <i class="fas fa-check me-1"></i>Mark as Complete
+                                </button>
+                            </form>
+                        }
+                        else if (Model.Status.Contains("Completion Requested"))
+                        {
+                            <form asp-controller="ServiceRequestCompletion" asp-action="ApproveCompletion" method="post" class="d-inline">
+                                <input type="hidden" name="serviceRequestId" value="@Model.Id" />
+                                <button type="submit" class="btn btn-success btn-sm">
+                                    <i class="fas fa-check me-1"></i>Approve Completion
+                                </button>
+                            </form>
+                            <button class="btn btn-danger btn-sm" onclick="showRejectionModal(@Model.Id)">
+                                <i class="fas fa-times me-1"></i>Reject
+                            </button>
+                        }
+                        else if (Model.Status == "Completed")
+                        {
+                            <span class="badge bg-success">
+                                <i class="fas fa-check-circle me-1"></i>Completed
+                            </span>
+                        }
                     }
                     @if (currentUser.UserType == "Provider" && Model.AcceptedRequest != null && Model.AcceptedRequest.ProviderId == currentUser.Id)
                     {
                         <a asp-controller="Message" asp-action="Thread" asp-route-serviceRequestId="@Model.Id" asp-route-withUserId="@Model.RequesterId" class="btn btn-outline-primary">Message Requester</a>
+                        
+                        @if (Model.PaymentStatus == "Paid")
+                        {
+                            <span class="badge bg-success">
+                                <i class="fas fa-money-bill-wave me-1"></i>Payment Received (৳@(Model.ProviderAmount?.ToString("N2") ?? "0.00"))
+                            </span>
+                        }
+                        
+                        <!-- Completion Actions -->
+                        @if (Model.Status == "Accepted")
+                        {
+                            <form asp-controller="ServiceRequestCompletion" asp-action="MarkInProgress" method="post" class="d-inline">
+                                <input type="hidden" name="serviceRequestId" value="@Model.Id" />
+                                <button type="submit" class="btn btn-info btn-sm">
+                                    <i class="fas fa-play me-1"></i>Start Work
+                                </button>
+                            </form>
+                        }
+                        else if (Model.Status == "In Progress" && Model.PaymentStatus == "Paid")
+                        {
+                            <form asp-controller="ServiceRequestCompletion" asp-action="RequestCompletion" method="post" class="d-inline">
+                                <input type="hidden" name="serviceRequestId" value="@Model.Id" />
+                                <button type="submit" class="btn btn-success btn-sm">
+                                    <i class="fas fa-check me-1"></i>Request Completion
+                                </button>
+                            </form>
+                        }
+                        else if (Model.Status.Contains("Completion Requested"))
+                        {
+                            <form asp-controller="ServiceRequestCompletion" asp-action="ApproveCompletion" method="post" class="d-inline">
+                                <input type="hidden" name="serviceRequestId" value="@Model.Id" />
+                                <button type="submit" class="btn btn-success btn-sm">
+                                    <i class="fas fa-check me-1"></i>Approve Completion
+                                </button>
+                            </form>
+                            <button class="btn btn-danger btn-sm" onclick="showRejectionModal(@Model.Id)">
+                                <i class="fas fa-times me-1"></i>Reject
+                            </button>
+                        }
+                        else if (Model.Status == "Completed")
+                        {
+                            <span class="badge bg-success">
+                                <i class="fas fa-check-circle me-1"></i>Completed
+                            </span>
+                        }
                     }
                 </div>
             </div>

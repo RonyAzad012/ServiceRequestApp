@@ -32,6 +32,16 @@
                             <i class="fas fa-shield-alt me-2 text-warning"></i>Admin Dashboard
                         </a>
                     </li>
+                    <li>
+                        <a class="dropdown-item" asp-controller="Admin" asp-action="PendingApprovals">
+                            <i class="fas fa-user-clock me-2 text-info"></i>Pending Approvals
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item" asp-controller="Category" asp-action="Index">
+                            <i class="fas fa-tags me-2 text-success"></i>Manage Categories
+                        </a>
+                    </li>
                 }
                 else if (roles.Contains("Provider"))
                 {
@@ -50,6 +60,16 @@
                     </li>
                 }
                 
+                <li>
+                    <a class="dropdown-item" asp-controller="Payment" asp-action="Index">
+                        <i class="fas fa-credit-card me-2 text-success"></i>Payments
+                    </a>
+                </li>
+                <li>
+                    <a class="dropdown-item" asp-controller="ServiceRequestCompletion" asp-action="PendingCompletions">
+                        <i class="fas fa-clock me-2 text-warning"></i>Pending Completions
+                    </a>
+                </li>
                 <li>
                     <a class="dropdown-item" href="#">
                         <i class="fas fa-cog me-2 text-secondary"></i>Settings

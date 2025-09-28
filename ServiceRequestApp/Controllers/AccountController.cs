@@ -2,10 +2,12 @@
 using Microsoft.AspNetCore.Mvc;
 using ServiceRequestApp.Models;
 using ServiceRequestApp.ViewModels;
+using ServiceRequestApp.Data;
 using System.Threading.Tasks;
 using System.Linq;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
+using System;
 
 namespace ServiceRequestApp.Controllers
 {
@@ -13,15 +15,18 @@ namespace ServiceRequestApp.Controllers
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly SignInManager<ApplicationUser> _signInManager;
+        private readonly ApplicationDbContext _dbContext;
 
         //Dependency Injection. These are services provided by ASP.NET core Identity.
         //for managing users and handling sign-ins.
         public AccountController(
             UserManager<ApplicationUser> userManager,
-            SignInManager<ApplicationUser> signInManager)
+            SignInManager<ApplicationUser> signInManager,
+            ApplicationDbContext dbContext)
         {
             _userManager = userManager;
             _signInManager = signInManager;
+            _dbContext = dbContext;
         }
 
         [HttpGet]
@@ -98,7 +103,10 @@ namespace ServiceRequestApp.Controllers
                     ShopAddress = model.ShopAddress,
                     ShopPhone = model.ShopPhone,
                     BusinessCredentials = model.BusinessCredentials,
-                    BusinessImagePath = model.BusinessImagePath
+                    BusinessImagePath = model.BusinessImagePath,
+                    PrimaryCategoryId = model.PrimaryCategoryId,
+                    ServiceAreas = model.ServiceAreas,
+                    IsApproved = false // Require admin approval
                 };
 
                 var result = await _userManager.CreateAsync(user, model.Password);
@@ -241,7 +249,10 @@ namespace ServiceRequestApp.Controllers
                     // Tasker-specific fields
                     Skills = model.Skills,
                     PortfolioUrl = model.PortfolioUrl,
-                    ProfileDescription = model.ProfileDescription
+                    ProfileDescription = model.ProfileDescription,
+                    PrimaryCategoryId = model.PrimaryCategoryId,
+                    ServiceAreas = model.ServiceAreas,
+                    IsApproved = false // Require admin approval
                 };
                 var result = await _userManager.CreateAsync(user, model.Password);
                 if (result.Succeeded)
@@ -373,6 +384,187 @@ namespace ServiceRequestApp.Controllers
             await _userManager.UpdateAsync(user);
             TempData["ProfileMessage"] = "Profile updated successfully.";
             return RedirectToAction("TaskerProfile", new { id = user.Id });
+        }
+
+        // Dashboard API endpoints
+        [HttpGet]
+        public async Task<IActionResult> GetProviderStats(string providerId)
+        {
+            try
+            {
+                var completedRequests = await _dbContext.ServiceRequests
+                    .CountAsync(sr => sr.ProviderId == providerId && sr.Status == "Completed");
+                
+                var pendingRequests = await _dbContext.ServiceRequests
+                    .CountAsync(sr => sr.ProviderId == providerId && sr.Status == "Pending");
+                
+                var totalEarnings = await _dbContext.ServiceRequests
+                    .Where(sr => sr.ProviderId == providerId && sr.Status == "Completed" && sr.PaymentAmount.HasValue)
+                    .SumAsync(sr => sr.ProviderAmount ?? 0);
+
+                return Json(new { 
+                    success = true, 
+                    completedRequests, 
+                    pendingRequests, 
+                    totalEarnings 
+                });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetRequesterStats(string requesterId)
+        {
+            try
+            {
+                var totalRequests = await _dbContext.ServiceRequests
+                    .CountAsync(sr => sr.RequesterId == requesterId);
+                
+                var completedRequests = await _dbContext.ServiceRequests
+                    .CountAsync(sr => sr.RequesterId == requesterId && sr.Status == "Completed");
+                
+                var pendingRequests = await _dbContext.ServiceRequests
+                    .CountAsync(sr => sr.RequesterId == requesterId && sr.Status == "In Progress");
+
+                // Calculate average rating from reviews
+                var averageRating = await _dbContext.Reviews
+                    .Where(r => r.RevieweeId == requesterId)
+                    .AverageAsync(r => (double?)r.Rating) ?? 0;
+
+                return Json(new { 
+                    success = true, 
+                    totalRequests, 
+                    completedRequests, 
+                    pendingRequests, 
+                    averageRating 
+                });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetTaskerStats(string taskerId)
+        {
+            try
+            {
+                var completedTasks = await _dbContext.ServiceRequests
+                    .CountAsync(sr => sr.ProviderId == taskerId && sr.Status == "Completed");
+                
+                var activeTasks = await _dbContext.ServiceRequests
+                    .CountAsync(sr => sr.ProviderId == taskerId && sr.Status == "In Progress");
+                
+                var totalEarnings = await _dbContext.ServiceRequests
+                    .Where(sr => sr.ProviderId == taskerId && sr.Status == "Completed" && sr.PaymentAmount.HasValue)
+                    .SumAsync(sr => sr.ProviderAmount ?? 0);
+
+                return Json(new { 
+                    success = true, 
+                    completedTasks, 
+                    activeTasks, 
+                    totalEarnings 
+                });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetRecentRequests(string providerId = null, string requesterId = null)
+        {
+            try
+            {
+                var query = _dbContext.ServiceRequests.AsQueryable();
+                
+                if (!string.IsNullOrEmpty(providerId))
+                {
+                    query = query.Where(sr => sr.ProviderId == providerId);
+                }
+                else if (!string.IsNullOrEmpty(requesterId))
+                {
+                    query = query.Where(sr => sr.RequesterId == requesterId);
+                }
+
+                var requests = await query
+                    .OrderByDescending(sr => sr.CreatedAt)
+                    .Take(5)
+                    .Select(sr => new {
+                        sr.Id,
+                        sr.Title,
+                        sr.Description,
+                        sr.Status,
+                        sr.CreatedAt
+                    })
+                    .ToListAsync();
+
+                return Json(new { success = true, requests });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetRecentTasks(string taskerId)
+        {
+            try
+            {
+                var tasks = await _dbContext.ServiceRequests
+                    .Where(sr => sr.ProviderId == taskerId)
+                    .OrderByDescending(sr => sr.CreatedAt)
+                    .Take(5)
+                    .Select(sr => new {
+                        sr.Id,
+                        sr.Title,
+                        sr.Description,
+                        sr.Status,
+                        sr.CreatedAt
+                    })
+                    .ToListAsync();
+
+                return Json(new { success = true, tasks });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetTaskerPerformance(string taskerId)
+        {
+            try
+            {
+                var totalRequests = await _dbContext.ServiceRequests
+                    .CountAsync(sr => sr.ProviderId == taskerId);
+                
+                var respondedRequests = await _dbContext.ServiceRequests
+                    .CountAsync(sr => sr.ProviderId == taskerId && sr.Status != "Pending");
+                
+                var completedRequests = await _dbContext.ServiceRequests
+                    .CountAsync(sr => sr.ProviderId == taskerId && sr.Status == "Completed");
+
+                var responseRate = totalRequests > 0 ? (respondedRequests * 100.0 / totalRequests) : 0;
+                var completionRate = totalRequests > 0 ? (completedRequests * 100.0 / totalRequests) : 0;
+
+                return Json(new { 
+                    success = true, 
+                    responseRate = Math.Round(responseRate, 1), 
+                    completionRate = Math.Round(completionRate, 1) 
+                });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
         }
     }
 }

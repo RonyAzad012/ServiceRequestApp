@@ -147,6 +147,111 @@ namespace ServiceRequestApp.Controllers
             }
         }
 
+        [HttpPost]
+        public async Task<IActionResult> ApproveUser(string userId)
+        {
+            try
+            {
+                var user = await _userManager.FindByIdAsync(userId);
+                if (user == null)
+                    return Json(new { success = false, message = "User not found" });
+
+                user.IsApproved = true;
+                user.ApprovedAt = DateTime.UtcNow;
+                user.ApprovedBy = User.Identity.Name;
+                user.RejectionReason = null; // Clear any previous rejection reason
+
+                var result = await _userManager.UpdateAsync(user);
+
+                if (result.Succeeded)
+                {
+                    return Json(new { 
+                        success = true, 
+                        message = "User approved successfully",
+                        isApproved = user.IsApproved
+                    });
+                }
+                else
+                {
+                    return Json(new { success = false, message = "Failed to approve user" });
+                }
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Error approving user" });
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> RejectUser(string userId, string reason)
+        {
+            try
+            {
+                var user = await _userManager.FindByIdAsync(userId);
+                if (user == null)
+                    return Json(new { success = false, message = "User not found" });
+
+                user.IsApproved = false;
+                user.RejectionReason = reason;
+                user.ApprovedAt = null;
+                user.ApprovedBy = null;
+
+                var result = await _userManager.UpdateAsync(user);
+
+                if (result.Succeeded)
+                {
+                    return Json(new { 
+                        success = true, 
+                        message = "User rejected successfully",
+                        isApproved = user.IsApproved
+                    });
+                }
+                else
+                {
+                    return Json(new { success = false, message = "Failed to reject user" });
+                }
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Error rejecting user" });
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetPendingApprovals()
+        {
+            try
+            {
+                var pendingUsers = await _userManager.Users
+                    .Where(u => !u.IsApproved && (u.UserType == "Provider" || u.UserType == "Tasker" || u.UserType == "Business"))
+                    .Include(u => u.PrimaryCategory)
+                    .Select(u => new
+                    {
+                        u.Id,
+                        u.FirstName,
+                        u.LastName,
+                        u.Email,
+                        u.UserType,
+                        u.PhoneNumber,
+                        u.CreatedAt,
+                        u.ShopName,
+                        u.Skills,
+                        u.BusinessCredentials,
+                        u.NationalId,
+                        CategoryName = u.PrimaryCategory != null ? u.PrimaryCategory.Name : "Not Selected",
+                        u.RejectionReason
+                    })
+                    .OrderByDescending(u => u.CreatedAt)
+                    .ToListAsync();
+
+                return Json(new { success = true, data = pendingUsers });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Error fetching pending approvals" });
+            }
+        }
+
         [HttpDelete]
         public async Task<IActionResult> DeleteUser(string userId)
         {

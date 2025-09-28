@@ -2,11 +2,24 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using ServiceRequestApp.Data;
 using ServiceRequestApp.Models;
+using ServiceRequestApp.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+
+// Register custom services
+builder.Services.AddScoped<CategorySeedService>();
+builder.Services.AddScoped<IPaymentService, PaymentService>();
+builder.Services.AddScoped<ISSLCommerzPaymentService, SSLCommerzPaymentService>();
+builder.Services.AddScoped<IServiceRequestCompletionService, ServiceRequestCompletionService>();
+builder.Services.AddScoped<INotificationService, NotificationService>();
+builder.Services.AddScoped<ISearchService, SearchService>();
+builder.Services.AddScoped<IReviewService, ReviewService>();
+builder.Services.AddScoped<IAnalyticsService, AnalyticsService>();
+builder.Services.AddHttpClient<PaymentService>();
+builder.Services.AddHttpClient<SSLCommerzPaymentService>();
 
 // Add DbContext with explicit options
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -76,19 +89,9 @@ using (var scope = app.Services.CreateScope())
         }
     }
 
-    // Seed default categories if none exist
-    var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    if (!dbContext.Categories.Any())
-    {
-        dbContext.Categories.AddRange(
-            new Category { Name = "Cleaning" },
-            new Category { Name = "Plumbing" },
-            new Category { Name = "Electrical" },
-            new Category { Name = "Moving" },
-            new Category { Name = "Handyman" }
-        );
-        await dbContext.SaveChangesAsync();
-    }
+    // Seed categories using the service
+    var categorySeedService = scope.ServiceProvider.GetRequiredService<CategorySeedService>();
+    await categorySeedService.SeedCategoriesAsync();
 }
 
 app.Run();

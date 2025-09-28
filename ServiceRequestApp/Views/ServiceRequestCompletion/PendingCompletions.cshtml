@@ -1,0 +1,226 @@
+@model IEnumerable<ServiceRequestApp.Models.ServiceRequest>
+@{
+    ViewData["Title"] = "Pending Completions";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <h2 class="mb-0">
+                    <i class="fas fa-clock me-2 text-warning"></i>Pending Completions
+                </h2>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-outline-primary" onclick="refreshCompletions()">
+                        <i class="fas fa-sync-alt me-1"></i>Refresh
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (Model != null && Model.Any())
+    {
+        <div class="row">
+            @foreach (var request in Model)
+            {
+                <div class="col-lg-6 mb-4">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-header bg-white border-0 py-3">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">@request.Title</h5>
+                                <span class="badge bg-warning">
+                                    <i class="fas fa-exclamation-triangle me-1"></i>@request.Status
+                                </span>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <p class="text-muted mb-3">@request.Description</p>
+                            
+                            <div class="row mb-3">
+                                <div class="col-6">
+                                    <small class="text-muted">Service Type</small>
+                                    <p class="fw-bold mb-0">@request.ServiceType</p>
+                                </div>
+                                <div class="col-6">
+                                    <small class="text-muted">Price</small>
+                                    <p class="fw-bold mb-0 text-success">৳@request.Price.ToString("N2")</p>
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-6">
+                                    <small class="text-muted">Requester</small>
+                                    <p class="fw-bold mb-0">@request.Requester?.FirstName @request.Requester?.LastName</p>
+                                </div>
+                                <div class="col-6">
+                                    <small class="text-muted">Provider</small>
+                                    <p class="fw-bold mb-0">@request.AcceptedRequest?.Provider?.FirstName @request.AcceptedRequest?.Provider?.LastName</p>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <small class="text-muted">Address</small>
+                                <p class="fw-bold mb-0">@request.Address</p>
+                            </div>
+
+                            <div class="mb-3">
+                                <small class="text-muted">Updated</small>
+                                <p class="fw-bold mb-0">@request.UpdatedAt?.ToString("MMM dd, yyyy h:mm tt")</p>
+                            </div>
+
+                            @if (!string.IsNullOrEmpty(request.CompletionRejectionReason))
+                            {
+                                <div class="alert alert-warning">
+                                    <i class="fas fa-exclamation-triangle me-2"></i>
+                                    <strong>Rejection Reason:</strong> @request.CompletionRejectionReason
+                                </div>
+                            }
+                        </div>
+                        <div class="card-footer bg-white border-0 py-3">
+                            <div class="d-flex gap-2">
+                                <a href="@Url.Action("Details", "ServiceRequest", new { id = request.Id })" class="btn btn-outline-primary btn-sm">
+                                    <i class="fas fa-eye me-1"></i>View Details
+                                </a>
+                                
+                                @if (request.Status.Contains("Completion Requested by Provider"))
+                                {
+                                    <button class="btn btn-success btn-sm" onclick="approveCompletion(@request.Id)">
+                                        <i class="fas fa-check me-1"></i>Approve
+                                    </button>
+                                    <button class="btn btn-danger btn-sm" onclick="rejectCompletion(@request.Id)">
+                                        <i class="fas fa-times me-1"></i>Reject
+                                    </button>
+                                }
+                                else if (request.Status.Contains("Completion Requested by Requester"))
+                                {
+                                    <button class="btn btn-success btn-sm" onclick="approveCompletion(@request.Id)">
+                                        <i class="fas fa-check me-1"></i>Approve
+                                    </button>
+                                    <button class="btn btn-danger btn-sm" onclick="rejectCompletion(@request.Id)">
+                                        <i class="fas fa-times me-1"></i>Reject
+                                    </button>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="row">
+            <div class="col-12">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body text-center py-5">
+                        <div class="text-muted mb-3">
+                            <i class="fas fa-check-circle fa-3x"></i>
+                        </div>
+                        <h5 class="text-muted">No Pending Completions</h5>
+                        <p class="text-muted small">All your service requests are up to date.</p>
+                        <a href="@Url.Action("Index", "ServiceRequest")" class="btn btn-primary">
+                            <i class="fas fa-list me-1"></i>View All Requests
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<!-- Rejection Modal -->
+<div class="modal fade" id="rejectionModal" tabindex="-1" aria-labelledby="rejectionModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="rejectionModalLabel">Reject Completion</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="rejectionForm">
+                <div class="modal-body">
+                    <input type="hidden" id="rejectionServiceRequestId" />
+                    <div class="mb-3">
+                        <label for="rejectionReason" class="form-label">Reason for Rejection</label>
+                        <textarea class="form-control" id="rejectionReason" rows="3" required placeholder="Please provide a reason for rejecting the completion request..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-times me-1"></i>Reject Completion
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function refreshCompletions() {
+            location.reload();
+        }
+
+        function approveCompletion(serviceRequestId) {
+            if (confirm('Are you sure you want to approve this completion request?')) {
+                $.ajax({
+                    url: '@Url.Action("ApproveCompletion", "ServiceRequestCompletion")',
+                    type: 'POST',
+                    data: { serviceRequestId: serviceRequestId },
+                    success: function(response) {
+                        if (response.success) {
+                            location.reload();
+                        } else {
+                            alert('Error: ' + response.message);
+                        }
+                    },
+                    error: function() {
+                        alert('Error approving completion');
+                    }
+                });
+            }
+        }
+
+        function rejectCompletion(serviceRequestId) {
+            $('#rejectionServiceRequestId').val(serviceRequestId);
+            $('#rejectionReason').val('');
+            $('#rejectionModal').modal('show');
+        }
+
+        $('#rejectionForm').on('submit', function(e) {
+            e.preventDefault();
+            
+            const serviceRequestId = $('#rejectionServiceRequestId').val();
+            const reason = $('#rejectionReason').val();
+            
+            if (!reason.trim()) {
+                alert('Please provide a reason for rejection');
+                return;
+            }
+            
+            $.ajax({
+                url: '@Url.Action("RejectCompletion", "ServiceRequestCompletion")',
+                type: 'POST',
+                data: { 
+                    serviceRequestId: serviceRequestId,
+                    reason: reason
+                },
+                success: function(response) {
+                    if (response.success) {
+                        $('#rejectionModal').modal('hide');
+                        location.reload();
+                    } else {
+                        alert('Error: ' + response.message);
+                    }
+                },
+                error: function() {
+                    alert('Error rejecting completion');
+                }
+            });
+        });
+    </script>
+}
+

@@ -92,6 +92,11 @@ namespace ServiceRequestApp.ViewModels
         public string? PortfolioUrl { get; set; }
 
         public string? ProfileDescription { get; set; }
+
+        [Required]
+        public int? PrimaryCategoryId { get; set; }
+
+        public string? ServiceAreas { get; set; }
     }
 
     public class EditRequesterProfileViewModel
@@ -222,5 +227,10 @@ namespace ServiceRequestApp.ViewModels
         public string? BusinessCredentials { get; set; }
 
         public string? BusinessImagePath { get; set; }
+
+        [Required]
+        public int? PrimaryCategoryId { get; set; }
+
+        public string? ServiceAreas { get; set; }
     }
 }

@@ -4,30 +4,261 @@
     var serviceRequestId = ViewBag.ServiceRequestId;
     var withUser = ViewBag.WithUser as ServiceRequestApp.Models.ApplicationUser;
     var withUserId = ViewBag.WithUserId as string;
+    var serviceRequest = ViewBag.ServiceRequest as ServiceRequestApp.Models.ServiceRequest;
+    var currentUser = ViewBag.CurrentUser as ServiceRequestApp.Models.ApplicationUser;
 }
 
-<h2>Conversation with @withUser?.FirstName @withUser?.LastName</h2>
-@if (TempData["MessageError"] != null)
-{
-    <div class="alert alert-danger">@TempData["MessageError"]</div>
-}
-<div class="card mb-3">
-    <div class="card-body" style="max-height:400px;overflow-y:auto;">
-        @foreach (var msg in Model)
-        {
-            <div class="mb-2 @(msg.SenderId == User.FindFirst("sub")?.Value ? "text-end" : "text-start")">
-                <span class="badge bg-secondary">@msg.SentAt.ToString("g")</span><br />
-                <span class="p-2 rounded @(msg.SenderId == User.FindFirst("sub")?.Value ? "bg-primary text-white" : "bg-light text-dark")">
-                    @msg.Content
-                </span>
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex align-items-center justify-content-between">
+                <div class="d-flex align-items-center">
+                    <a href="@Url.Action("Index", "Message")" class="btn btn-outline-secondary me-3">
+                        <i class="fas fa-arrow-left"></i>
+                    </a>
+                    <div>
+                        <h2 class="mb-0">@withUser?.FirstName @withUser?.LastName</h2>
+                        <p class="text-muted mb-0">@serviceRequest?.Title</p>
+                    </div>
+                </div>
+                <div class="d-flex gap-2">
+                    <a href="@Url.Action("Details", "ServiceRequest", new { id = serviceRequestId })" class="btn btn-outline-primary">
+                        <i class="fas fa-eye me-1"></i>View Request
+                    </a>
+                </div>
             </div>
-        }
+        </div>
     </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <!-- Chat Header -->
+                <div class="card-header bg-white border-0 py-3">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0 me-3">
+                            <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center" 
+                                 style="width: 50px; height: 50px;">
+                                <i class="fas fa-user"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1">
+                            <h5 class="mb-0">@withUser?.FirstName @withUser?.LastName</h5>
+                            <small class="text-muted">
+                                @if (withUser?.UserType == "Provider" || withUser?.UserType == "Business")
+                                {
+                                    <i class="fas fa-store me-1"></i>Service Provider
+                                }
+                                else if (withUser?.UserType == "Tasker")
+                                {
+                                    <i class="fas fa-user-tie me-1"></i>Tasker
+                                }
+                                else
+                                {
+                                    <i class="fas fa-user me-1"></i>Requester
+                                }
+                            </small>
+                        </div>
+                        <div class="flex-shrink-0">
+                            <span class="badge bg-@(serviceRequest?.Status?.ToLower() switch {
+                                "completed" => "success",
+                                "in progress" => "info", 
+                                "pending" => "warning",
+                                "cancelled" => "danger",
+                                _ => "secondary"
+                            })">@serviceRequest?.Status</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Messages Area -->
+                <div class="card-body p-0" style="height: 500px;">
+                    <div class="h-100 d-flex flex-column">
+                        <!-- Messages Container -->
+                        <div class="flex-grow-1 p-3 overflow-auto" id="messagesContainer">
+                            @if (Model != null && Model.Any())
+                            {
+                                @foreach (var msg in Model)
+                                {
+                                    var isOwn = msg.SenderId == currentUser?.Id;
+                                    var messageClass = isOwn ? "text-end" : "text-start";
+                                    var bubbleClass = isOwn ? "bg-primary text-white" : "bg-light text-dark";
+                                    
+                                    <div class="mb-3 @messageClass">
+                                        <div class="d-inline-block max-width-75">
+                                            <div class="p-3 rounded-3 @bubbleClass shadow-sm">
+                                                <p class="mb-1">@msg.Content</p>
+                                                <small class="opacity-75">
+                                                    @msg.SentAt.ToString("MMM dd, h:mm tt")
+                                                    @if (isOwn && msg.IsRead)
+                                                    {
+                                                        <i class="fas fa-check-double ms-1 text-info"></i>
+                                                    }
+                                                </small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            }
+                            else
+                            {
+                                <div class="text-center py-5">
+                                    <div class="text-muted mb-3">
+                                        <i class="fas fa-comment-dots fa-3x"></i>
+                                    </div>
+                                    <h5 class="text-muted">No messages yet</h5>
+                                    <p class="text-muted small">Start the conversation by sending a message below.</p>
+                                </div>
+                            }
+                        </div>
+
+                        <!-- Message Input -->
+                        <div class="border-top p-3">
+                            @if (TempData["MessageError"] != null)
+                            {
+                                <div class="alert alert-danger alert-dismissible fade show mb-3" role="alert">
+                                    @TempData["MessageError"]
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                </div>
+                            }
+                            
+                            <form asp-action="Send" method="post" class="d-flex gap-2" id="messageForm">
+                                <input type="hidden" name="serviceRequestId" value="@serviceRequestId" />
+                                <input type="hidden" name="receiverId" value="@withUserId" />
+                                <div class="flex-grow-1">
+                                    <textarea name="content" class="form-control" rows="2" placeholder="Type your message..." 
+                                              style="resize: none;" maxlength="1000" id="messageInput" required></textarea>
+                                </div>
+                                <div class="flex-shrink-0">
+                                    <button type="submit" class="btn btn-primary" id="sendButton">
+                                        <i class="fas fa-paper-plane"></i>
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Service Request Details -->
+    @if (serviceRequest != null)
+    {
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white border-0 py-3">
+                        <h5 class="mb-0">
+                            <i class="fas fa-info-circle me-2 text-info"></i>Service Request Details
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label text-muted">Title</label>
+                                <p class="fw-bold">@serviceRequest.Title</p>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label text-muted">Status</label>
+                                <p>
+                                    <span class="badge bg-@(serviceRequest.Status?.ToLower() switch {
+                                        "completed" => "success",
+                                        "in progress" => "info", 
+                                        "pending" => "warning",
+                                        "cancelled" => "danger",
+                                        _ => "secondary"
+                                    })">@serviceRequest.Status</span>
+                                </p>
+                            </div>
+                            <div class="col-12 mb-3">
+                                <label class="form-label text-muted">Description</label>
+                                <p>@serviceRequest.Description</p>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label text-muted">Address</label>
+                                <p>@serviceRequest.Address</p>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label text-muted">Created</label>
+                                <p>@serviceRequest.CreatedAt.ToString("MMM dd, yyyy")</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
 </div>
-<form asp-action="Send" method="post" class="d-flex gap-2">
-    <input type="hidden" name="serviceRequestId" value="@serviceRequestId" />
-    <input type="hidden" name="receiverId" value="@withUserId" />
-    <input type="text" name="content" class="form-control" placeholder="Type your message..." autocomplete="off" />
-    <button type="submit" class="btn btn-primary">Send</button>
-</form>
-<a asp-action="Details" asp-controller="ServiceRequest" asp-route-id="@serviceRequestId" class="btn btn-secondary mt-3">Back to Request</a>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Auto-scroll to bottom
+            scrollToBottom();
+            
+            // Auto-resize textarea
+            $('#messageInput').on('input', function() {
+                this.style.height = 'auto';
+                this.style.height = (this.scrollHeight) + 'px';
+            });
+
+            // Focus on message input
+            $('#messageInput').focus();
+
+            // Handle form submission
+            $('#messageForm').on('submit', function(e) {
+                const content = $('#messageInput').val().trim();
+                if (!content) {
+                    e.preventDefault();
+                    return false;
+                }
+                
+                // Disable send button to prevent double submission
+                $('#sendButton').prop('disabled', true);
+            });
+        });
+
+        function scrollToBottom() {
+            const container = $('#messagesContainer');
+            container.scrollTop(container[0].scrollHeight);
+        }
+    </script>
+}
+
+<style>
+    .max-width-75 {
+        max-width: 75%;
+    }
+    
+    #messagesContainer {
+        scrollbar-width: thin;
+        scrollbar-color: #dee2e6 transparent;
+    }
+    
+    #messagesContainer::-webkit-scrollbar {
+        width: 6px;
+    }
+    
+    #messagesContainer::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    
+    #messagesContainer::-webkit-scrollbar-thumb {
+        background-color: #dee2e6;
+        border-radius: 3px;
+    }
+    
+    #messagesContainer::-webkit-scrollbar-thumb:hover {
+        background-color: #adb5bd;
+    }
+    
+    .card {
+        transition: box-shadow 0.15s ease-in-out;
+    }
+    
+    .card:hover {
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+    }
+</style>

@@ -1,0 +1,307 @@
+@model IEnumerable<ServiceRequestApp.Models.ApplicationUser>
+@{
+    ViewData["Title"] = "Service Providers";
+    var categories = ViewBag.Categories as List<ServiceRequestApp.Models.Category>;
+    var selectedCategoryId = ViewBag.SelectedCategoryId as int?;
+    var location = ViewBag.Location as string;
+}
+
+<div class="container-fluid py-4">
+    <!-- Header Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="display-6 fw-bold mb-2">Find Service Providers</h1>
+                    <p class="text-muted mb-0">Connect with verified professionals in your area</p>
+                </div>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-outline-primary" onclick="toggleView('grid')" id="gridViewBtn">
+                        <i class="fas fa-th"></i> Grid
+                    </button>
+                    <button class="btn btn-outline-primary" onclick="toggleView('list')" id="listViewBtn">
+                        <i class="fas fa-list"></i> List
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <form method="get" class="row g-3">
+                        <div class="col-md-4">
+                            <label for="categoryId" class="form-label">Category</label>
+                            <select name="categoryId" id="categoryId" class="form-select">
+                                <option value="">All Categories</option>
+                                @if (categories != null)
+                                {
+                                    foreach (var category in categories)
+                                    {
+                                        <option value="@category.Id" selected="@(selectedCategoryId == category.Id)">
+                                            @category.Name
+                                        </option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="location" class="form-label">Location</label>
+                            <input type="text" name="location" id="location" class="form-control" 
+                                   placeholder="Enter city or area..." value="@location">
+                        </div>
+                        <div class="col-md-4 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary me-2">
+                                <i class="fas fa-search"></i> Search
+                            </button>
+                            <a href="@Url.Action("Index")" class="btn btn-outline-secondary">
+                                <i class="fas fa-times"></i> Clear
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Results Section -->
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="mb-0">@Model.Count() Providers Found</h5>
+                <div class="d-flex gap-2">
+                    <select class="form-select form-select-sm" id="sortBy" onchange="sortProviders()">
+                        <option value="rating">Sort by Rating</option>
+                        <option value="reviews">Sort by Reviews</option>
+                        <option value="name">Sort by Name</option>
+                        <option value="distance">Sort by Distance</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Providers Grid -->
+    <div id="providersContainer" class="row">
+        @foreach (var provider in Model)
+        {
+            <div class="col-lg-4 col-md-6 mb-4 provider-card">
+                <div class="card h-100 shadow-sm hover-card">
+                    <div class="position-relative">
+                        @if (!string.IsNullOrEmpty(provider.BusinessImagePath))
+                        {
+                            <img src="@provider.BusinessImagePath" class="card-img-top" alt="@provider.ShopName" style="height: 200px; object-fit: cover;">
+                        }
+                        else if (!string.IsNullOrEmpty(provider.ProfileImagePath))
+                        {
+                            <img src="@provider.ProfileImagePath" class="card-img-top" alt="@provider.FirstName" style="height: 200px; object-fit: cover;">
+                        }
+                        else
+                        {
+                            <div class="card-img-top bg-gradient-primary d-flex align-items-center justify-content-center" style="height: 200px;">
+                                <i class="fas fa-user fa-4x text-white"></i>
+                            </div>
+                        }
+                        
+                        <!-- Category Badge -->
+                        @if (provider.PrimaryCategory != null)
+                        {
+                            <div class="position-absolute top-0 start-0 m-2">
+                                <span class="badge" style="background-color: @provider.PrimaryCategory.Color; color: white;">
+                                    <i class="@provider.PrimaryCategory.Icon"></i> @provider.PrimaryCategory.Name
+                                </span>
+                            </div>
+                        }
+                        
+                        <!-- Rating Badge -->
+                        @if (provider.AverageRating.HasValue)
+                        {
+                            <div class="position-absolute top-0 end-0 m-2">
+                                <span class="badge bg-warning text-dark">
+                                    <i class="fas fa-star"></i> @provider.AverageRating.Value.ToString("F1")
+                                </span>
+                            </div>
+                        }
+                    </div>
+                    
+                    <div class="card-body d-flex flex-column">
+                        <div class="flex-grow-1">
+                            <h5 class="card-title mb-2">
+                                @if (!string.IsNullOrEmpty(provider.ShopName))
+                                {
+                                    @provider.ShopName
+                                }
+                                else
+                                {
+                                    @($"{provider.FirstName} {provider.LastName}")
+                                }
+                            </h5>
+                            
+                            <p class="card-text text-muted small mb-2">
+                                @if (!string.IsNullOrEmpty(provider.ShopDescription))
+                                {
+                                    @(provider.ShopDescription.Length > 100 ? provider.ShopDescription.Substring(0, 100) + "..." : provider.ShopDescription)
+                                }
+                                else if (!string.IsNullOrEmpty(provider.ProfileDescription))
+                                {
+                                    @(provider.ProfileDescription.Length > 100 ? provider.ProfileDescription.Substring(0, 100) + "..." : provider.ProfileDescription)
+                                }
+                            </p>
+                            
+                            <div class="d-flex align-items-center mb-2">
+                                <i class="fas fa-map-marker-alt text-muted me-2"></i>
+                                <small class="text-muted">
+                                    @if (!string.IsNullOrEmpty(provider.ShopAddress))
+                                    {
+                                        @provider.ShopAddress
+                                    }
+                                    else
+                                    {
+                                        @provider.Address
+                                    }
+                                </small>
+                            </div>
+                            
+                            @if (provider.TotalReviews.HasValue && provider.TotalReviews > 0)
+                            {
+                                <div class="d-flex align-items-center mb-2">
+                                    <div class="me-2">
+                                        @for (int i = 1; i <= 5; i++)
+                                        {
+                                            <i class="fas fa-star @(i <= provider.AverageRating ? "text-warning" : "text-muted")"></i>
+                                        }
+                                    </div>
+                                    <small class="text-muted">(@provider.TotalReviews reviews)</small>
+                                </div>
+                            }
+                        </div>
+                        
+                        <div class="mt-auto">
+                            <div class="d-flex gap-2">
+                                <a href="@Url.Action("Details", new { id = provider.Id })" class="btn btn-primary btn-sm flex-grow-1">
+                                    <i class="fas fa-eye"></i> View Profile
+                                </a>
+                                <button class="btn btn-outline-primary btn-sm" onclick="contactProvider('@provider.Id')">
+                                    <i class="fas fa-envelope"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="row">
+            <div class="col-12">
+                <div class="text-center py-5">
+                    <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                    <h4 class="text-muted">No providers found</h4>
+                    <p class="text-muted">Try adjusting your search criteria or browse all categories.</p>
+                    <a href="@Url.Action("Index")" class="btn btn-primary">View All Providers</a>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<style>
+    .hover-card {
+        transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    }
+    
+    .hover-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15) !important;
+    }
+    
+    .provider-card {
+        transition: all 0.3s ease;
+    }
+    
+    .list-view .provider-card {
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
+    
+    .list-view .card {
+        flex-direction: row;
+    }
+    
+    .list-view .card-img-top {
+        width: 200px;
+        height: 150px;
+        object-fit: cover;
+    }
+    
+    .badge {
+        font-size: 0.75rem;
+        padding: 0.5rem 0.75rem;
+    }
+    
+    .bg-gradient-primary {
+        background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+    }
+</style>
+
+<script>
+    let currentView = 'grid';
+    
+    function toggleView(view) {
+        currentView = view;
+        const container = document.getElementById('providersContainer');
+        const gridBtn = document.getElementById('gridViewBtn');
+        const listBtn = document.getElementById('listViewBtn');
+        
+        if (view === 'list') {
+            container.classList.add('list-view');
+            gridBtn.classList.remove('btn-primary');
+            gridBtn.classList.add('btn-outline-primary');
+            listBtn.classList.remove('btn-outline-primary');
+            listBtn.classList.add('btn-primary');
+        } else {
+            container.classList.remove('list-view');
+            listBtn.classList.remove('btn-primary');
+            listBtn.classList.add('btn-outline-primary');
+            gridBtn.classList.remove('btn-outline-primary');
+            gridBtn.classList.add('btn-primary');
+        }
+    }
+    
+    function sortProviders() {
+        const sortBy = document.getElementById('sortBy').value;
+        const cards = Array.from(document.querySelectorAll('.provider-card'));
+        
+        cards.sort((a, b) => {
+            // This is a simplified sorting - in a real app, you'd want to sort on the server
+            const nameA = a.querySelector('.card-title').textContent.trim();
+            const nameB = b.querySelector('.card-title').textContent.trim();
+            
+            switch (sortBy) {
+                case 'name':
+                    return nameA.localeCompare(nameB);
+                case 'rating':
+                case 'reviews':
+                case 'distance':
+                default:
+                    return 0; // Keep original order for now
+            }
+        });
+        
+        const container = document.getElementById('providersContainer');
+        cards.forEach(card => container.appendChild(card));
+    }
+    
+    function contactProvider(providerId) {
+        // Implement contact functionality
+        alert('Contact functionality will be implemented with messaging system');
+    }
+    
+    // Initialize view
+    document.getElementById('gridViewBtn').classList.add('btn-primary');
+</script>
