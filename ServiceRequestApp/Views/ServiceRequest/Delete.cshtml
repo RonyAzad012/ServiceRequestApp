@@ -20,8 +20,8 @@
                         <dt class="col-sm-3">Title</dt>
                         <dd class="col-sm-9">@Model.Title</dd>
 
-                        <dt class="col-sm-3">Service Type</dt>
-                        <dd class="col-sm-9">@Model.ServiceType</dd>
+                        <dt class="col-sm-3">Category</dt>
+                        <dd class="col-sm-9">@(Model.Category?.Name ?? "General")</dd>
 
                         <dt class="col-sm-3">Description</dt>
                         <dd class="col-sm-9">@Model.Description</dd>

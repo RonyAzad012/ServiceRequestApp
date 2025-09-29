@@ -74,7 +74,7 @@
     <div class="row g-4" id="requestsContainer">
         @foreach (var item in Model)
         {
-            <div class="col-lg-6 col-xl-4 request-card" data-status="@item.Status.ToLower()" data-title="@item.Title.ToLower()" data-price="@item.Price">
+            <div class="col-lg-6 col-xl-4 request-card" data-status="@item.Status.ToLower()" data-title="@item.Title.ToLower()" data-price="@(item.Budget ?? 0)">
                 <div class="card h-100 shadow-sm border-0">
                     <div class="card-header bg-gradient-primary text-white">
                         <div class="d-flex justify-content-between align-items-center">
@@ -93,7 +93,7 @@
                                 <i class="fas fa-tools text-primary"></i>
                             </div>
                             <div>
-                                <h6 class="mb-0 text-primary fw-bold">@item.ServiceType</h6>
+                                <h6 class="mb-0 text-primary fw-bold">@(item.Category?.Name ?? "General")</h6>
                                 <small class="text-muted">@(item.Category?.Name ?? "General")</small>
                             </div>
                         </div>
@@ -111,7 +111,7 @@
                                 <div class="col-6">
                                     <div class="detail-item">
                                         <i class="fas fa-dollar-sign text-success me-2"></i>
-                                        <small class="fw-bold text-success">@item.Price.ToString("C")</small>
+                                        <small class="fw-bold text-success">@(item.Budget?.ToString("C") ?? "TBD")</small>
                                     </div>
                                 </div>
                                 <div class="col-6">

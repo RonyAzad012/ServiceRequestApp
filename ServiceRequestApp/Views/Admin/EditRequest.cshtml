@@ -16,8 +16,10 @@
         <textarea asp-for="Description" class="form-control"></textarea>
     </div>
     <div class="mb-3">
-        <label asp-for="ServiceType" class="form-label"></label>
-        <input asp-for="ServiceType" class="form-control" />
+        <label asp-for="CategoryId" class="form-label"></label>
+        <select asp-for="CategoryId" class="form-control" asp-items="@(new SelectList(ViewBag.Categories, "Id", "Name"))">
+            <option value="">Select a category</option>
+        </select>
     </div>
     <div class="mb-3">
         <label asp-for="Status" class="form-label"></label>

@@ -41,12 +41,12 @@
                             
                             <div class="row mb-3">
                                 <div class="col-6">
-                                    <small class="text-muted">Service Type</small>
-                                    <p class="fw-bold mb-0">@request.ServiceType</p>
+                                    <small class="text-muted">Category</small>
+                                    <p class="fw-bold mb-0">@(request.Category?.Name ?? "General")</p>
                                 </div>
                                 <div class="col-6">
-                                    <small class="text-muted">Price</small>
-                                    <p class="fw-bold mb-0 text-success">৳@request.Price.ToString("N2")</p>
+                                    <small class="text-muted">Budget</small>
+                                    <p class="fw-bold mb-0 text-success">৳@(request.Budget?.ToString("N2") ?? "TBD")</p>
                                 </div>
                             </div>
 

@@ -29,6 +29,8 @@ namespace ServiceRequestApp.Models
         public string? ShopAddress { get; set; } // For providers
         public string? BusinessLicense { get; set; }
         public string? TaxId { get; set; }
+        public string? BusinessWebsite { get; set; } // Business website URL
+        public string? BusinessDocuments { get; set; } // JSON string for multiple file paths
         
         // Tasker-specific fields
         public string? Skills { get; set; } // Comma-separated skills

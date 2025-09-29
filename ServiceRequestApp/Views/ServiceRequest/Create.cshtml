@@ -4,148 +4,282 @@
     ViewData["Title"] = "Create Service Request";
 }
 
-<div class="container">
+<div class="container-fluid">
     <div class="row justify-content-center">
-        <div class="col-md-8">
-            <h2>Create Service Request</h2>
-            <form asp-action="Create" enctype="multipart/form-data">
-                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-
-                <div class="form-group mb-3">
-                    <label asp-for="Title" class="control-label"></label>
-                    <input asp-for="Title" class="form-control" />
-                    <span asp-validation-for="Title" class="text-danger"></span>
+        <div class="col-lg-10 col-xl-8">
+            <div class="card shadow-lg border-0">
+                <div class="card-header bg-primary text-white text-center py-4">
+                    <h2 class="mb-0">
+                        <i class="fas fa-plus-circle me-2"></i>Create Service Request
+                    </h2>
+                    <p class="mb-0 mt-2">Tell us what service you need and we'll connect you with the right professionals</p>
                 </div>
+                <div class="card-body p-5">
+                    <form id="createServiceRequestForm" enctype="multipart/form-data">
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert" style="display: none;"></div>
 
-                <div class="form-group mb-3">
-                    <label asp-for="CategoryId" class="control-label"></label>
-                    <select asp-for="CategoryId" class="form-control" asp-items="@(new SelectList(Model.Categories, "Id", "Name"))">
-                        <option value="">Select a category...</option>
-                    </select>
-                    <span asp-validation-for="CategoryId" class="text-danger"></span>
-                </div>
+                        <!-- Service Details Section -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h5 class="text-primary mb-3">
+                                    <i class="fas fa-info-circle me-2"></i>Service Details
+                                </h5>
+                            </div>
+                        </div>
 
-                <div class="form-group mb-3">
-                    <label asp-for="ServiceType" class="control-label"></label>
-                    <select asp-for="ServiceType" class="form-control">
-                        <option value="">Select a service type...</option>
-                        <option value="Cleaning">Cleaning</option>
-                        <option value="Plumbing">Plumbing</option>
-                        <option value="Electrical">Electrical</option>
-                        <option value="Moving">Moving</option>
-                        <option value="Other">Other</option>
-                    </select>
-                    <span asp-validation-for="ServiceType" class="text-danger"></span>
-                </div>
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-8">
+                                <label asp-for="Title" class="form-label fw-semibold">
+                                    <i class="fas fa-heading me-1"></i>Service Title *
+                                </label>
+                                <input asp-for="Title" class="form-control form-control-lg" placeholder="Brief description of what you need" />
+                                <span asp-validation-for="Title" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-4">
+                                <label asp-for="CategoryId" class="form-label fw-semibold">
+                                    <i class="fas fa-tags me-1"></i>Category *
+                                </label>
+                                <select asp-for="CategoryId" class="form-control form-control-lg" asp-items="@(new SelectList(Model.Categories, "Id", "Name"))">
+                                    <option value="">Select category</option>
+                                </select>
+                                <span asp-validation-for="CategoryId" class="text-danger small"></span>
+                            </div>
+                        </div>
 
-                <div class="form-group mb-3">
-                    <label asp-for="Description" class="control-label"></label>
-                    <textarea asp-for="Description" class="form-control" rows="4"></textarea>
-                    <span asp-validation-for="Description" class="text-danger"></span>
-                </div>
+                        <div class="row g-3 mb-4">
+                            <div class="col-12">
+                                <label asp-for="Description" class="form-label fw-semibold">
+                                    <i class="fas fa-align-left me-1"></i>Detailed Description *
+                                </label>
+                                <textarea asp-for="Description" class="form-control form-control-lg" rows="4" placeholder="Provide detailed information about the service you need. Include any specific requirements, materials needed, or special instructions."></textarea>
+                                <span asp-validation-for="Description" class="text-danger small"></span>
+                            </div>
+                        </div>
 
-                <div class="form-group mb-3">
-                    <label>Location</label>
-                    <div id="map" style="height: 400px;" class="mb-2"></div>
-                    <input type="hidden" asp-for="Latitude" id="Latitude" />
-                    <input type="hidden" asp-for="Longitude" id="Longitude" />
-                </div>
+                        <!-- Budget and Timeline Section -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h5 class="text-primary mb-3">
+                                    <i class="fas fa-dollar-sign me-2"></i>Budget & Timeline
+                                </h5>
+                            </div>
+                        </div>
 
-                <div class="form-group mb-3">
-                    <label asp-for="Address" class="control-label"></label>
-                    <input asp-for="Address" class="form-control" />
-                    <span asp-validation-for="Address" class="text-danger"></span>
-                </div>
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-4">
+                                <label asp-for="Budget" class="form-label fw-semibold">
+                                    <i class="fas fa-money-bill-wave me-1"></i>Budget (৳)
+                                </label>
+                                <input asp-for="Budget" class="form-control form-control-lg" placeholder="Your budget range" type="number" step="0.01" />
+                                <span asp-validation-for="Budget" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-4">
+                                <label asp-for="BudgetType" class="form-label fw-semibold">
+                                    <i class="fas fa-calculator me-1"></i>Budget Type *
+                                </label>
+                                <select asp-for="BudgetType" class="form-control form-control-lg">
+                                    <option value="Negotiable">Negotiable</option>
+                                    <option value="Fixed">Fixed Price</option>
+                                    <option value="Hourly">Hourly Rate</option>
+                                </select>
+                                <span asp-validation-for="BudgetType" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-4">
+                                <label asp-for="Urgency" class="form-label fw-semibold">
+                                    <i class="fas fa-clock me-1"></i>Urgency *
+                                </label>
+                                <select asp-for="Urgency" class="form-control form-control-lg">
+                                    <option value="Low">Low - Flexible timing</option>
+                                    <option value="Medium" selected>Medium - Within a week</option>
+                                    <option value="High">High - Within 2-3 days</option>
+                                    <option value="Urgent">Urgent - ASAP</option>
+                                </select>
+                                <span asp-validation-for="Urgency" class="text-danger small"></span>
+                            </div>
+                        </div>
 
-                <div class="form-group mb-3">
-                    <label asp-for="Zipcode" class="control-label"></label>
-                    <input asp-for="Zipcode" class="form-control" />
-                    <span asp-validation-for="Zipcode" class="text-danger"></span>
-                </div>
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label asp-for="PreferredDate" class="form-label fw-semibold">
+                                    <i class="fas fa-calendar-alt me-1"></i>Preferred Date
+                                </label>
+                                <input asp-for="PreferredDate" class="form-control form-control-lg" type="date" />
+                                <span asp-validation-for="PreferredDate" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="Deadline" class="form-label fw-semibold">
+                                    <i class="fas fa-calendar-times me-1"></i>Deadline
+                                </label>
+                                <input asp-for="Deadline" class="form-control form-control-lg" type="date" />
+                                <span asp-validation-for="Deadline" class="text-danger small"></span>
+                            </div>
+                        </div>
 
-                <div class="form-group mb-3">
-                    <label asp-for="Price" class="control-label"></label>
-                    <input asp-for="Price" class="form-control" />
-                    <span asp-validation-for="Price" class="text-danger"></span>
-                </div>
+                        <!-- Location Section -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h5 class="text-primary mb-3">
+                                    <i class="fas fa-map-marker-alt me-2"></i>Service Location
+                                </h5>
+                            </div>
+                        </div>
 
-                <div class="form-group mb-3">
-                    <label asp-for="PhoneNumber" class="control-label"></label>
-                    <input asp-for="PhoneNumber" class="form-control" />
-                    <span asp-validation-for="PhoneNumber" class="text-danger"></span>
-                </div>
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-8">
+                                <label asp-for="Address" class="form-label fw-semibold">
+                                    <i class="fas fa-home me-1"></i>Service Address *
+                                </label>
+                                <input asp-for="Address" class="form-control form-control-lg" placeholder="Enter the complete address where service is needed" />
+                                <span asp-validation-for="Address" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-4">
+                                <label asp-for="Zipcode" class="form-label fw-semibold">
+                                    <i class="fas fa-mail-bulk me-1"></i>Zip Code *
+                                </label>
+                                <input asp-for="Zipcode" class="form-control form-control-lg" placeholder="Enter zip code" />
+                                <span asp-validation-for="Zipcode" class="text-danger small"></span>
+                            </div>
+                        </div>
 
-                <div class="form-group mb-3">
-                    <label asp-for="Deadline" class="control-label"></label>
-                    <input asp-for="Deadline" class="form-control" type="date" />
-                    <span asp-validation-for="Deadline" class="text-danger"></span>
-                </div>
+                        <!-- Contact Information Section -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h5 class="text-primary mb-3">
+                                    <i class="fas fa-phone me-2"></i>Contact Information
+                                </h5>
+                            </div>
+                        </div>
 
-                <div class="form-group mb-3">
-                    <label asp-for="Images" class="control-label">Upload Images</label>
-                    <input asp-for="Images" class="form-control" type="file" multiple />
-                    <span asp-validation-for="Images" class="text-danger"></span>
-                </div>
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label asp-for="PhoneNumber" class="form-label fw-semibold">
+                                    <i class="fas fa-phone me-1"></i>Contact Phone *
+                                </label>
+                                <input asp-for="PhoneNumber" class="form-control form-control-lg" placeholder="Your contact number" />
+                                <span asp-validation-for="PhoneNumber" class="text-danger small"></span>
+                            </div>
+                        </div>
 
-                <div class="form-group">
-                    <button type="submit" class="btn btn-primary">Create Request</button>
-                    <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+                        <!-- Additional Details Section -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h5 class="text-primary mb-3">
+                                    <i class="fas fa-clipboard-list me-2"></i>Additional Details
+                                </h5>
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-4">
+                            <div class="col-12">
+                                <label asp-for="SpecialRequirements" class="form-label fw-semibold">
+                                    <i class="fas fa-exclamation-triangle me-1"></i>Special Requirements
+                                </label>
+                                <textarea asp-for="SpecialRequirements" class="form-control form-control-lg" rows="3" placeholder="Any special requirements, access instructions, or additional information providers should know"></textarea>
+                                <span asp-validation-for="SpecialRequirements" class="text-danger small"></span>
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-4">
+                            <div class="col-12">
+                                <label asp-for="AttachedFiles" class="form-label fw-semibold">
+                                    <i class="fas fa-paperclip me-1"></i>Attach Files
+                                </label>
+                                <input asp-for="AttachedFiles" type="file" class="form-control form-control-lg" multiple accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.txt" />
+                                <span asp-validation-for="AttachedFiles" class="text-danger small"></span>
+                                <div class="form-text">Upload photos, documents, or any relevant files (PDF, images, documents)</div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-12">
+                                <button type="submit" class="btn btn-primary btn-lg w-100 py-3">
+                                    <i class="fas fa-paper-plane me-2"></i>Create Service Request
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="row mt-3">
+                            <div class="col-12 text-center">
+                                <p class="text-muted">
+                                    <i class="fas fa-shield-alt me-1"></i>
+                                    Your request will be visible to verified service providers in your area
+                                </p>
+                            </div>
+                        </div>
+                    </form>
                 </div>
-            </form>
+            </div>
         </div>
     </div>
 </div>
 
 @section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
-
+    
     <script>
-        // Initialize the map
-        var map = L.map('map').setView([0, 0], 2);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap contributors'
-        }).addTo(map);
-
-        var marker;
-
-        // Try to get user's location
-        if ("geolocation" in navigator) {
-            navigator.geolocation.getCurrentPosition(function(position) {
-                var lat = position.coords.latitude;
-                var lng = position.coords.longitude;
-                map.setView([lat, lng], 13);
-
-                if (marker) {
-                    marker.setLatLng([lat, lng]);
-                } else {
-                    marker = L.marker([lat, lng], {draggable: true}).addTo(map);
-                }
-
-                updateCoordinates(lat, lng);
+        $(document).ready(function() {
+            $('#createServiceRequestForm').on('submit', function(e) {
+                e.preventDefault();
+                
+                // Show loading state
+                const submitBtn = $(this).find('button[type="submit"]');
+                const originalText = submitBtn.html();
+                submitBtn.html('<i class="fas fa-spinner fa-spin me-2"></i>Creating Request...').prop('disabled', true);
+                
+                // Create FormData for file uploads
+                const formData = new FormData(this);
+                
+                $.ajax({
+                    url: '@Url.Action("Create", "ServiceRequest")',
+                    type: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function(response) {
+                        if (response.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Request Created!',
+                                text: response.message || 'Your service request has been created successfully.',
+                                confirmButtonText: 'View Requests',
+                                allowOutsideClick: false
+                            }).then((result) => {
+                                if (result.isConfirmed) {
+                                    window.location.href = '@Url.Action("Index", "ServiceRequest")';
+                                }
+                            });
+                        } else {
+                            // Show validation errors
+                            let errorMessage = 'Please fix the following errors:\n';
+                            if (response.errors && response.errors.length > 0) {
+                                errorMessage += response.errors.join('\n');
+                            }
+                            
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Request Failed',
+                                text: errorMessage,
+                                confirmButtonText: 'Try Again'
+                            });
+                        }
+                    },
+                    error: function() {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'An unexpected error occurred. Please try again.',
+                            confirmButtonText: 'OK'
+                        });
+                    },
+                    complete: function() {
+                        // Reset button state
+                        submitBtn.html(originalText).prop('disabled', false);
+                    }
+                });
             });
-        }
-
-        // Handle map clicks
-        map.on('click', function(e) {
-            var lat = e.latlng.lat;
-            var lng = e.latlng.lng;
-
-            if (marker) {
-                marker.setLatLng([lat, lng]);
-            } else {
-                marker = L.marker([lat, lng], {draggable: true}).addTo(map);
-            }
-
-            updateCoordinates(lat, lng);
         });
-
-        function updateCoordinates(lat, lng) {
-            document.getElementById('Latitude').value = lat;
-            document.getElementById('Longitude').value = lng;
-        }
     </script>
 }

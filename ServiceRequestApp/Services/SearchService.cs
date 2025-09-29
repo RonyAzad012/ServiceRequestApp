@@ -129,7 +129,7 @@ namespace ServiceRequestApp.Services
                 query = query.Where(sr =>
                     sr.Title.Contains(criteria.SearchTerm) ||
                     sr.Description.Contains(criteria.SearchTerm) ||
-                    sr.ServiceType.Contains(criteria.SearchTerm));
+                    sr.Category.Name.Contains(criteria.SearchTerm));
             }
 
             // Location filter
@@ -141,11 +141,11 @@ namespace ServiceRequestApp.Services
             // Price range filter
             if (criteria.MinPrice.HasValue)
             {
-                query = query.Where(sr => sr.Price >= criteria.MinPrice.Value);
+                query = query.Where(sr => sr.Budget >= criteria.MinPrice.Value);
             }
             if (criteria.MaxPrice.HasValue)
             {
-                query = query.Where(sr => sr.Price <= criteria.MaxPrice.Value);
+                query = query.Where(sr => sr.Budget <= criteria.MaxPrice.Value);
             }
 
             // Date range filter
@@ -161,8 +161,8 @@ namespace ServiceRequestApp.Services
             // Sorting
             query = criteria.SortBy?.ToLower() switch
             {
-                "price" => query.OrderBy(sr => sr.Price),
-                "price_desc" => query.OrderByDescending(sr => sr.Price),
+                "price" => query.OrderBy(sr => sr.Budget),
+                "price_desc" => query.OrderByDescending(sr => sr.Budget),
                 "date" => query.OrderBy(sr => sr.CreatedAt),
                 "date_desc" => query.OrderByDescending(sr => sr.CreatedAt),
                 _ => query.OrderByDescending(sr => sr.CreatedAt)

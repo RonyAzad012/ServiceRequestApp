@@ -317,6 +317,7 @@ namespace ServiceRequestApp.Controllers
         {
             var req = _dbContext.ServiceRequests.FirstOrDefault(r => r.Id == id);
             if (req == null) return NotFound();
+            ViewBag.Categories = _dbContext.Categories.ToList();
             return View(req);
         }
 
@@ -327,7 +328,6 @@ namespace ServiceRequestApp.Controllers
             if (req == null) return NotFound();
             req.Title = model.Title;
             req.Description = model.Description;
-            req.ServiceType = model.ServiceType;
             req.Status = model.Status;
             _dbContext.SaveChanges();
             return RedirectToAction("ServiceRequests");

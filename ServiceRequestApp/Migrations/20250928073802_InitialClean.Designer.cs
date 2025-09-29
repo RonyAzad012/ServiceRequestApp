@@ -12,8 +12,8 @@ using ServiceRequestApp.Data;
 namespace ServiceRequestApp.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250928062834_CompleteFeatures")]
-    partial class CompleteFeatures
+    [Migration("20250928073802_InitialClean")]
+    partial class InitialClean
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

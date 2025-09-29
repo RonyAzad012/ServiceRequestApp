@@ -20,7 +20,7 @@
     {
         <tr>
             <td>@req.Title</td>
-            <td>@req.ServiceType</td>
+            <td>@(req.Category?.Name ?? "General")</td>
             <td>@req.Status</td>
             <td>@req.CreatedAt.ToString("g")</td>
             <td>

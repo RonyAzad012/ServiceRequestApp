@@ -12,8 +12,8 @@ using ServiceRequestApp.Data;
 namespace ServiceRequestApp.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250917065836_NewFeature2")]
-    partial class NewFeature2
+    [Migration("20250929031151_AddPaymentModel")]
+    partial class AddPaymentModel
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -207,15 +207,39 @@ namespace ServiceRequestApp.Migrations
                     b.Property<string>("Address")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<DateTime?>("ApprovedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ApprovedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("AvailabilitySchedule")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal?>("AverageRating")
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<string>("BusinessCredentials")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("BusinessDocuments")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("BusinessImagePath")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("BusinessLicense")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("BusinessWebsite")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("Email")
                         .HasMaxLength(256)
@@ -227,14 +251,26 @@ namespace ServiceRequestApp.Migrations
                     b.Property<string>("FirstName")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<bool>("IsApproved")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsAvailable")
+                        .HasColumnType("bit");
+
                     b.Property<string>("LastName")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<double?>("Latitude")
+                        .HasColumnType("float");
 
                     b.Property<bool>("LockoutEnabled")
                         .HasColumnType("bit");
 
                     b.Property<DateTimeOffset?>("LockoutEnd")
                         .HasColumnType("datetimeoffset");
+
+                    b.Property<double?>("Longitude")
+                        .HasColumnType("float");
 
                     b.Property<string>("NationalId")
                         .HasColumnType("nvarchar(max)");
@@ -256,7 +292,25 @@ namespace ServiceRequestApp.Migrations
                     b.Property<bool>("PhoneNumberConfirmed")
                         .HasColumnType("bit");
 
+                    b.Property<string>("PortfolioUrl")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("PrimaryCategoryId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ProfileDescription")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ProfileImagePath")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("RejectionReason")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("SecurityStamp")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ServiceAreas")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("ShopAddress")
@@ -270,6 +324,15 @@ namespace ServiceRequestApp.Migrations
 
                     b.Property<string>("ShopPhone")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Skills")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("TaxId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("TotalReviews")
+                        .HasColumnType("int");
 
                     b.Property<bool>("TwoFactorEnabled")
                         .HasColumnType("bit");
@@ -295,6 +358,8 @@ namespace ServiceRequestApp.Migrations
                         .HasDatabaseName("UserNameIndex")
                         .HasFilter("[NormalizedUserName] IS NOT NULL");
 
+                    b.HasIndex("PrimaryCategoryId");
+
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
@@ -305,6 +370,21 @@ namespace ServiceRequestApp.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Color")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Icon")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -330,6 +410,9 @@ namespace ServiceRequestApp.Migrations
                     b.Property<bool>("IsRead")
                         .HasColumnType("bit");
 
+                    b.Property<DateTime?>("ReadAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("ReceiverId")
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
@@ -344,6 +427,9 @@ namespace ServiceRequestApp.Migrations
                     b.Property<int>("ServiceRequestId")
                         .HasColumnType("int");
 
+                    b.Property<int?>("ServiceRequestId1")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
 
                     b.HasIndex("ReceiverId");
@@ -352,7 +438,225 @@ namespace ServiceRequestApp.Migrations
 
                     b.HasIndex("ServiceRequestId");
 
+                    b.HasIndex("ServiceRequestId1");
+
                     b.ToTable("Messages");
+                });
+
+            modelBuilder.Entity("ServiceRequestApp.Models.Notification", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ActionUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Icon")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<bool>("IsRead")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<DateTime?>("ReadAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Notifications");
+                });
+
+            modelBuilder.Entity("ServiceRequestApp.Models.Payment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("FailureReason")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PaymentGatewayResponse")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PaymentMethod")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PaymentStatus")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("RequesterId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("SSLCommerzBankName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("SSLCommerzBankTransactionId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("SSLCommerzCardNo")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("SSLCommerzCardType")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("SSLCommerzRiskLevel")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("SSLCommerzRiskTitle")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("SSLCommerzSessionKey")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("SSLCommerzTransactionId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("SSLCommerzValId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("ServiceRequestId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("TransactionId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RequesterId");
+
+                    b.HasIndex("ServiceRequestId");
+
+                    b.ToTable("Payments");
+                });
+
+            modelBuilder.Entity("ServiceRequestApp.Models.PaymentTransaction", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal?>("AdminCommission")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal?>("AdminCommissionAmount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("FailureReason")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("GatewayResponse")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PaymentMethod")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal?>("ProviderAmount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal?>("ProviderReceivedAmount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("RefundReason")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("RefundedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Remarks")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("ServiceRequestId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("TransactionDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("TransactionId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ServiceRequestId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("PaymentTransactions");
                 });
 
             modelBuilder.Entity("ServiceRequestApp.Models.Review", b =>
@@ -384,6 +688,9 @@ namespace ServiceRequestApp.Migrations
                     b.Property<int>("ServiceRequestId")
                         .HasColumnType("int");
 
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
                     b.HasKey("Id");
 
                     b.HasIndex("RevieweeId");
@@ -405,10 +712,35 @@ namespace ServiceRequestApp.Migrations
 
                     b.Property<string>("Address")
                         .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<decimal?>("AdminCommission")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("AttachedFiles")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("CategoryId")
+                    b.Property<decimal?>("Budget")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("BudgetType")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("CancellationReason")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("CancelledAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("CategoryId")
                         .HasColumnType("int");
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CompletionRejectionReason")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
@@ -418,15 +750,13 @@ namespace ServiceRequestApp.Migrations
 
                     b.Property<string>("Description")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
 
-                    b.Property<string>("ImagePaths")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<double>("Latitude")
+                    b.Property<double?>("Latitude")
                         .HasColumnType("float");
 
-                    b.Property<double>("Longitude")
+                    b.Property<double?>("Longitude")
                         .HasColumnType("float");
 
                     b.Property<decimal?>("PaymentAmount")
@@ -443,34 +773,51 @@ namespace ServiceRequestApp.Migrations
 
                     b.Property<string>("PhoneNumber")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
 
-                    b.Property<decimal>("Price")
+                    b.Property<DateTime?>("PreferredDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal?>("ProviderAmount")
                         .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("ProviderId")
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("RequesterId")
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
-                    b.Property<string>("ServiceType")
-                        .IsRequired()
+                    b.Property<string>("SpecialRequirements")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Status")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<string>("Title")
                         .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Urgency")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Zipcode")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
 
                     b.HasKey("Id");
 
                     b.HasIndex("CategoryId");
+
+                    b.HasIndex("ProviderId");
 
                     b.HasIndex("RequesterId");
 
@@ -585,6 +932,16 @@ namespace ServiceRequestApp.Migrations
                     b.Navigation("ServiceRequest");
                 });
 
+            modelBuilder.Entity("ServiceRequestApp.Models.ApplicationUser", b =>
+                {
+                    b.HasOne("ServiceRequestApp.Models.Category", "PrimaryCategory")
+                        .WithMany("Providers")
+                        .HasForeignKey("PrimaryCategoryId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("PrimaryCategory");
+                });
+
             modelBuilder.Entity("ServiceRequestApp.Models.Message", b =>
                 {
                     b.HasOne("ServiceRequestApp.Models.ApplicationUser", "Receiver")
@@ -605,6 +962,10 @@ namespace ServiceRequestApp.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("ServiceRequestApp.Models.ServiceRequest", null)
+                        .WithMany("Messages")
+                        .HasForeignKey("ServiceRequestId1");
+
                     b.Navigation("Receiver");
 
                     b.Navigation("Sender");
@@ -612,10 +973,59 @@ namespace ServiceRequestApp.Migrations
                     b.Navigation("ServiceRequest");
                 });
 
+            modelBuilder.Entity("ServiceRequestApp.Models.Notification", b =>
+                {
+                    b.HasOne("ServiceRequestApp.Models.ApplicationUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("ServiceRequestApp.Models.Payment", b =>
+                {
+                    b.HasOne("ServiceRequestApp.Models.ApplicationUser", "Requester")
+                        .WithMany()
+                        .HasForeignKey("RequesterId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("ServiceRequestApp.Models.ServiceRequest", "ServiceRequest")
+                        .WithMany("Payments")
+                        .HasForeignKey("ServiceRequestId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Requester");
+
+                    b.Navigation("ServiceRequest");
+                });
+
+            modelBuilder.Entity("ServiceRequestApp.Models.PaymentTransaction", b =>
+                {
+                    b.HasOne("ServiceRequestApp.Models.ServiceRequest", "ServiceRequest")
+                        .WithMany()
+                        .HasForeignKey("ServiceRequestId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("ServiceRequestApp.Models.ApplicationUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("ServiceRequest");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("ServiceRequestApp.Models.Review", b =>
                 {
                     b.HasOne("ServiceRequestApp.Models.ApplicationUser", "Reviewee")
-                        .WithMany()
+                        .WithMany("Reviews")
                         .HasForeignKey("RevieweeId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
@@ -644,7 +1054,12 @@ namespace ServiceRequestApp.Migrations
                     b.HasOne("ServiceRequestApp.Models.Category", "Category")
                         .WithMany("ServiceRequests")
                         .HasForeignKey("CategoryId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .IsRequired();
+
+                    b.HasOne("ServiceRequestApp.Models.ApplicationUser", "Provider")
+                        .WithMany("ServiceRequests")
+                        .HasForeignKey("ProviderId");
 
                     b.HasOne("ServiceRequestApp.Models.ApplicationUser", "Requester")
                         .WithMany("Requests")
@@ -653,6 +1068,8 @@ namespace ServiceRequestApp.Migrations
                         .IsRequired();
 
                     b.Navigation("Category");
+
+                    b.Navigation("Provider");
 
                     b.Navigation("Requester");
                 });
@@ -681,16 +1098,26 @@ namespace ServiceRequestApp.Migrations
                     b.Navigation("AcceptedRequests");
 
                     b.Navigation("Requests");
+
+                    b.Navigation("Reviews");
+
+                    b.Navigation("ServiceRequests");
                 });
 
             modelBuilder.Entity("ServiceRequestApp.Models.Category", b =>
                 {
+                    b.Navigation("Providers");
+
                     b.Navigation("ServiceRequests");
                 });
 
             modelBuilder.Entity("ServiceRequestApp.Models.ServiceRequest", b =>
                 {
                     b.Navigation("AcceptedRequest");
+
+                    b.Navigation("Messages");
+
+                    b.Navigation("Payments");
                 });
 #pragma warning restore 612, 618
         }

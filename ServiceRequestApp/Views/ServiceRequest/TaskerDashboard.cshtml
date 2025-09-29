@@ -55,14 +55,14 @@
                     </div>
                     <div class="card-body">
                         <h6 class="card-subtitle mb-3 text-primary">
-                            <i class="fas fa-tools me-2"></i>@item.ServiceType
+                            <i class="fas fa-tools me-2"></i>@(item.Category?.Name ?? "General")
                         </h6>
                         <p class="card-text">@item.Description</p>
                         <div class="mb-2">
                             <strong>Category:</strong> @(item.Category?.Name ?? "N/A") <br />
                             <strong>Address:</strong> @item.Address <br />
                             <strong>Zipcode:</strong> @item.Zipcode <br />
-                            <strong>Price:</strong> @item.Price.ToString("C") <br />
+                            <strong>Budget:</strong> @(item.Budget?.ToString("C") ?? "TBD") <br />
                             <strong>Deadline:</strong> @(item.Deadline?.ToString("d") ?? "N/A")
                         </div>
                         <div class="text-muted small mb-3">

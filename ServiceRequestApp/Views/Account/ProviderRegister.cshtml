@@ -151,12 +151,50 @@
                         </div>
 
                         <div class="row g-3 mb-4">
-                            <div class="col-12">
+                            <div class="col-md-6">
                                 <label asp-for="BusinessImagePath" class="form-label fw-semibold">
                                     <i class="fas fa-image me-1"></i>Business Image URL
                                 </label>
                                 <input asp-for="BusinessImagePath" class="form-control form-control-lg" placeholder="Enter URL for business image (optional)" />
                                 <span asp-validation-for="BusinessImagePath" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="BusinessWebsite" class="form-label fw-semibold">
+                                    <i class="fas fa-globe me-1"></i>Business Website
+                                </label>
+                                <input asp-for="BusinessWebsite" class="form-control form-control-lg" placeholder="https://yourbusiness.com (optional)" />
+                                <span asp-validation-for="BusinessWebsite" class="text-danger small"></span>
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label asp-for="PrimaryCategoryId" class="form-label fw-semibold">
+                                    <i class="fas fa-tags me-1"></i>Primary Service Category
+                                </label>
+                                <select asp-for="PrimaryCategoryId" class="form-control form-control-lg" asp-items="@(new SelectList(ViewBag.Categories, "Id", "Name"))">
+                                    <option value="">Select your primary service category</option>
+                                </select>
+                                <span asp-validation-for="PrimaryCategoryId" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="ServiceAreas" class="form-label fw-semibold">
+                                    <i class="fas fa-map-marker-alt me-1"></i>Service Areas
+                                </label>
+                                <input asp-for="ServiceAreas" class="form-control form-control-lg" placeholder="e.g., Dhaka, Chittagong, Sylhet" />
+                                <span asp-validation-for="ServiceAreas" class="text-danger small"></span>
+                                <div class="form-text">Enter areas where you provide services (comma-separated)</div>
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-4">
+                            <div class="col-12">
+                                <label asp-for="BusinessDocuments" class="form-label fw-semibold">
+                                    <i class="fas fa-file-upload me-1"></i>Business Documents
+                                </label>
+                                <input asp-for="BusinessDocuments" type="file" class="form-control form-control-lg" multiple accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" />
+                                <span asp-validation-for="BusinessDocuments" class="text-danger small"></span>
+                                <div class="form-text">Upload business licenses, certificates, or other relevant documents (PDF, images, or documents)</div>
                             </div>
                         </div>
 

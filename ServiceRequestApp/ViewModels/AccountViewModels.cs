@@ -93,7 +93,6 @@ namespace ServiceRequestApp.ViewModels
 
         public string? ProfileDescription { get; set; }
 
-        [Required]
         public int? PrimaryCategoryId { get; set; }
 
         public string? ServiceAreas { get; set; }
@@ -228,9 +227,13 @@ namespace ServiceRequestApp.ViewModels
 
         public string? BusinessImagePath { get; set; }
 
-        [Required]
         public int? PrimaryCategoryId { get; set; }
 
         public string? ServiceAreas { get; set; }
+
+        [Url]
+        public string? BusinessWebsite { get; set; }
+
+        public IFormFileCollection? BusinessDocuments { get; set; }
     }
 }

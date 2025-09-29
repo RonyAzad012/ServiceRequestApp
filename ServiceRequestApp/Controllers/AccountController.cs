@@ -77,8 +77,10 @@ namespace ServiceRequestApp.Controllers
         }
 
         [HttpGet]
-        public IActionResult ProviderRegister()
+        public async Task<IActionResult> ProviderRegister()
         {
+            var categories = await _dbContext.Categories.Where(c => c.IsActive).ToListAsync();
+            ViewBag.Categories = categories;
             return View();
         }
 
@@ -104,6 +106,7 @@ namespace ServiceRequestApp.Controllers
                     ShopPhone = model.ShopPhone,
                     BusinessCredentials = model.BusinessCredentials,
                     BusinessImagePath = model.BusinessImagePath,
+                    BusinessWebsite = model.BusinessWebsite,
                     PrimaryCategoryId = model.PrimaryCategoryId,
                     ServiceAreas = model.ServiceAreas,
                     IsApproved = false // Require admin approval
@@ -225,8 +228,10 @@ namespace ServiceRequestApp.Controllers
         }
 
         [HttpGet]
-        public IActionResult TaskerRegister()
+        public async Task<IActionResult> TaskerRegister()
         {
+            var categories = await _dbContext.Categories.Where(c => c.IsActive).ToListAsync();
+            ViewBag.Categories = categories;
             return View();
         }
 

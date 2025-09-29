@@ -20,7 +20,7 @@
             <div class="card">
                 <div class="card-body">
                     <h2 class="card-title">@Model.Title</h2>
-                    <h6 class="card-subtitle mb-3 text-muted">@Model.ServiceType</h6>
+                    <h6 class="card-subtitle mb-3 text-muted">@Model.Category?.Name</h6>
 
                     <dl class="row">
                         <dt class="col-sm-3">Description</dt>
@@ -41,8 +41,8 @@
                         <dt class="col-sm-3">Zipcode</dt>
                         <dd class="col-sm-9">@Model.Zipcode</dd>
 
-                        <dt class="col-sm-3">Price</dt>
-                        <dd class="col-sm-9">@Model.Price.ToString("C")</dd>
+                        <dt class="col-sm-3">Budget</dt>
+                        <dd class="col-sm-9">@(Model.Budget?.ToString("C") ?? "Not specified")</dd>
 
                         <dt class="col-sm-3">Phone Number</dt>
                         <dd class="col-sm-9">@Model.PhoneNumber</dd>
@@ -50,13 +50,15 @@
                         <dt class="col-sm-3">Deadline</dt>
                         <dd class="col-sm-9">@(Model.Deadline?.ToString("d") ?? "N/A")</dd>
 
-                        @if (!string.IsNullOrEmpty(Model.ImagePaths))
+                        @if (!string.IsNullOrEmpty(Model.AttachedFiles))
                         {
-                            <dt class="col-sm-3">Images</dt>
+                            <dt class="col-sm-3">Attached Files</dt>
                             <dd class="col-sm-9">
-                                @foreach (var img in Model.ImagePaths.Split(','))
+                                @foreach (var file in Model.AttachedFiles.Split(','))
                                 {
-                                    <img src="@img" alt="Request Image" style="max-width:120px;max-height:120px;margin-right:10px;" />
+                                    <a href="@file" target="_blank" class="btn btn-sm btn-outline-primary me-2 mb-2">
+                                        <i class="fas fa-file"></i> View File
+                                    </a>
                                 }
                             </dd>
                         }
@@ -155,7 +157,7 @@
                         @if (Model.PaymentStatus != "Paid" && Model.Status == "In Progress")
                         {
                             <a asp-controller="Payment" asp-action="Process" asp-route-serviceRequestId="@Model.Id" class="btn btn-success">
-                                <i class="fas fa-credit-card me-1"></i>Make Payment (৳@Model.Price.ToString("N2"))
+                                <i class="fas fa-credit-card me-1"></i>Make Payment (৳@(Model.Budget?.ToString("N2") ?? "TBD"))
                             </a>
                         }
                         else if (Model.PaymentStatus == "Paid")

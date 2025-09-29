@@ -90,13 +90,16 @@ namespace ServiceRequestApp.Controllers
             if (ModelState.IsValid)
             {
                 var currentUser = await _userManager.GetUserAsync(User);
-                string imagePaths = null;
-                if (model.Images != null && model.Images.Count > 0)
+                string attachedFiles = null;
+                
+                // Handle file uploads
+                if (model.AttachedFiles != null && model.AttachedFiles.Count > 0)
                 {
-                    var uploads = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/images/requests");
+                    var uploads = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/uploads/requests");
                     Directory.CreateDirectory(uploads);
                     var fileNames = new List<string>();
-                    foreach (var file in model.Images)
+                    
+                    foreach (var file in model.AttachedFiles)
                     {
                         if (file.Length > 0)
                         {
@@ -106,34 +109,45 @@ namespace ServiceRequestApp.Controllers
                             {
                                 await file.CopyToAsync(stream);
                             }
-                            fileNames.Add("/images/requests/" + fileName);
+                            fileNames.Add("/uploads/requests/" + fileName);
                         }
                     }
-                    imagePaths = string.Join(",", fileNames);
+                    attachedFiles = string.Join(",", fileNames);
                 }
+                
                 var request = new ServiceRequest
                 {
                     Title = model.Title,
                     Description = model.Description,
-                    ServiceType = model.ServiceType,
+                    CategoryId = model.CategoryId,
                     CreatedAt = DateTime.UtcNow,
                     Status = "Pending",
-                    Latitude = model.Latitude,
-                    Longitude = model.Longitude,
                     RequesterId = currentUser.Id,
                     Address = model.Address,
                     Zipcode = model.Zipcode,
-                    Price = model.Price,
                     PhoneNumber = model.PhoneNumber,
+                    Budget = model.Budget,
+                    BudgetType = model.BudgetType,
+                    PreferredDate = model.PreferredDate,
                     Deadline = model.Deadline,
-                    ImagePaths = imagePaths,
-                    CategoryId = model.CategoryId
+                    Urgency = model.Urgency,
+                    SpecialRequirements = model.SpecialRequirements,
+                    AttachedFiles = attachedFiles
                 };
+                
                 _dbContext.Add(request);
                 await _dbContext.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
+                
+                return Json(new { 
+                    success = true, 
+                    message = "Service request created successfully! Providers in your area will be notified." 
+                });
             }
-            return View(model);
+            
+            return Json(new { 
+                success = false, 
+                errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage) 
+            });
         }
 
         // POST: ServiceRequest/Accept/5
@@ -327,7 +341,7 @@ namespace ServiceRequestApp.Controllers
             {
                 existingRequest.Title = model.Title;
                 existingRequest.Description = model.Description;
-                existingRequest.CategoryId = model.CategoryId;
+                existingRequest.CategoryId = model.CategoryId ?? 0;
 
                 await _dbContext.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
@@ -415,7 +429,7 @@ namespace ServiceRequestApp.Controllers
             }
             // Show payment options (stub)
             ViewBag.RequestId = id;
-            ViewBag.Amount = request.Price;
+            ViewBag.Amount = request.Budget;
             return View();
         }
 
@@ -449,7 +463,7 @@ namespace ServiceRequestApp.Controllers
             // Simulate payment success
             request.PaymentStatus = "Paid";
             request.PaymentTransactionId = $"{gateway.ToUpper()}-{Guid.NewGuid()}";
-            request.PaymentAmount = request.Price;
+            request.PaymentAmount = request.Budget;
             request.PaymentDate = DateTime.UtcNow;
             await _dbContext.SaveChangesAsync();
             TempData["PaymentSuccess"] = $"Payment successful via {gateway}.";
@@ -640,9 +654,9 @@ namespace ServiceRequestApp.Controllers
             if (request.Status == "Pending")
             {
                 request.Status = "Accepted";
-                // Optionally set price to agreed price
+                // Optionally set budget to agreed price
                 if (application.OfferedPrice.HasValue)
-                    request.Price = application.OfferedPrice.Value;
+                    request.Budget = application.OfferedPrice.Value;
                 // Create AcceptedRequest if needed
                 if (request.AcceptedRequest == null)
                 {

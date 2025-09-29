@@ -219,10 +219,16 @@ namespace ServiceRequestApp.Migrations
                     b.Property<string>("BusinessCredentials")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("BusinessDocuments")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("BusinessImagePath")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("BusinessLicense")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("BusinessWebsite")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("ConcurrencyStamp")
@@ -485,6 +491,92 @@ namespace ServiceRequestApp.Migrations
                     b.ToTable("Notifications");
                 });
 
+            modelBuilder.Entity("ServiceRequestApp.Models.Payment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("FailureReason")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PaymentGatewayResponse")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PaymentMethod")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PaymentStatus")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("RequesterId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("SSLCommerzBankName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("SSLCommerzBankTransactionId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("SSLCommerzCardNo")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("SSLCommerzCardType")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("SSLCommerzRiskLevel")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("SSLCommerzRiskTitle")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("SSLCommerzSessionKey")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("SSLCommerzTransactionId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("SSLCommerzValId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("ServiceRequestId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("TransactionId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RequesterId");
+
+                    b.HasIndex("ServiceRequestId");
+
+                    b.ToTable("Payments");
+                });
+
             modelBuilder.Entity("ServiceRequestApp.Models.PaymentTransaction", b =>
                 {
                     b.Property<int>("Id")
@@ -617,10 +709,20 @@ namespace ServiceRequestApp.Migrations
 
                     b.Property<string>("Address")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<decimal?>("AdminCommission")
                         .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("AttachedFiles")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal?>("Budget")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("BudgetType")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("CancellationReason")
                         .HasColumnType("nvarchar(max)");
@@ -628,7 +730,7 @@ namespace ServiceRequestApp.Migrations
                     b.Property<DateTime?>("CancelledAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<int?>("CategoryId")
+                    b.Property<int>("CategoryId")
                         .HasColumnType("int");
 
                     b.Property<DateTime?>("CompletedAt")
@@ -645,15 +747,13 @@ namespace ServiceRequestApp.Migrations
 
                     b.Property<string>("Description")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
 
-                    b.Property<string>("ImagePaths")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<double>("Latitude")
+                    b.Property<double?>("Latitude")
                         .HasColumnType("float");
 
-                    b.Property<double>("Longitude")
+                    b.Property<double?>("Longitude")
                         .HasColumnType("float");
 
                     b.Property<decimal?>("PaymentAmount")
@@ -670,10 +770,11 @@ namespace ServiceRequestApp.Migrations
 
                     b.Property<string>("PhoneNumber")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
 
-                    b.Property<decimal>("Price")
-                        .HasColumnType("decimal(18,2)");
+                    b.Property<DateTime?>("PreferredDate")
+                        .HasColumnType("datetime2");
 
                     b.Property<decimal?>("ProviderAmount")
                         .HasColumnType("decimal(18,2)");
@@ -685,24 +786,29 @@ namespace ServiceRequestApp.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
-                    b.Property<string>("ServiceType")
-                        .IsRequired()
+                    b.Property<string>("SpecialRequirements")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Status")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<string>("Title")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("Urgency")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Zipcode")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
 
                     b.HasKey("Id");
 
@@ -875,6 +981,25 @@ namespace ServiceRequestApp.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("ServiceRequestApp.Models.Payment", b =>
+                {
+                    b.HasOne("ServiceRequestApp.Models.ApplicationUser", "Requester")
+                        .WithMany()
+                        .HasForeignKey("RequesterId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("ServiceRequestApp.Models.ServiceRequest", "ServiceRequest")
+                        .WithMany("Payments")
+                        .HasForeignKey("ServiceRequestId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Requester");
+
+                    b.Navigation("ServiceRequest");
+                });
+
             modelBuilder.Entity("ServiceRequestApp.Models.PaymentTransaction", b =>
                 {
                     b.HasOne("ServiceRequestApp.Models.ServiceRequest", "ServiceRequest")
@@ -926,7 +1051,8 @@ namespace ServiceRequestApp.Migrations
                     b.HasOne("ServiceRequestApp.Models.Category", "Category")
                         .WithMany("ServiceRequests")
                         .HasForeignKey("CategoryId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .IsRequired();
 
                     b.HasOne("ServiceRequestApp.Models.ApplicationUser", "Provider")
                         .WithMany("ServiceRequests")
@@ -987,6 +1113,8 @@ namespace ServiceRequestApp.Migrations
                     b.Navigation("AcceptedRequest");
 
                     b.Navigation("Messages");
+
+                    b.Navigation("Payments");
                 });
 #pragma warning restore 612, 618
         }

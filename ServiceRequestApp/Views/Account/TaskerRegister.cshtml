@@ -146,6 +146,26 @@
                                 <input asp-for="PortfolioUrl" class="form-control form-control-lg" placeholder="https://yourportfolio.com (optional)" />
                                 <span asp-validation-for="PortfolioUrl" class="text-danger small"></span>
                             </div>
+                            <div class="col-md-6">
+                                <label asp-for="PrimaryCategoryId" class="form-label fw-semibold">
+                                    <i class="fas fa-tags me-1"></i>Primary Service Category
+                                </label>
+                                <select asp-for="PrimaryCategoryId" class="form-control form-control-lg" asp-items="@(new SelectList(ViewBag.Categories, "Id", "Name"))">
+                                    <option value="">Select your primary service category</option>
+                                </select>
+                                <span asp-validation-for="PrimaryCategoryId" class="text-danger small"></span>
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-4">
+                            <div class="col-12">
+                                <label asp-for="ServiceAreas" class="form-label fw-semibold">
+                                    <i class="fas fa-map-marker-alt me-1"></i>Service Areas
+                                </label>
+                                <input asp-for="ServiceAreas" class="form-control form-control-lg" placeholder="e.g., Dhaka, Chittagong, Sylhet" />
+                                <span asp-validation-for="ServiceAreas" class="text-danger small"></span>
+                                <div class="form-text">Enter areas where you provide services (comma-separated)</div>
+                            </div>
                         </div>
 
                         <div class="row g-3 mb-4">
