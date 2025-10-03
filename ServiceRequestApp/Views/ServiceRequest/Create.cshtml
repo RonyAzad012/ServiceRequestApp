@@ -16,6 +16,7 @@
                 </div>
                 <div class="card-body p-5">
                     <form id="createServiceRequestForm" enctype="multipart/form-data">
+                        @Html.AntiForgeryToken()
                         <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert" style="display: none;"></div>
 
                         <!-- Service Details Section -->
@@ -124,21 +125,34 @@
                             </div>
                         </div>
 
-                        <div class="row g-3 mb-4">
-                            <div class="col-md-8">
-                                <label asp-for="Address" class="form-label fw-semibold">
-                                    <i class="fas fa-home me-1"></i>Service Address *
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label asp-for="Street" class="form-label fw-semibold">
+                                    <i class="fas fa-road me-1"></i>Street
                                 </label>
-                                <input asp-for="Address" class="form-control form-control-lg" placeholder="Enter the complete address where service is needed" />
-                                <span asp-validation-for="Address" class="text-danger small"></span>
+                                <input asp-for="Street" class="form-control form-control-lg" placeholder="Street/house/apartment" />
+                                <span asp-validation-for="Street" class="text-danger small"></span>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-3">
+                                <label asp-for="City" class="form-label fw-semibold">
+                                    <i class="fas fa-city me-1"></i>City
+                                </label>
+                                <input asp-for="City" class="form-control form-control-lg" placeholder="City" />
+                                <span asp-validation-for="City" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-3">
                                 <label asp-for="Zipcode" class="form-label fw-semibold">
                                     <i class="fas fa-mail-bulk me-1"></i>Zip Code *
                                 </label>
-                                <input asp-for="Zipcode" class="form-control form-control-lg" placeholder="Enter zip code" />
+                                <input asp-for="Zipcode" class="form-control form-control-lg" placeholder="Zip code" />
                                 <span asp-validation-for="Zipcode" class="text-danger small"></span>
                             </div>
+                        </div>
+                        <input type="hidden" asp-for="Address" />
+                        <div class="mb-4">
+                            <div id="create-map" style="height: 320px;" class="rounded border"></div>
+                            <input type="hidden" name="Latitude" id="Latitude" />
+                            <input type="hidden" name="Longitude" id="Longitude" />
                         </div>
 
                         <!-- Contact Information Section -->
@@ -215,6 +229,8 @@
 
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
@@ -229,6 +245,13 @@
                 const originalText = submitBtn.html();
                 submitBtn.html('<i class="fas fa-spinner fa-spin me-2"></i>Creating Request...').prop('disabled', true);
                 
+                // Compose full address from parts
+                const street = $('[name="Street"]').val() || '';
+                const city = $('[name="City"]').val() || '';
+                const zip = $('[name="Zipcode"]').val() || '';
+                const fullAddress = [street, city, zip].filter(Boolean).join(', ');
+                $('[name="Address"]').val(fullAddress);
+
                 // Create FormData for file uploads
                 const formData = new FormData(this);
                 
@@ -281,5 +304,25 @@
                 });
             });
         });
+
+        // Leaflet picker
+        (function(){
+            var mapEl = document.getElementById('create-map');
+            if(!mapEl) return;
+            var map = L.map('create-map').setView([23.777176, 90.399452], 12); // Dhaka default
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap contributors' }).addTo(map);
+            var marker;
+            function setLatLng(lat, lng){
+                if(marker){ marker.setLatLng([lat, lng]); } else { marker = L.marker([lat, lng], {draggable:true}).addTo(map); marker.on('dragend', function(e){ var p = e.target.getLatLng(); updateForm(p.lat, p.lng); }); }
+                updateForm(lat, lng);
+            }
+            function updateForm(lat, lng){
+                var latEl = document.getElementById('Latitude');
+                var lngEl = document.getElementById('Longitude');
+                if(latEl) latEl.value = lat;
+                if(lngEl) lngEl.value = lng;
+            }
+            map.on('click', function(e){ setLatLng(e.latlng.lat, e.latlng.lng); });
+        })();
     </script>
 }

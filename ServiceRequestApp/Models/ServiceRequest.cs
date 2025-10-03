@@ -26,6 +26,13 @@ namespace ServiceRequestApp.Models
         public double? Latitude { get; set; }
         public double? Longitude { get; set; }
         
+        // Address parts
+        [StringLength(200)]
+        public string? Street { get; set; }
+
+        [StringLength(100)]
+        public string? City { get; set; }
+
         [Required]
         [StringLength(500)]
         public string Address { get; set; }

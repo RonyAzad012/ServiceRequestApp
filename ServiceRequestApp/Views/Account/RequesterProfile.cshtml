@@ -17,22 +17,31 @@
                             <div class="d-flex align-items-end">
                                 <!-- Profile Image -->
                                 <div class="position-relative">
-                                    @if (!string.IsNullOrEmpty(Model.ProfileImagePath))
-                                    {
-                                        <img src="@Model.ProfileImagePath" class="rounded-circle border border-4 border-white shadow" 
-                                             style="width: 120px; height: 120px; object-fit: cover;" alt="Profile Image" />
-                                    }
-                                    else
-                                    {
-                                        <div class="rounded-circle border border-4 border-white shadow d-flex align-items-center justify-content-center bg-light" 
-                                             style="width: 120px; height: 120px;">
-                                            <i class="fas fa-user fa-3x text-muted"></i>
+                                    <div class="profile-image-container" style="cursor: pointer;" onclick="document.getElementById('profileImageInput').click()">
+                                        @if (!string.IsNullOrEmpty(Model.ProfileImagePath))
+                                        {
+                                            <img src="@Model.ProfileImagePath" class="rounded-circle border border-4 border-white shadow" 
+                                                 style="width: 120px; height: 120px; object-fit: cover;" alt="Profile Image" id="profileImage" />
+                                        }
+                                        else
+                                        {
+                                            <div class="rounded-circle border border-4 border-white shadow d-flex align-items-center justify-content-center bg-light" 
+                                                 style="width: 120px; height: 120px;" id="profileImagePlaceholder">
+                                                <i class="fas fa-user fa-3x text-muted"></i>
+                                            </div>
+                                        }
+                                        <!-- Upload Overlay -->
+                                        <div class="position-absolute top-0 start-0 w-100 h-100 rounded-circle d-flex align-items-center justify-content-center" 
+                                             style="background: rgba(0,0,0,0.5); opacity: 0; transition: opacity 0.3s;" id="uploadOverlay">
+                                            <i class="fas fa-camera text-white fa-2x"></i>
                                         </div>
-                                    }
+                                    </div>
                                     <!-- Status Badge -->
                                     <span class="position-absolute top-0 end-0 badge bg-success rounded-pill">
                                         <i class="fas fa-user-check me-1"></i>Active
                                     </span>
+                                    <!-- Hidden File Input -->
+                                    <input type="file" id="profileImageInput" accept="image/*" style="display: none;" />
                                 </div>
                                 <div class="ms-4 mb-3">
                                     <h2 class="text-dark mb-1">@Model.FirstName @Model.LastName</h2>
@@ -107,7 +116,35 @@
                     </div>
                     <h4 class="mb-1" id="averageRating">0.0</h4>
                     <p class="text-muted mb-0">Avg Rating</p>
-                    <small class="text-muted">From providers</small>
+                    <small class="text-muted">Given to providers</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Additional Stats Row -->
+    <div class="row mb-4">
+        <div class="col-md-6 mb-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center">
+                    <div class="text-success mb-2">
+                        <i class="fas fa-money-bill-wave fa-2x"></i>
+                    </div>
+                    <h4 class="mb-1" id="totalSpent">৳0.00</h4>
+                    <p class="text-muted mb-0">Total Spent</p>
+                    <small class="text-muted">On services</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 mb-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center">
+                    <div class="text-warning mb-2">
+                        <i class="fas fa-clock fa-2x"></i>
+                    </div>
+                    <h4 class="mb-1" id="pendingPayments">0</h4>
+                    <p class="text-muted mb-0">Pending Payments</p>
+                    <small class="text-muted">Awaiting completion</small>
                 </div>
             </div>
         </div>
@@ -228,6 +265,96 @@
     </div>
 </div>
 
+<!-- Review Modal -->
+<div class="modal fade" id="reviewModal" tabindex="-1" aria-labelledby="reviewModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="reviewModalLabel">
+                    <i class="fas fa-star me-2 text-warning"></i>Review Provider
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">Provider:</label>
+                    <p class="fw-bold" id="reviewProviderName"></p>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label">Rating <span class="text-danger">*</span></label>
+                    <div class="rating-input">
+                        <div class="d-flex gap-1">
+                            <input type="radio" name="rating" value="1" id="rating1" class="d-none">
+                            <label for="rating1" class="rating-star" data-rating="1">
+                                <i class="fas fa-star"></i>
+                            </label>
+                            <input type="radio" name="rating" value="2" id="rating2" class="d-none">
+                            <label for="rating2" class="rating-star" data-rating="2">
+                                <i class="fas fa-star"></i>
+                            </label>
+                            <input type="radio" name="rating" value="3" id="rating3" class="d-none">
+                            <label for="rating3" class="rating-star" data-rating="3">
+                                <i class="fas fa-star"></i>
+                            </label>
+                            <input type="radio" name="rating" value="4" id="rating4" class="d-none">
+                            <label for="rating4" class="rating-star" data-rating="4">
+                                <i class="fas fa-star"></i>
+                            </label>
+                            <input type="radio" name="rating" value="5" id="rating5" class="d-none">
+                            <label for="rating5" class="rating-star" data-rating="5">
+                                <i class="fas fa-star"></i>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="reviewComment" class="form-label">Comment (Optional)</label>
+                    <textarea class="form-control" id="reviewComment" rows="3" placeholder="Share your experience with this provider..."></textarea>
+                </div>
+                
+                <input type="hidden" id="reviewServiceRequestId" />
+                <input type="hidden" id="reviewProviderId" />
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-warning" onclick="submitReview()">
+                    <i class="fas fa-star me-2"></i>Submit Review
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        .rating-star {
+            font-size: 1.5rem;
+            color: #ddd;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        
+        .rating-star:hover,
+        .rating-star.active {
+            color: #ffc107;
+        }
+        
+        .profile-image-container:hover #uploadOverlay {
+            opacity: 1 !important;
+        }
+        
+        .profile-image-container {
+            transition: transform 0.2s;
+        }
+        
+        .profile-image-container:hover {
+            transform: scale(1.05);
+        }
+    </style>
+}
+
 @section Scripts {
     <script>
         $(document).ready(function() {
@@ -247,6 +374,11 @@
                         $('#completedRequests').text(data.completedRequests);
                         $('#pendingRequests').text(data.pendingRequests);
                         $('#averageRating').text(data.averageRating.toFixed(1));
+                        $('#totalSpent').text('৳' + data.totalSpent.toFixed(2));
+                        
+                        // Calculate pending payments (requests with payment but not completed)
+                        var pendingPayments = data.totalRequests - data.completedRequests;
+                        $('#pendingPayments').text(pendingPayments);
                     }
                 },
                 error: function() {
@@ -264,6 +396,15 @@
                     if (data.success && data.requests.length > 0) {
                         let html = '';
                         data.requests.forEach(function(request) {
+                            let reviewButton = '';
+                            if (request.status.toLowerCase() === 'completed' && !request.hasReview) {
+                                reviewButton = `
+                                    <button class="btn btn-sm btn-outline-warning ms-2" onclick="openReviewModal(${request.id}, '${request.providerId}', '${request.providerName}')">
+                                        <i class="fas fa-star me-1"></i>Review
+                                    </button>
+                                `;
+                            }
+                            
                             html += `
                                 <div class="d-flex align-items-center mb-3 p-3 border rounded">
                                     <div class="flex-shrink-0">
@@ -274,7 +415,10 @@
                                     <div class="flex-grow-1 ms-3">
                                         <h6 class="mb-1">${request.title}</h6>
                                         <p class="text-muted mb-1 small">${request.description.substring(0, 50)}...</p>
-                                        <span class="badge bg-${getStatusColor(request.status)}">${request.status}</span>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <span class="badge bg-${getStatusColor(request.status)}">${request.status}</span>
+                                            ${reviewButton}
+                                        </div>
                                     </div>
                                     <div class="flex-shrink-0">
                                         <small class="text-muted">${formatDate(request.createdAt)}</small>
@@ -336,6 +480,121 @@
         function formatDate(dateString) {
             const date = new Date(dateString);
             return date.toLocaleDateString();
+        }
+
+        // Profile Image Upload
+        $(document).ready(function() {
+            $('#profileImageInput').on('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const formData = new FormData();
+                    formData.append('profileImage', file);
+                    formData.append('userId', '@Model.Id');
+
+                    $.ajax({
+                        url: '@Url.Action("UploadProfileImage", "Account")',
+                        type: 'POST',
+                        data: formData,
+                        processData: false,
+                        contentType: false,
+                        success: function(response) {
+                            if (response.success) {
+                                // Update the image
+                                if ($('#profileImage').length) {
+                                    $('#profileImage').attr('src', response.imagePath + '?t=' + new Date().getTime());
+                                } else {
+                                    $('#profileImagePlaceholder').html(`<img src="${response.imagePath}" class="rounded-circle border border-4 border-white shadow" style="width: 120px; height: 120px; object-fit: cover;" alt="Profile Image" id="profileImage" />`);
+                                }
+                                Swal.fire('Success!', 'Profile image updated successfully.', 'success');
+                            } else {
+                                Swal.fire('Error!', response.message || 'Failed to upload image.', 'error');
+                            }
+                        },
+                        error: function() {
+                            Swal.fire('Error!', 'Failed to upload image. Please try again.', 'error');
+                        }
+                    });
+                }
+            });
+
+            // Profile image hover effects
+            $('.profile-image-container').hover(
+                function() {
+                    $('#uploadOverlay').css('opacity', '1');
+                },
+                function() {
+                    $('#uploadOverlay').css('opacity', '0');
+                }
+            );
+
+            // Rating star interaction
+            $('.rating-star').on('click', function() {
+                const rating = $(this).data('rating');
+                $('.rating-star').removeClass('active');
+                $(this).addClass('active');
+                $(this).prevAll().addClass('active');
+                $(`#rating${rating}`).prop('checked', true);
+            });
+
+            $('.rating-star').on('mouseenter', function() {
+                const rating = $(this).data('rating');
+                $('.rating-star').removeClass('active');
+                $(this).addClass('active');
+                $(this).prevAll().addClass('active');
+            });
+
+            $('.rating-input').on('mouseleave', function() {
+                const checkedRating = $('input[name="rating"]:checked').val();
+                $('.rating-star').removeClass('active');
+                if (checkedRating) {
+                    $(`.rating-star[data-rating="${checkedRating}"]`).addClass('active');
+                    $(`.rating-star[data-rating="${checkedRating}"]`).prevAll().addClass('active');
+                }
+            });
+        });
+
+        // Review Modal Functions
+        function openReviewModal(serviceRequestId, providerId, providerName) {
+            $('#reviewModal').modal('show');
+            $('#reviewServiceRequestId').val(serviceRequestId);
+            $('#reviewProviderId').val(providerId);
+            $('#reviewProviderName').text(providerName);
+        }
+
+        function submitReview() {
+            const serviceRequestId = $('#reviewServiceRequestId').val();
+            const providerId = $('#reviewProviderId').val();
+            const rating = $('input[name="rating"]:checked').val();
+            const comment = $('#reviewComment').val();
+
+            if (!rating) {
+                Swal.fire('Error!', 'Please select a rating.', 'error');
+                return;
+            }
+
+            $.ajax({
+                url: '@Url.Action("SubmitReview", "Review")',
+                type: 'POST',
+                data: {
+                    serviceRequestId: serviceRequestId,
+                    providerId: providerId,
+                    rating: rating,
+                    comment: comment
+                },
+                success: function(response) {
+                    if (response.success) {
+                        $('#reviewModal').modal('hide');
+                        Swal.fire('Success!', 'Review submitted successfully.', 'success');
+                        // Reload recent requests to update the review button
+                        loadRecentRequests();
+                    } else {
+                        Swal.fire('Error!', response.message || 'Failed to submit review.', 'error');
+                    }
+                },
+                error: function() {
+                    Swal.fire('Error!', 'Failed to submit review. Please try again.', 'error');
+                }
+            });
         }
     </script>
 }

@@ -9,6 +9,8 @@ namespace ServiceRequestApp.Models
         public string? FirstName { get; set; }
         public string? LastName { get; set; }
         public string? Address { get; set; }
+        public string? Street { get; set; }
+        public string? City { get; set; }
         public string UserType { get; set; } // "Provider", "Requester", "Tasker", "Business"
         public string? Zipcode { get; set; }
         public string? NationalId { get; set; }

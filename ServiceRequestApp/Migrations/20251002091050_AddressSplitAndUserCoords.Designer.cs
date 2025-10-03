@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using ServiceRequestApp.Data;
 
@@ -11,9 +12,11 @@ using ServiceRequestApp.Data;
 namespace ServiceRequestApp.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251002091050_AddressSplitAndUserCoords")]
+    partial class AddressSplitAndUserCoords
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -396,84 +399,6 @@ namespace ServiceRequestApp.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Categories");
-                });
-
-            modelBuilder.Entity("ServiceRequestApp.Models.Invoice", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<decimal>("AdminCommission")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Currency")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("InvoiceNumber")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Notes")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime?>("PaidAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("PaymentMethod")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("PaymentTransactionId")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<decimal>("ProviderAmount")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<string>("ProviderId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("RequesterId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<DateTime?>("SentAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("ServiceDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("ServiceDescription")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ServiceLocation")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("ServiceRequestId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<decimal>("TotalAmount")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ProviderId");
-
-                    b.HasIndex("RequesterId");
-
-                    b.HasIndex("ServiceRequestId");
-
-                    b.ToTable("Invoices");
                 });
 
             modelBuilder.Entity("ServiceRequestApp.Models.Message", b =>
@@ -943,33 +868,6 @@ namespace ServiceRequestApp.Migrations
                         .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("PrimaryCategory");
-                });
-
-            modelBuilder.Entity("ServiceRequestApp.Models.Invoice", b =>
-                {
-                    b.HasOne("ServiceRequestApp.Models.ApplicationUser", "Provider")
-                        .WithMany()
-                        .HasForeignKey("ProviderId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("ServiceRequestApp.Models.ApplicationUser", "Requester")
-                        .WithMany()
-                        .HasForeignKey("RequesterId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("ServiceRequestApp.Models.ServiceRequest", "ServiceRequest")
-                        .WithMany()
-                        .HasForeignKey("ServiceRequestId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Provider");
-
-                    b.Navigation("Requester");
-
-                    b.Navigation("ServiceRequest");
                 });
 
             modelBuilder.Entity("ServiceRequestApp.Models.Message", b =>

@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using ServiceRequestApp.Data;
 using ServiceRequestApp.Models;
 using ServiceRequestApp.ViewModels;
+using ServiceRequestApp.Services;
 
 namespace ServiceRequestApp.Controllers
 {
@@ -15,14 +16,17 @@ namespace ServiceRequestApp.Controllers
         //The ApplicationDbContext and UserManager<ApplicationUser> services are injected into the controller.
         private readonly ApplicationDbContext _dbContext;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly IGeocodingService _geocodingService;
 
         //Dependency injection is used to inject the ApplicationDbContext and UserManager<ApplicationUser> services into the controller.
         public ServiceRequestController(
             ApplicationDbContext context,//For database operations
-            UserManager<ApplicationUser> userManager)//For user management
+            UserManager<ApplicationUser> userManager,//For user management
+            IGeocodingService geocodingService)//For geocoding
         {
             _dbContext = context;
             _userManager = userManager;
+            _geocodingService = geocodingService;
         }
 
         // GET: ServiceRequest
@@ -40,6 +44,7 @@ namespace ServiceRequestApp.Controllers
                 // Providers and Taskers see available requests and their accepted requests
                 requests = await _dbContext.ServiceRequests
                     .Include(r => r.Requester)
+                    .Include(r => r.Category)
                     .Include(r => r.AcceptedRequest)
                     .Where(r => r.Status == "Pending" ||
                            (r.AcceptedRequest != null &&
@@ -51,6 +56,7 @@ namespace ServiceRequestApp.Controllers
                 // Admins see all requests
                 requests = await _dbContext.ServiceRequests
                     .Include(r => r.Requester)
+                    .Include(r => r.Category)
                     .Include(r => r.AcceptedRequest)
                     .ToListAsync();
             }
@@ -59,6 +65,7 @@ namespace ServiceRequestApp.Controllers
                 // Requesters see only their own requests
                 requests = await _dbContext.ServiceRequests
                     .Include(r => r.Requester)
+                    .Include(r => r.Category)
                     .Include(r => r.AcceptedRequest)
                     .Where(r => r.RequesterId == currentUser.Id)
                     .ToListAsync();
@@ -115,6 +122,15 @@ namespace ServiceRequestApp.Controllers
                     attachedFiles = string.Join(",", fileNames);
                 }
                 
+                // Auto-geocode if no coordinates provided
+                var (latitude, longitude) = (model.Latitude, model.Longitude);
+                if (!latitude.HasValue || !longitude.HasValue)
+                {
+                    var (geoLat, geoLng) = await _geocodingService.GeocodeAddressAsync(model.Street, model.City, model.Zipcode);
+                    latitude = geoLat;
+                    longitude = geoLng;
+                }
+
                 var request = new ServiceRequest
                 {
                     Title = model.Title,
@@ -123,6 +139,8 @@ namespace ServiceRequestApp.Controllers
                     CreatedAt = DateTime.UtcNow,
                     Status = "Pending",
                     RequesterId = currentUser.Id,
+                    Street = model.Street,
+                    City = model.City,
                     Address = model.Address,
                     Zipcode = model.Zipcode,
                     PhoneNumber = model.PhoneNumber,
@@ -132,6 +150,8 @@ namespace ServiceRequestApp.Controllers
                     Deadline = model.Deadline,
                     Urgency = model.Urgency,
                     SpecialRequirements = model.SpecialRequirements,
+                    Latitude = latitude,
+                    Longitude = longitude,
                     AttachedFiles = attachedFiles
                 };
                 
@@ -201,6 +221,7 @@ namespace ServiceRequestApp.Controllers
 
             var request = await _dbContext.ServiceRequests
                 .Include(r => r.Requester)
+                .Include(r => r.Category)
                 .Include(r => r.AcceptedRequest)
                     .ThenInclude(ar => ar.Provider)
                 .FirstOrDefaultAsync(m => m.Id == id);
@@ -239,36 +260,15 @@ namespace ServiceRequestApp.Controllers
                 return Unauthorized();
             }
 
-            // Only allow completion if the request is in "Accepted" status or partially completed
-            if (request.Status != "Accepted" &&
-                request.Status != "ProviderCompleted" &&
-                request.Status != "RequesterCompleted")
+            // New logic: allow marking complete only if Paid
+            if (request.PaymentStatus != "Paid")
             {
-                return BadRequest("Request cannot be completed at this time.");
+                return BadRequest("You can complete the request only after payment is completed.");
             }
 
-            if (isProvider && request.Status != "RequesterCompleted")
+            request.Status = "Completed";
+            if (request.AcceptedRequest != null)
             {
-                request.Status = "ProviderCompleted";
-                if (request.AcceptedRequest != null)
-                {
-                    request.AcceptedRequest.Status = "ProviderCompleted";
-                }
-            }
-            else if (isRequester && request.Status != "ProviderCompleted")
-            {
-                request.Status = "RequesterCompleted";
-                if (request.AcceptedRequest != null)
-                {
-                    request.AcceptedRequest.Status = "RequesterCompleted";
-                }
-            }
-
-            // Check if both parties have marked it as complete
-            if ((request.Status == "ProviderCompleted" && request.AcceptedRequest?.Status == "RequesterCompleted") ||
-                (request.Status == "RequesterCompleted" && request.AcceptedRequest?.Status == "ProviderCompleted"))
-            {
-                request.Status = "Completed";
                 request.AcceptedRequest.Status = "Completed";
             }
 
@@ -305,6 +305,19 @@ namespace ServiceRequestApp.Controllers
                 Title = request.Title,
                 Description = request.Description,
                 CategoryId = request.CategoryId,
+                Street = request.Street,
+                City = request.City,
+                Address = request.Address,
+                Zipcode = request.Zipcode,
+                PhoneNumber = request.PhoneNumber,
+                Budget = request.Budget,
+                BudgetType = request.BudgetType,
+                PreferredDate = request.PreferredDate,
+                Deadline = request.Deadline,
+                Urgency = request.Urgency,
+                SpecialRequirements = request.SpecialRequirements,
+                Latitude = request.Latitude,
+                Longitude = request.Longitude,
                 Categories = _dbContext.Categories.ToList()
             };
 
@@ -339,9 +352,31 @@ namespace ServiceRequestApp.Controllers
 
             try
             {
+                // Auto-geocode if no coordinates provided
+                var (latitude, longitude) = (model.Latitude, model.Longitude);
+                if (!latitude.HasValue || !longitude.HasValue)
+                {
+                    var (geoLat, geoLng) = await _geocodingService.GeocodeAddressAsync(model.Street, model.City, model.Zipcode);
+                    latitude = geoLat;
+                    longitude = geoLng;
+                }
+
                 existingRequest.Title = model.Title;
                 existingRequest.Description = model.Description;
-                existingRequest.CategoryId = model.CategoryId ?? 0;
+                existingRequest.CategoryId = model.CategoryId;
+                existingRequest.Street = model.Street;
+                existingRequest.City = model.City;
+                existingRequest.Address = model.Address;
+                existingRequest.Zipcode = model.Zipcode;
+                existingRequest.PhoneNumber = model.PhoneNumber;
+                existingRequest.Budget = model.Budget;
+                existingRequest.BudgetType = model.BudgetType;
+                existingRequest.PreferredDate = model.PreferredDate;
+                existingRequest.Deadline = model.Deadline;
+                existingRequest.Urgency = model.Urgency;
+                existingRequest.SpecialRequirements = model.SpecialRequirements;
+                existingRequest.Latitude = latitude;
+                existingRequest.Longitude = longitude;
 
                 await _dbContext.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
@@ -550,39 +585,6 @@ namespace ServiceRequestApp.Controllers
             return View(reviews);
         }
 
-        // GET: ServiceRequest/ProviderDashboard
-        [Authorize(Roles = "Provider")]
-        public async Task<IActionResult> ProviderDashboard()
-        {
-            var currentUser = await _userManager.GetUserAsync(User);
-            var acceptedCount = await _dbContext.AcceptedRequests.CountAsync(ar => ar.ProviderId == currentUser.Id);
-            var completedCount = await _dbContext.AcceptedRequests.CountAsync(ar => ar.ProviderId == currentUser.Id && ar.Status == "Completed");
-            var totalEarnings = await _dbContext.ServiceRequests.Where(r => r.AcceptedRequest != null && r.AcceptedRequest.ProviderId == currentUser.Id && r.Status == "Completed" && r.PaymentStatus == "Paid" && r.PaymentAmount.HasValue).SumAsync(r => r.PaymentAmount.Value);
-            var model = new ProviderDashboardViewModel
-            {
-                AcceptedCount = acceptedCount,
-                CompletedCount = completedCount,
-                TotalEarnings = totalEarnings
-            };
-            return View(model);
-        }
-
-        // GET: ServiceRequest/RequesterDashboard
-        [Authorize(Roles = "Requester")]
-        public async Task<IActionResult> RequesterDashboard()
-        {
-            var currentUser = await _userManager.GetUserAsync(User);
-            var createdCount = await _dbContext.ServiceRequests.CountAsync(r => r.RequesterId == currentUser.Id);
-            var completedCount = await _dbContext.ServiceRequests.CountAsync(r => r.RequesterId == currentUser.Id && r.Status == "Completed");
-            var totalSpent = await _dbContext.ServiceRequests.Where(r => r.RequesterId == currentUser.Id && r.Status == "Completed" && r.PaymentStatus == "Paid" && r.PaymentAmount.HasValue).SumAsync(r => r.PaymentAmount.Value);
-            var model = new RequesterDashboardViewModel
-            {
-                CreatedCount = createdCount,
-                CompletedCount = completedCount,
-                TotalSpent = totalSpent
-            };
-            return View(model);
-        }
 
         // POST: ServiceRequest/Apply/5
         //Allows a provider to apply for a service request if the request is still pending
@@ -689,29 +691,6 @@ namespace ServiceRequestApp.Controllers
             return RedirectToAction("Applicants", new { id = application.ServiceRequestId });
         }
 
-        // GET: ServiceRequest/TaskerDashboard
-        [Authorize(Roles = "Tasker")]
-        public async Task<IActionResult> TaskerDashboard()
-        {
-            var currentUser = await _userManager.GetUserAsync(User);
-            var acceptedCount = await _dbContext.AcceptedRequests.CountAsync(ar => ar.ProviderId == currentUser.Id);
-            var completedCount = await _dbContext.AcceptedRequests.CountAsync(ar => ar.ProviderId == currentUser.Id && ar.Status == "Completed");
-            var totalEarnings = await _dbContext.ServiceRequests.Where(r => r.AcceptedRequest != null && r.AcceptedRequest.ProviderId == currentUser.Id && r.Status == "Completed" && r.PaymentStatus == "Paid" && r.PaymentAmount.HasValue).SumAsync(r => r.PaymentAmount.Value);
-            // Show all pending requests for taskers
-            var availableRequests = await _dbContext.ServiceRequests
-                .Include(r => r.Category)
-                .Where(r => r.Status == "Pending")
-                .OrderByDescending(r => r.CreatedAt)
-                .ToListAsync();
-            ViewBag.AvailableRequests = availableRequests;
-            var model = new ProviderDashboardViewModel
-            {
-                AcceptedCount = acceptedCount,
-                CompletedCount = completedCount,
-                TotalEarnings = totalEarnings
-            };
-            return View("TaskerDashboard", model);
-        }
 
         [Authorize(Roles = "Provider")]
         public async Task<IActionResult> ProviderConversations()

@@ -26,12 +26,17 @@ namespace ServiceRequestApp.Controllers
         {
             var currentUser = await _userManager.GetUserAsync(User);
             
-            // Get all conversations for the current user
-            var conversations = await _dbContext.Messages
+            // Get all messages for the current user
+            var messages = await _dbContext.Messages
                 .Where(m => m.SenderId == currentUser.Id || m.ReceiverId == currentUser.Id)
                 .Include(m => m.Sender)
                 .Include(m => m.Receiver)
                 .Include(m => m.ServiceRequest)
+                .OrderByDescending(m => m.SentAt)
+                .ToListAsync();
+
+            // Group messages by conversation (ServiceRequest + Other User)
+            var conversations = messages
                 .GroupBy(m => new { 
                     ServiceRequestId = m.ServiceRequestId,
                     OtherUserId = m.SenderId == currentUser.Id ? m.ReceiverId : m.SenderId
@@ -45,7 +50,7 @@ namespace ServiceRequestApp.Controllers
                     UnreadCount = g.Count(m => m.ReceiverId == currentUser.Id && !m.IsRead)
                 })
                 .OrderByDescending(c => c.LastMessage.SentAt)
-                .ToListAsync();
+                .ToList();
 
             ViewBag.CurrentUser = currentUser;
             return View(conversations);

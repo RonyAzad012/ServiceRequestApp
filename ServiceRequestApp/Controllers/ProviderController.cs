@@ -20,7 +20,7 @@ namespace ServiceRequestApp.Controllers
         {
             var query = _dbContext.Users
                 .Where(u => (u.UserType == "Provider" || u.UserType == "Business" || u.UserType == "Tasker") 
-                           && u.IsApproved && u.IsAvailable)
+                           && u.IsApproved)
                 .Include(u => u.PrimaryCategory)
                 .AsQueryable();
 
@@ -62,7 +62,7 @@ namespace ServiceRequestApp.Controllers
         {
             var query = _dbContext.Users
                 .Where(u => (u.UserType == "Provider" || u.UserType == "Business" || u.UserType == "Tasker") 
-                           && u.IsApproved && u.IsAvailable)
+                           && u.IsApproved)
                 .Include(u => u.PrimaryCategory)
                 .AsQueryable();
 

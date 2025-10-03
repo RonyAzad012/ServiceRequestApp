@@ -8,6 +8,7 @@ using System.Linq;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using System;
+using System.IO;
 
 namespace ServiceRequestApp.Controllers
 {
@@ -53,11 +54,15 @@ namespace ServiceRequestApp.Controllers
                     FirstName = model.FirstName,
                     LastName = model.LastName,
                     Address = model.Address,
+                    Street = model.Street,
+                    City = model.City,
                     UserType = "Requester",
                     PhoneNumber = model.PhoneNumber,
                     Zipcode = model.Zipcode,
                     NationalId = model.NationalId
                 };
+                user.Latitude = model.Latitude;
+                user.Longitude = model.Longitude;
 
                 var result = await _userManager.CreateAsync(user, model.Password);
 
@@ -96,6 +101,8 @@ namespace ServiceRequestApp.Controllers
                     FirstName = model.FirstName,
                     LastName = model.LastName,
                     Address = model.Address,
+                    Street = model.Street,
+                    City = model.City,
                     UserType = "Provider",
                     PhoneNumber = model.PhoneNumber,
                     Zipcode = model.Zipcode,
@@ -111,6 +118,8 @@ namespace ServiceRequestApp.Controllers
                     ServiceAreas = model.ServiceAreas,
                     IsApproved = false // Require admin approval
                 };
+                user.Latitude = model.Latitude;
+                user.Longitude = model.Longitude;
 
                 var result = await _userManager.CreateAsync(user, model.Password);
 
@@ -217,6 +226,15 @@ namespace ServiceRequestApp.Controllers
             return View(user);
         }
 
+        [Authorize]
+        public async Task<IActionResult> TaskerProfile(string id)
+        {
+            if (string.IsNullOrEmpty(id)) return NotFound();
+            var user = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == id && u.UserType == "Tasker");
+            if (user == null) return NotFound();
+            return View(user);
+        }
+
         [HttpGet]
         [AllowAnonymous]
         public async Task<IActionResult> AllProviders()
@@ -247,6 +265,8 @@ namespace ServiceRequestApp.Controllers
                     FirstName = model.FirstName,
                     LastName = model.LastName,
                     Address = model.Address,
+                    Street = model.Street,
+                    City = model.City,
                     UserType = "Tasker",
                     PhoneNumber = model.PhoneNumber,
                     Zipcode = model.Zipcode,
@@ -284,8 +304,12 @@ namespace ServiceRequestApp.Controllers
                 FirstName = user.FirstName,
                 LastName = user.LastName,
                 Address = user.Address,
+                Street = user.Street,
+                City = user.City,
                 PhoneNumber = user.PhoneNumber,
-                Zipcode = user.Zipcode
+                Zipcode = user.Zipcode,
+                Latitude = user.Latitude,
+                Longitude = user.Longitude
             };
             return View(model);
         }
@@ -300,8 +324,12 @@ namespace ServiceRequestApp.Controllers
             user.FirstName = model.FirstName;
             user.LastName = model.LastName;
             user.Address = model.Address;
+            user.Street = model.Street;
+            user.City = model.City;
             user.PhoneNumber = model.PhoneNumber;
             user.Zipcode = model.Zipcode;
+            user.Latitude = model.Latitude;
+            user.Longitude = model.Longitude;
             await _userManager.UpdateAsync(user);
             TempData["ProfileMessage"] = "Profile updated successfully.";
             return RedirectToAction("RequesterProfile", new { id = user.Id });
@@ -317,8 +345,12 @@ namespace ServiceRequestApp.Controllers
                 FirstName = user.FirstName,
                 LastName = user.LastName,
                 Address = user.Address,
+                Street = user.Street,
+                City = user.City,
                 PhoneNumber = user.PhoneNumber,
                 Zipcode = user.Zipcode,
+                Latitude = user.Latitude,
+                Longitude = user.Longitude,
                 ShopName = user.ShopName,
                 ShopDescription = user.ShopDescription,
                 ShopAddress = user.ShopAddress,
@@ -339,8 +371,12 @@ namespace ServiceRequestApp.Controllers
             user.FirstName = model.FirstName;
             user.LastName = model.LastName;
             user.Address = model.Address;
+            user.Street = model.Street;
+            user.City = model.City;
             user.PhoneNumber = model.PhoneNumber;
             user.Zipcode = model.Zipcode;
+            user.Latitude = model.Latitude;
+            user.Longitude = model.Longitude;
             user.ShopName = model.ShopName;
             user.ShopDescription = model.ShopDescription;
             user.ShopAddress = model.ShopAddress;
@@ -362,8 +398,12 @@ namespace ServiceRequestApp.Controllers
                 FirstName = user.FirstName,
                 LastName = user.LastName,
                 Address = user.Address,
+                Street = user.Street,
+                City = user.City,
                 PhoneNumber = user.PhoneNumber,
                 Zipcode = user.Zipcode,
+                Latitude = user.Latitude,
+                Longitude = user.Longitude,
                 Skills = user.Skills,
                 PortfolioUrl = user.PortfolioUrl,
                 ProfileDescription = user.ProfileDescription
@@ -381,8 +421,12 @@ namespace ServiceRequestApp.Controllers
             user.FirstName = model.FirstName;
             user.LastName = model.LastName;
             user.Address = model.Address;
+            user.Street = model.Street;
+            user.City = model.City;
             user.PhoneNumber = model.PhoneNumber;
             user.Zipcode = model.Zipcode;
+            user.Latitude = model.Latitude;
+            user.Longitude = model.Longitude;
             user.Skills = model.Skills;
             user.PortfolioUrl = model.PortfolioUrl;
             user.ProfileDescription = model.ProfileDescription;
@@ -397,20 +441,35 @@ namespace ServiceRequestApp.Controllers
         {
             try
             {
+                var totalRequests = await _dbContext.ServiceRequests
+                    .Include(sr => sr.AcceptedRequest)
+                    .CountAsync(sr => sr.AcceptedRequest.ProviderId == providerId);
+                
                 var completedRequests = await _dbContext.ServiceRequests
-                    .CountAsync(sr => sr.ProviderId == providerId && sr.Status == "Completed");
+                    .Include(sr => sr.AcceptedRequest)
+                    .CountAsync(sr => sr.AcceptedRequest.ProviderId == providerId && sr.Status == "Completed");
                 
                 var pendingRequests = await _dbContext.ServiceRequests
-                    .CountAsync(sr => sr.ProviderId == providerId && sr.Status == "Pending");
-                
+                    .Include(sr => sr.AcceptedRequest)
+                    .CountAsync(sr => sr.AcceptedRequest.ProviderId == providerId && sr.Status == "In Progress");
+
+                // Calculate total earnings for provider
                 var totalEarnings = await _dbContext.ServiceRequests
-                    .Where(sr => sr.ProviderId == providerId && sr.Status == "Completed" && sr.PaymentAmount.HasValue)
+                    .Include(sr => sr.AcceptedRequest)
+                    .Where(sr => sr.AcceptedRequest.ProviderId == providerId && sr.PaymentStatus == "Paid")
                     .SumAsync(sr => sr.ProviderAmount ?? 0);
+
+                // Calculate average rating received from requesters
+                var averageRating = await _dbContext.Reviews
+                    .Where(r => r.RevieweeId == providerId)
+                    .AverageAsync(r => (double?)r.Rating) ?? 0;
 
                 return Json(new { 
                     success = true, 
+                    totalRequests, 
                     completedRequests, 
                     pendingRequests, 
+                    averageRating,
                     totalEarnings 
                 });
             }
@@ -434,9 +493,14 @@ namespace ServiceRequestApp.Controllers
                 var pendingRequests = await _dbContext.ServiceRequests
                     .CountAsync(sr => sr.RequesterId == requesterId && sr.Status == "In Progress");
 
-                // Calculate average rating from reviews
+                // Calculate total amount spent by requester
+                var totalSpent = await _dbContext.PaymentTransactions
+                    .Where(pt => pt.UserId == requesterId && pt.Status == "Completed" && pt.Amount > 0)
+                    .SumAsync(pt => pt.Amount);
+
+                // Calculate average rating given to providers (not received from providers)
                 var averageRating = await _dbContext.Reviews
-                    .Where(r => r.RevieweeId == requesterId)
+                    .Where(r => r.ReviewerId == requesterId)
                     .AverageAsync(r => (double?)r.Rating) ?? 0;
 
                 return Json(new { 
@@ -444,7 +508,8 @@ namespace ServiceRequestApp.Controllers
                     totalRequests, 
                     completedRequests, 
                     pendingRequests, 
-                    averageRating 
+                    averageRating,
+                    totalSpent
                 });
             }
             catch (Exception ex)
@@ -452,6 +517,7 @@ namespace ServiceRequestApp.Controllers
                 return Json(new { success = false, message = ex.Message });
             }
         }
+
 
         [HttpGet]
         public async Task<IActionResult> GetTaskerStats(string taskerId)
@@ -486,7 +552,10 @@ namespace ServiceRequestApp.Controllers
         {
             try
             {
-                var query = _dbContext.ServiceRequests.AsQueryable();
+                var query = _dbContext.ServiceRequests
+                    .Include(sr => sr.AcceptedRequest)
+                    .ThenInclude(ar => ar.Provider)
+                    .AsQueryable();
                 
                 if (!string.IsNullOrEmpty(providerId))
                 {
@@ -500,16 +569,23 @@ namespace ServiceRequestApp.Controllers
                 var requests = await query
                     .OrderByDescending(sr => sr.CreatedAt)
                     .Take(5)
-                    .Select(sr => new {
-                        sr.Id,
-                        sr.Title,
-                        sr.Description,
-                        sr.Status,
-                        sr.CreatedAt
-                    })
                     .ToListAsync();
 
-                return Json(new { success = true, requests });
+                var currentUser = await _userManager.GetUserAsync(User);
+                var requestData = requests.Select(sr => new {
+                    sr.Id,
+                    sr.Title,
+                    sr.Description,
+                    sr.Status,
+                    sr.CreatedAt,
+                    providerId = sr.AcceptedRequest?.ProviderId,
+                    providerName = sr.AcceptedRequest?.Provider != null ? 
+                        $"{sr.AcceptedRequest.Provider.FirstName} {sr.AcceptedRequest.Provider.LastName}" : null,
+                    hasReview = currentUser != null && _dbContext.Reviews
+                        .Any(r => r.ServiceRequestId == sr.Id && r.ReviewerId == currentUser.Id)
+                }).ToList();
+
+                return Json(new { success = true, requests = requestData });
             }
             catch (Exception ex)
             {
@@ -569,6 +645,68 @@ namespace ServiceRequestApp.Controllers
             catch (Exception ex)
             {
                 return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpPost]
+        [Authorize]
+        public async Task<IActionResult> UploadProfileImage(IFormFile profileImage, string userId)
+        {
+            try
+            {
+                if (profileImage == null || profileImage.Length == 0)
+                {
+                    return Json(new { success = false, message = "No image file provided" });
+                }
+
+                // Validate file type
+                var allowedTypes = new[] { "image/jpeg", "image/jpg", "image/png", "image/gif" };
+                if (!allowedTypes.Contains(profileImage.ContentType.ToLower()))
+                {
+                    return Json(new { success = false, message = "Invalid file type. Only JPEG, PNG, and GIF images are allowed." });
+                }
+
+                // Validate file size (5MB max)
+                if (profileImage.Length > 5 * 1024 * 1024)
+                {
+                    return Json(new { success = false, message = "File size too large. Maximum size is 5MB." });
+                }
+
+                // Get the current user
+                var currentUser = await _userManager.GetUserAsync(User);
+                if (currentUser == null || currentUser.Id != userId)
+                {
+                    return Json(new { success = false, message = "Unauthorized" });
+                }
+
+                // Create uploads directory if it doesn't exist
+                var uploadsPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "profiles");
+                if (!Directory.Exists(uploadsPath))
+                {
+                    Directory.CreateDirectory(uploadsPath);
+                }
+
+                // Generate unique filename
+                var fileExtension = Path.GetExtension(profileImage.FileName);
+                var fileName = $"{userId}_{DateTime.UtcNow.Ticks}{fileExtension}";
+                var filePath = Path.Combine(uploadsPath, fileName);
+
+                // Save the file
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await profileImage.CopyToAsync(stream);
+                }
+
+                // Update user's profile image path
+                var relativePath = $"/uploads/profiles/{fileName}";
+                currentUser.ProfileImagePath = relativePath;
+                await _userManager.UpdateAsync(currentUser);
+
+                return Json(new { success = true, imagePath = relativePath });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "An error occurred while uploading the image" });
             }
         }
     }

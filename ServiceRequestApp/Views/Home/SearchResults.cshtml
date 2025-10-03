@@ -1,7 +1,7 @@
 @model IEnumerable<ServiceRequestApp.Models.ApplicationUser>
 @{
     ViewData["Title"] = "Search Results";
-    var category = ViewBag.Category as string;
+    var categoryName = ViewBag.CategoryName as string;
     var location = ViewBag.Location as string;
 }
 
@@ -12,11 +12,11 @@
             <div class="d-flex justify-content-between align-items-center">
                 <div>
                     <h1 class="display-6 fw-bold mb-2">Search Results</h1>
-                    @if (!string.IsNullOrEmpty(category) || !string.IsNullOrEmpty(location))
+                    @if (!string.IsNullOrEmpty(categoryName) || !string.IsNullOrEmpty(location))
                     {
                         <p class="text-muted mb-0">
                             Showing results for
-                            @if (!string.IsNullOrEmpty(category)) { <span class="badge bg-primary me-2">@category</span> } 
+                            @if (!string.IsNullOrEmpty(categoryName)) { <span class="badge bg-primary me-2">@categoryName</span> } 
                             @if (!string.IsNullOrEmpty(location)) { <span class="badge bg-info me-2">@location</span> }
                         </p>
                     }

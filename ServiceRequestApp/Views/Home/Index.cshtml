@@ -21,32 +21,40 @@
                     <!-- Search Form -->
                     <div class="search-form animate-fade-in-up">
                         <form asp-action="Search" asp-controller="Home" method="get" class="row g-3">
-                            <div class="col-md-5">
+                            <div class="col-md-3">
                                 <div class="form-floating">
-                <input id="categoryInput" name="category" class="form-control" placeholder="Select a category..." autocomplete="off" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" />
-                                    <label for="categoryInput">What service do you need?</label>
-                <ul class="dropdown-menu w-100" id="categoryDropdown">
-                    @if (categories != null)
-                    {
-                        foreach (var cat in categories)
-                        {
-                            <li><a class="dropdown-item" href="#" onclick="selectCategory('@cat.Name')">@cat.Name</a></li>
-                        }
-                    }
-                </ul>
-            </div>
+                                    <select id="categorySelect" name="categoryId" class="form-select" aria-label="Select a category">
+                                        <option value="">All categories</option>
+                                        @if (categories != null)
+                                        {
+                                            foreach (var cat in categories)
+                                            {
+                                                <option value="@cat.Id">@cat.Name</option>
+                                            }
+                                        }
+                                    </select>
+                                    <label for="categorySelect">What service do you need?</label>
+                                </div>
                             </div>
-                            <div class="col-md-5">
-                                <div class="form-floating position-relative">
-                <input id="locationInput" name="location" class="form-control" placeholder="Enter your address or area..." autocomplete="off" />
-                                    <label for="locationInput">Where are you located?</label>
-                                    <button type="button" class="btn btn-link position-absolute top-50 end-0 translate-middle-y me-2" title="Use my current location" onclick="getCurrentLocation()">
-                                        <i class="fas fa-crosshairs text-primary"></i>
-                                    </button>
-                                    <div id="locationSuggestions" class="dropdown-menu w-100"></div>
+                            <div class="col-md-3">
+                                <div class="form-floating">
+                                    <input id="streetInput" name="street" class="form-control" placeholder="Street" />
+                                    <label for="streetInput">Street</label>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-floating">
+                                    <input id="cityInput" name="city" class="form-control" placeholder="City" />
+                                    <label for="cityInput">City</label>
                                 </div>
                             </div>
                             <div class="col-md-2">
+                                <div class="form-floating">
+                                    <input id="zipInput" name="zipcode" class="form-control" placeholder="Zip" />
+                                    <label for="zipInput">Zip</label>
+                                </div>
+                            </div>
+                            <div class="col-md-1">
                                 <button type="submit" class="btn btn-primary btn-lg w-100 h-100 d-flex align-items-center justify-content-center">
                                     <i class="fas fa-search me-2"></i>Search
                 </button>
@@ -513,82 +521,32 @@
 </style>
 
         <script>
-            function selectCategory(name) {
-                document.getElementById('categoryInput').value = name;
-                document.getElementById('categoryDropdown').classList.remove('show');
+            // Make category dropdown scrollable if too many
+            const categorySelect = document.getElementById('categorySelect');
+            if (categorySelect) {
+                // Apply a max-height to the dropdown list via CSS
+                const style = document.createElement('style');
+                style.textContent = `
+                    #categorySelect { overflow-y: auto; }
+                    select#categorySelect option { white-space: nowrap; }
+                `;
+                document.head.appendChild(style);
             }
     
-            document.getElementById('categoryInput').addEventListener('focus', function () {
-                document.getElementById('categoryDropdown').classList.add('show');
-            });
-    
-            document.addEventListener('click', function (e) {
-                if (!document.getElementById('categoryInput').contains(e.target)) {
-                    document.getElementById('categoryDropdown').classList.remove('show');
-                }
-            });
-    
-            // Location autocomplete using Nominatim
-            const locationInput = document.getElementById('locationInput');
-            const locationSuggestions = document.getElementById('locationSuggestions');
-    
-            locationInput.addEventListener('input', function () {
-                const query = this.value;
-                if (query.length < 3) {
-                    locationSuggestions.classList.remove('show');
-                    return;
-                }
-        
-                fetch('https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(query))
-                    .then(res => res.json())
-                    .then(data => {
-                        locationSuggestions.innerHTML = '';
-                        data.slice(0, 5).forEach(function (item) {
-                            const li = document.createElement('a');
-                            li.className = 'dropdown-item';
-                            li.href = '#';
-                            li.textContent = item.display_name;
-                            li.onclick = function () {
-                                locationInput.value = item.display_name;
-                                locationSuggestions.classList.remove('show');
-                                return false;
-                            };
-                            locationSuggestions.appendChild(li);
-                        });
-                
-                        if (data.length > 0) {
-                            locationSuggestions.classList.add('show');
-                        } else {
-                            locationSuggestions.classList.remove('show');
-                        }
-                    });
-            });
-    
-            document.addEventListener('click', function (e) {
-                if (!locationInput.contains(e.target) && !locationSuggestions.contains(e.target)) {
-                    locationSuggestions.classList.remove('show');
-                }
-            });
-    
-            // Geolocation
+            // Optional: keep geolocation to suggest city
             function getCurrentLocation() {
-                if (navigator.geolocation) {
-                    navigator.geolocation.getCurrentPosition(function (position) {
-                        const lat = position.coords.latitude;
-                        const lon = position.coords.longitude;
-                        fetch('https://nominatim.openstreetmap.org/reverse?format=json&lat=' + lat + '&lon=' + lon)
-                            .then(res => res.json())
-                            .then(data => {
-                                if (data && data.display_name) {
-                                    locationInput.value = data.display_name;
-                                }
-                            });
-                    }, function (err) {
-                        alert('Could not get your location.');
-                    });
-                } else {
-                    alert('Geolocation is not supported by your browser.');
-                }
+                if (!navigator.geolocation) { alert('Geolocation not supported.'); return; }
+                navigator.geolocation.getCurrentPosition(function (pos) {
+                    const lat = pos.coords.latitude; const lon = pos.coords.longitude;
+                    fetch('https://nominatim.openstreetmap.org/reverse?format=json&lat=' + lat + '&lon=' + lon)
+                        .then(r=>r.json()).then(d=>{
+                            if(d && d.address){
+                                if(d.address.road){ document.getElementById('streetInput').value = d.address.road; }
+                                if(d.address.city || d.address.town || d.address.village){ document.getElementById('cityInput').value = d.address.city || d.address.town || d.address.village; }
+                                if(d.address.postcode){ document.getElementById('zipInput').value = d.address.postcode; }
+                            }
+                        });
+                });
             }
             
             // Load featured providers

@@ -18,6 +18,9 @@ builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<ISearchService, SearchService>();
 builder.Services.AddScoped<IReviewService, ReviewService>();
 builder.Services.AddScoped<IAnalyticsService, AnalyticsService>();
+builder.Services.AddScoped<IGeocodingService, GeocodingService>();
+builder.Services.AddScoped<IPaymentCompletionService, PaymentCompletionService>();
+builder.Services.AddScoped<IInvoiceService, InvoiceService>();
 builder.Services.AddHttpClient<PaymentService>();
 builder.Services.AddHttpClient<SSLCommerzPaymentService>();
 

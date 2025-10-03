@@ -1,0 +1,174 @@
+@{
+    ViewData["Title"] = "Payment Successful";
+    var serviceRequest = ViewBag.ServiceRequest as ServiceRequestApp.Models.ServiceRequest;
+    var invoice = ViewBag.Invoice as ServiceRequestApp.Models.Invoice;
+    var transaction = ViewBag.Transaction as ServiceRequestApp.Models.PaymentTransaction;
+    var currentUser = ViewBag.CurrentUser as ServiceRequestApp.Models.ApplicationUser;
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Success Header -->
+            <div class="text-center mb-4">
+                <div class="success-icon mb-3">
+                    <i class="fas fa-check-circle text-success" style="font-size: 4rem;"></i>
+                </div>
+                <h1 class="text-success">Payment Successful!</h1>
+                <p class="lead text-muted">Your payment has been processed and the service request is now completed.</p>
+            </div>
+
+            <!-- Service Request Summary -->
+            <div class="card mb-4">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-clipboard-list me-2"></i>Service Request Summary</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="text-muted">Service Details</h6>
+                            <p><strong>Title:</strong> @serviceRequest.Title</p>
+                            <p><strong>Category:</strong> @(serviceRequest.Category?.Name ?? "General")</p>
+                            <p><strong>Description:</strong> @serviceRequest.Description</p>
+                            <p><strong>Location:</strong> @serviceRequest.Address</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-muted">Service Information</h6>
+                            <p><strong>Requested By:</strong> @(serviceRequest.Requester?.FirstName) @(serviceRequest.Requester?.LastName)</p>
+                            <p><strong>Provider:</strong> @(serviceRequest.AcceptedRequest?.Provider?.FirstName ?? serviceRequest.Provider?.FirstName) @(serviceRequest.AcceptedRequest?.Provider?.LastName ?? serviceRequest.Provider?.LastName)</p>
+                            <p><strong>Status:</strong> <span class="badge bg-success">@serviceRequest.Status</span></p>
+                            <p><strong>Completed:</strong> @(serviceRequest.CompletedAt?.ToString("MMM dd, yyyy HH:mm"))</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Payment Details -->
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-credit-card me-2"></i>Payment Details</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="text-muted">Transaction Information</h6>
+                            <p><strong>Transaction ID:</strong> @transaction.TransactionId</p>
+                            <p><strong>Payment Method:</strong> @transaction.PaymentMethod</p>
+                            <p><strong>Payment Date:</strong> @(transaction.CompletedAt?.ToString("MMM dd, yyyy HH:mm"))</p>
+                            <p><strong>Status:</strong> <span class="badge bg-success">@transaction.Status</span></p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-muted">Amount Breakdown</h6>
+                            <p><strong>Total Amount:</strong> ৳@(transaction.Amount.ToString("N2"))</p>
+                            <p><strong>Admin Commission (5%):</strong> ৳@((transaction.AdminCommissionAmount ?? 0).ToString("N2"))</p>
+                            <p><strong>Provider Amount (95%):</strong> ৳@((transaction.ProviderReceivedAmount ?? 0).ToString("N2"))</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Invoice Information -->
+            @if (invoice != null)
+            {
+                <div class="card mb-4">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0"><i class="fas fa-file-invoice me-2"></i>Invoice Information</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6 class="text-muted">Invoice Details</h6>
+                                <p><strong>Invoice Number:</strong> @invoice.InvoiceNumber</p>
+                                <p><strong>Invoice Date:</strong> @invoice.CreatedAt.ToString("MMM dd, yyyy")</p>
+                                <p><strong>Status:</strong> <span class="badge bg-success">@invoice.Status</span></p>
+                            </div>
+                            <div class="col-md-6">
+                                <h6 class="text-muted">Invoice Actions</h6>
+                                <a href="@Url.Action("ViewInvoice", "Payment", new { invoiceId = invoice.Id })" class="btn btn-outline-primary btn-sm me-2">
+                                    <i class="fas fa-eye me-1"></i>View Invoice
+                                </a>
+                                <a href="@Url.Action("ViewInvoice", "Payment", new { invoiceId = invoice.Id })" class="btn btn-outline-secondary btn-sm" target="_blank">
+                                    <i class="fas fa-print me-1"></i>Print Invoice
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <!-- Next Steps -->
+            <div class="card mb-4">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0"><i class="fas fa-star me-2"></i>Next Steps</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="text-muted">Rate & Review</h6>
+                            <p>Now that the service is completed, you can rate and review the provider.</p>
+                            <a href="@Url.Action("Details", "ServiceRequest", new { id = serviceRequest.Id })" class="btn btn-warning">
+                                <i class="fas fa-star me-1"></i>Rate Provider
+                            </a>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-muted">Additional Actions</h6>
+                            <p>View your invoices, payment history, or create a new service request.</p>
+                            <div class="btn-group" role="group">
+                                <a href="@Url.Action("MyInvoices", "Payment")" class="btn btn-outline-primary btn-sm">
+                                    <i class="fas fa-file-invoice me-1"></i>My Invoices
+                                </a>
+                                <a href="@Url.Action("Index", "ServiceRequest")" class="btn btn-outline-success btn-sm">
+                                    <i class="fas fa-plus me-1"></i>New Request
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="text-center">
+                <a href="@Url.Action("Details", "ServiceRequest", new { id = serviceRequest.Id })" class="btn btn-primary btn-lg me-3">
+                    <i class="fas fa-eye me-2"></i>View Service Request
+                </a>
+                <a href="@Url.Action("Index", "ServiceRequest")" class="btn btn-outline-secondary btn-lg">
+                    <i class="fas fa-list me-2"></i>All Requests
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        .success-icon {
+            animation: bounceIn 0.6s ease-out;
+        }
+        
+        @@keyframes bounceIn {
+            0% {
+                transform: scale(0.3);
+                opacity: 0;
+            }
+            50% {
+                transform: scale(1.05);
+            }
+            70% {
+                transform: scale(0.9);
+            }
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+        
+        .card {
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+            border: 1px solid rgba(0, 0, 0, 0.125);
+        }
+        
+        .card-header {
+            border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+        }
+    </style>
+}

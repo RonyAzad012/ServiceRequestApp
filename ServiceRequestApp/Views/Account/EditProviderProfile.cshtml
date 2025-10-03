@@ -15,11 +15,25 @@
         <input asp-for="LastName" class="form-control" />
         <span asp-validation-for="LastName" class="text-danger"></span>
     </div>
-    <div class="mb-3">
-        <label asp-for="Address" class="form-label"></label>
-        <input asp-for="Address" class="form-control" />
-        <span asp-validation-for="Address" class="text-danger"></span>
+    <div class="row g-3">
+        <div class="col-md-6">
+            <label asp-for="Street" class="form-label">Street</label>
+            <input asp-for="Street" class="form-control" />
+        </div>
+        <div class="col-md-3">
+            <label asp-for="City" class="form-label">City</label>
+            <input asp-for="City" class="form-control" />
+        </div>
+        <div class="col-md-3">
+            <label asp-for="Zipcode" class="form-label"></label>
+            <input asp-for="Zipcode" class="form-control" />
+            <span asp-validation-for="Zipcode" class="text-danger"></span>
+        </div>
     </div>
+    <input type="hidden" asp-for="Address" />
+    <input type="hidden" asp-for="Latitude" />
+    <input type="hidden" asp-for="Longitude" />
+    <div id="proedit-map" style="height:280px;" class="rounded border my-3"></div>
     <div class="mb-3">
         <label asp-for="PhoneNumber" class="form-label"></label>
         <input asp-for="PhoneNumber" class="form-control" />
@@ -65,4 +79,22 @@
 </form>
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script>
+        (function(){
+            var lat = parseFloat(document.querySelector('[name="Latitude"]').value) || 23.777176;
+            var lng = parseFloat(document.querySelector('[name="Longitude"]').value) || 90.399452;
+            var map = L.map('proedit-map').setView([lat, lng], 12);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap contributors' }).addTo(map);
+            var marker = L.marker([lat, lng], {draggable:true}).addTo(map);
+            marker.on('dragend', function(e){ var p = e.target.getLatLng(); document.querySelector('[name="Latitude"]').value=p.lat; document.querySelector('[name="Longitude"]').value=p.lng; });
+        })();
+        document.querySelector('form').addEventListener('submit', function(){
+            var street = document.querySelector('[name="Street"]').value || '';
+            var city = document.querySelector('[name="City"]').value || '';
+            var zip = document.querySelector('[name="Zipcode"]').value || '';
+            document.querySelector('[name="Address"]').value = [street, city, zip].filter(Boolean).join(', ');
+        });
+    </script>
 }

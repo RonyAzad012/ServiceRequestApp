@@ -43,23 +43,12 @@
                         </a>
                     </li>
                 }
-                else if (roles.Contains("Provider"))
-                {
-                    <li>
-                        <a class="dropdown-item" asp-controller="ServiceRequest" asp-action="ProviderDashboard">
-                            <i class="fas fa-briefcase me-2 text-primary"></i>Provider Dashboard
-                        </a>
-                    </li>
-                }
-                else if (roles.Contains("Requester"))
-                {
-                    <li>
-                        <a class="dropdown-item" asp-controller="ServiceRequest" asp-action="RequesterDashboard">
-                            <i class="fas fa-user me-2 text-info"></i>Requester Dashboard
-                        </a>
-                    </li>
-                }
                 
+                <li>
+                    <a class="dropdown-item" asp-controller="Account" asp-action="@(roles.Contains("Provider") ? "ProviderProfile" : roles.Contains("Requester") ? "RequesterProfile" : "TaskerProfile")" asp-route-id="@currentUser.Id">
+                        <i class="fas fa-user-circle me-2 text-primary"></i>Profile
+                    </a>
+                </li>
                 <li>
                     <a class="dropdown-item" asp-controller="Payment" asp-action="Index">
                         <i class="fas fa-credit-card me-2 text-success"></i>Payments

@@ -3,36 +3,320 @@
     ViewData["Title"] = "Edit Profile";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
-<h2>Edit Requester Profile</h2>
-<form asp-action="EditRequesterProfile" method="post">
-    <div class="mb-3">
-        <label asp-for="FirstName" class="form-label"></label>
-        <input asp-for="FirstName" class="form-control" />
-        <span asp-validation-for="FirstName" class="text-danger"></span>
+
+<div class="container-fluid py-4">
+    <div class="row justify-content-center">
+        <div class="col-12 col-lg-10 col-xl-8">
+            <!-- Page Header -->
+            <div class="d-flex align-items-center mb-4">
+                <div class="bg-primary rounded-circle p-3 me-3">
+                    <i class="fas fa-user-edit text-white fs-4"></i>
+                </div>
+                <div>
+                    <h1 class="h3 mb-1 fw-bold text-dark">Edit Profile</h1>
+                    <p class="text-muted mb-0">Update your personal information and location details</p>
+                </div>
+            </div>
+
+            <!-- Profile Form -->
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-gradient-primary text-white">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-user-cog me-2"></i>
+                        <h5 class="mb-0">Personal Information</h5>
+                    </div>
+                </div>
+                <div class="card-body p-4">
+                    <form asp-action="EditRequesterProfile" method="post" id="profileForm">
+                        <!-- Personal Details Section -->
+                        <div class="row g-3 mb-4">
+                            <div class="col-12">
+                                <h6 class="text-primary fw-bold mb-3">
+                                    <i class="fas fa-id-card me-2"></i>Basic Information
+                                </h6>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="FirstName" class="form-label fw-semibold">
+                                    <i class="fas fa-user me-1 text-muted"></i>First Name
+                                </label>
+                                <input asp-for="FirstName" class="form-control form-control-lg" placeholder="Enter your first name" />
+                                <span asp-validation-for="FirstName" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="LastName" class="form-label fw-semibold">
+                                    <i class="fas fa-user me-1 text-muted"></i>Last Name
+                                </label>
+                                <input asp-for="LastName" class="form-control form-control-lg" placeholder="Enter your last name" />
+                                <span asp-validation-for="LastName" class="text-danger small"></span>
+                            </div>
+                        </div>
+
+                        <!-- Contact Information Section -->
+                        <div class="row g-3 mb-4">
+                            <div class="col-12">
+                                <h6 class="text-primary fw-bold mb-3">
+                                    <i class="fas fa-phone me-2"></i>Contact Information
+                                </h6>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="PhoneNumber" class="form-label fw-semibold">
+                                    <i class="fas fa-mobile-alt me-1 text-muted"></i>Phone Number
+                                </label>
+                                <input asp-for="PhoneNumber" class="form-control form-control-lg" placeholder="+880 1XXX XXXXXX" />
+                                <span asp-validation-for="PhoneNumber" class="text-danger small"></span>
+                                <div class="form-text">
+                                    <i class="fas fa-info-circle me-1"></i>This will be used for service providers to contact you
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Location Information Section -->
+                        <div class="row g-3 mb-4">
+                            <div class="col-12">
+                                <h6 class="text-primary fw-bold mb-3">
+                                    <i class="fas fa-map-marker-alt me-2"></i>Location Information
+                                </h6>
+                                <p class="text-muted small mb-3">
+                                    <i class="fas fa-lightbulb me-1"></i>Provide your address details to help service providers find you easily
+                                </p>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="Street" class="form-label fw-semibold">
+                                    <i class="fas fa-road me-1 text-muted"></i>Street Address
+                                </label>
+                                <input asp-for="Street" class="form-control form-control-lg" placeholder="House/Flat No, Road Name" />
+                                <span asp-validation-for="Street" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-3">
+                                <label asp-for="City" class="form-label fw-semibold">
+                                    <i class="fas fa-city me-1 text-muted"></i>City
+                                </label>
+                                <input asp-for="City" class="form-control form-control-lg" placeholder="Dhaka" />
+                                <span asp-validation-for="City" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-3">
+                                <label asp-for="Zipcode" class="form-label fw-semibold">
+                                    <i class="fas fa-mail-bulk me-1 text-muted"></i>Zip Code
+                                </label>
+                                <input asp-for="Zipcode" class="form-control form-control-lg" placeholder="1230" />
+                                <span asp-validation-for="Zipcode" class="text-danger small"></span>
+                            </div>
+                        </div>
+
+                        <!-- Interactive Map Section -->
+                        <div class="row g-3 mb-4">
+                            <div class="col-12">
+                                <h6 class="text-primary fw-bold mb-3">
+                                    <i class="fas fa-map me-2"></i>Location on Map
+                                </h6>
+                                <p class="text-muted small mb-3">
+                                    <i class="fas fa-hand-pointer me-1"></i>Drag the marker to set your exact location, or enter address details above
+                                </p>
+                                <div id="reqedit-map" style="height: 400px;" class="rounded border shadow-sm"></div>
+                                <div class="mt-2">
+                                    <small class="text-muted">
+                                        <i class="fas fa-info-circle me-1"></i>Your location helps service providers estimate travel time and costs
+                                    </small>
+                                </div>
     </div>
-    <div class="mb-3">
-        <label asp-for="LastName" class="form-label"></label>
-        <input asp-for="LastName" class="form-control" />
-        <span asp-validation-for="LastName" class="text-danger"></span>
     </div>
-    <div class="mb-3">
-        <label asp-for="Address" class="form-label"></label>
-        <input asp-for="Address" class="form-control" />
-        <span asp-validation-for="Address" class="text-danger"></span>
+
+                        <!-- Hidden Fields -->
+                        <input type="hidden" asp-for="Address" />
+                        <input type="hidden" asp-for="Latitude" />
+                        <input type="hidden" asp-for="Longitude" />
+
+                        <!-- Action Buttons -->
+                        <div class="d-flex flex-wrap gap-3 justify-content-between align-items-center pt-3 border-top">
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-primary btn-lg px-4">
+                                    <i class="fas fa-save me-2"></i>Save Changes
+                                </button>
+                                <a asp-action="RequesterProfile" asp-route-id="@User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value" class="btn btn-outline-secondary btn-lg px-4">
+                                    <i class="fas fa-times me-2"></i>Cancel
+                                </a>
     </div>
-    <div class="mb-3">
-        <label asp-for="PhoneNumber" class="form-label"></label>
-        <input asp-for="PhoneNumber" class="form-control" />
-        <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+                            <div class="text-muted small">
+                                <i class="fas fa-shield-alt me-1"></i>Your information is secure and private
     </div>
-    <div class="mb-3">
-        <label asp-for="Zipcode" class="form-label"></label>
-        <input asp-for="Zipcode" class="form-control" />
-        <span asp-validation-for="Zipcode" class="text-danger"></span>
     </div>
-    <button type="submit" class="btn btn-primary">Save Changes</button>
-    <a asp-action="RequesterProfile" asp-route-id="@User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value" class="btn btn-secondary">Cancel</a>
 </form>
+                </div>
+            </div>
+
+            <!-- Additional Information Card -->
+            <div class="card shadow-sm border-0 mt-4">
+                <div class="card-body p-4">
+                    <div class="row g-4">
+                        <div class="col-md-4">
+                            <div class="d-flex align-items-center">
+                                <div class="bg-success bg-opacity-10 rounded-circle p-3 me-3">
+                                    <i class="fas fa-check-circle text-success"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-1 fw-bold">Verified Profile</h6>
+                                    <small class="text-muted">Your profile is verified and trusted</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="d-flex align-items-center">
+                                <div class="bg-info bg-opacity-10 rounded-circle p-3 me-3">
+                                    <i class="fas fa-map-marked-alt text-info"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-1 fw-bold">Location Services</h6>
+                                    <small class="text-muted">Help providers find you easily</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="d-flex align-items-center">
+                                <div class="bg-warning bg-opacity-10 rounded-circle p-3 me-3">
+                                    <i class="fas fa-bell text-warning"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-1 fw-bold">Instant Updates</h6>
+                                    <small class="text-muted">Get notified about new services</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script>
+        (function(){
+            var lat = parseFloat(document.querySelector('[name="Latitude"]').value) || 23.777176;
+            var lng = parseFloat(document.querySelector('[name="Longitude"]').value) || 90.399452;
+            
+            var map = L.map('reqedit-map').setView([lat, lng], 12);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { 
+                attribution: '© OpenStreetMap contributors' 
+            }).addTo(map);
+            
+            var marker = L.marker([lat, lng], {draggable: true}).addTo(map);
+            marker.bindPopup('<b>Your Location</b><br>Drag to adjust position').openPopup();
+            
+            marker.on('dragend', function(e){ 
+                var p = e.target.getLatLng(); 
+                document.querySelector('[name="Latitude"]').value = p.lat.toFixed(6); 
+                document.querySelector('[name="Longitude"]').value = p.lng.toFixed(6);
+                
+                // Update popup with new coordinates
+                marker.setPopupContent('<b>Your Location</b><br>Lat: ' + p.lat.toFixed(6) + '<br>Lng: ' + p.lng.toFixed(6));
+            });
+            
+            // Auto-geocode when address fields change
+            function geocodeAddress() {
+                var street = document.querySelector('[name="Street"]').value;
+                var city = document.querySelector('[name="City"]').value;
+                var zip = document.querySelector('[name="Zipcode"]').value;
+                
+                if (street && city) {
+                    var address = [street, city, zip].filter(Boolean).join(', ');
+                    var encodedAddress = encodeURIComponent(address);
+                    var url = 'https://nominatim.openstreetmap.org/search?q=' + encodedAddress + '&format=json&limit=1';
+                    
+                    fetch(url)
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data && data.length > 0) {
+                                var lat = parseFloat(data[0].lat);
+                                var lng = parseFloat(data[0].lon);
+                                map.setView([lat, lng], 15);
+                                marker.setLatLng([lat, lng]);
+                                document.querySelector('[name="Latitude"]').value = lat.toFixed(6);
+                                document.querySelector('[name="Longitude"]').value = lng.toFixed(6);
+                            }
+                        })
+                        .catch(error => console.log('Geocoding error:', error));
+                }
+            }
+            
+            // Add event listeners for address fields
+            document.querySelector('[name="Street"]').addEventListener('blur', geocodeAddress);
+            document.querySelector('[name="City"]').addEventListener('blur', geocodeAddress);
+            document.querySelector('[name="Zipcode"]').addEventListener('blur', geocodeAddress);
+        })();
+        
+        // Compose Address on submit
+        document.querySelector('#profileForm').addEventListener('submit', function(){
+            var street = document.querySelector('[name="Street"]').value || '';
+            var city = document.querySelector('[name="City"]').value || '';
+            var zip = document.querySelector('[name="Zipcode"]').value || '';
+            document.querySelector('[name="Address"]').value = [street, city, zip].filter(Boolean).join(', ');
+        });
+        
+        // Form validation and user feedback
+        document.querySelector('#profileForm').addEventListener('submit', function(e) {
+            var requiredFields = ['FirstName', 'LastName', 'PhoneNumber'];
+            var isValid = true;
+            
+            requiredFields.forEach(function(fieldName) {
+                var field = document.querySelector('[name="' + fieldName + '"]');
+                if (!field.value.trim()) {
+                    field.classList.add('is-invalid');
+                    isValid = false;
+                } else {
+                    field.classList.remove('is-invalid');
+                }
+            });
+            
+            if (!isValid) {
+                e.preventDefault();
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Missing Information',
+                    text: 'Please fill in all required fields before saving.',
+                    confirmButtonColor: '#0d6efd'
+                });
+            }
+        });
+    </script>
+}
+
+@section Styles {
+    <style>
+        .form-control:focus {
+            border-color: #0d6efd;
+            box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+        }
+        
+        .card {
+            border-radius: 1rem;
+        }
+        
+        .card-header {
+            border-radius: 1rem 1rem 0 0 !important;
+        }
+        
+        .btn {
+            border-radius: 0.5rem;
+            font-weight: 500;
+        }
+        
+        .bg-gradient-primary {
+            background: linear-gradient(135deg, #0d6efd 0%, #6610f2 100%);
+        }
+        
+        #reqedit-map {
+            border-radius: 0.5rem;
+        }
+        
+        .form-label {
+            color: #495057;
+        }
+        
+        .text-primary {
+            color: #0d6efd !important;
+        }
+    </style>
 }

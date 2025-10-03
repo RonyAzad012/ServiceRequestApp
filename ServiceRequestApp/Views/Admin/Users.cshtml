@@ -140,10 +140,20 @@
                                     </span>
                                 </td>
                                 <td>
-                                    <span class="badge @(user.EmailConfirmed ? "bg-success" : "bg-warning") text-white" id="status-@user.Id">
-                                        <i class="fas @(user.EmailConfirmed ? "fa-check-circle" : "fa-clock") me-1"></i>
-                                        @(user.EmailConfirmed ? "Active" : "Pending")
-                                    </span>
+                                    @if (user.UserType == "Provider" || user.UserType == "Tasker" || user.UserType == "Business")
+                                    {
+                                        <span class="badge @(user.IsApproved ? "bg-success" : "bg-warning") text-white" id="status-@user.Id">
+                                            <i class="fas @(user.IsApproved ? "fa-check-circle" : "fa-clock") me-1"></i>
+                                            @(user.IsApproved ? "Approved" : "Pending")
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge @(user.EmailConfirmed ? "bg-success" : "bg-warning") text-white" id="status-@user.Id">
+                                            <i class="fas @(user.EmailConfirmed ? "fa-check-circle" : "fa-clock") me-1"></i>
+                                            @(user.EmailConfirmed ? "Active" : "Pending")
+                                        </span>
+                                    }
                                 </td>
                                 <td>
                                     <small class="text-muted">

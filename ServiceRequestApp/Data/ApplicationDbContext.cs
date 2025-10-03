@@ -18,6 +18,7 @@ namespace ServiceRequestApp.Data
         public DbSet<Category> Categories { get; set; }
         public DbSet<Message> Messages { get; set; }
         public DbSet<PaymentTransaction> PaymentTransactions { get; set; }
+        public DbSet<Invoice> Invoices { get; set; }
         public DbSet<Notification> Notifications { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -134,6 +135,25 @@ namespace ServiceRequestApp.Data
                 .HasOne(r => r.Reviewee)
                 .WithMany(u => u.Reviews)
                 .HasForeignKey(r => r.RevieweeId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Invoice relationships
+            modelBuilder.Entity<Invoice>()
+                .HasOne(i => i.ServiceRequest)
+                .WithMany()
+                .HasForeignKey(i => i.ServiceRequestId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Invoice>()
+                .HasOne(i => i.Requester)
+                .WithMany()
+                .HasForeignKey(i => i.RequesterId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Invoice>()
+                .HasOne(i => i.Provider)
+                .WithMany()
+                .HasForeignKey(i => i.ProviderId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             // Notification relationships

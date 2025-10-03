@@ -88,6 +88,13 @@ namespace ServiceRequestApp.Controllers
             }
         }
 
+        // View to manage pending approvals
+        [HttpGet]
+        public IActionResult PendingApprovals()
+        {
+            return View();
+        }
+
         [HttpGet]
         public async Task<IActionResult> GetUsers()
         {

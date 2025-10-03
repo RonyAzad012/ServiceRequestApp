@@ -70,22 +70,25 @@
                             </div>
                         </div>
 
-                        <div class="row g-3 mb-4">
-                            <div class="col-md-8">
-                                <label asp-for="Address" class="form-label fw-semibold">
-                                    <i class="fas fa-home me-1"></i>Personal Address *
-                                </label>
-                                <input asp-for="Address" class="form-control form-control-lg" placeholder="Enter your personal address" />
-                                <span asp-validation-for="Address" class="text-danger small"></span>
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label asp-for="Street" class="form-label fw-semibold"><i class="fas fa-road me-1"></i>Street</label>
+                                <input asp-for="Street" class="form-control form-control-lg" placeholder="Street/house/apartment" />
                             </div>
-                            <div class="col-md-4">
-                                <label asp-for="Zipcode" class="form-label fw-semibold">
-                                    <i class="fas fa-mail-bulk me-1"></i>Zip Code *
-                                </label>
-                                <input asp-for="Zipcode" class="form-control form-control-lg" placeholder="Enter zip code" />
+                            <div class="col-md-3">
+                                <label asp-for="City" class="form-label fw-semibold"><i class="fas fa-city me-1"></i>City</label>
+                                <input asp-for="City" class="form-control form-control-lg" placeholder="City" />
+                            </div>
+                            <div class="col-md-3">
+                                <label asp-for="Zipcode" class="form-label fw-semibold"><i class="fas fa-mail-bulk me-1"></i>Zip Code *</label>
+                                <input asp-for="Zipcode" class="form-control form-control-lg" placeholder="Zip code" />
                                 <span asp-validation-for="Zipcode" class="text-danger small"></span>
                             </div>
                         </div>
+                        <input type="hidden" asp-for="Address" />
+                        <input type="hidden" asp-for="Latitude" />
+                        <input type="hidden" asp-for="Longitude" />
+                        <div id="provreg-map" style="height: 280px;" class="rounded border mb-4"></div>
 
                         <div class="row g-3 mb-4">
                             <div class="col-md-6">
@@ -264,6 +267,11 @@
                 const originalText = submitBtn.html();
                 submitBtn.html('<i class="fas fa-spinner fa-spin me-2"></i>Creating Account...').prop('disabled', true);
                 
+                const street = $('[name="Street"]').val() || '';
+                const city = $('[name="City"]').val() || '';
+                const zip = $('[name="Zipcode"]').val() || '';
+                $('[name="Address"]').val([street, city, zip].filter(Boolean).join(', '));
+
                 $.ajax({
                     url: '@Url.Action("ProviderRegister", "Account")',
                     type: 'POST',
@@ -311,5 +319,19 @@
                 });
             });
         });
+    </script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script>
+        (function(){
+            var map = L.map('provreg-map').setView([23.777176, 90.399452], 12);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap contributors' }).addTo(map);
+            var marker;
+            function setLL(lat, lng){
+                if(marker){ marker.setLatLng([lat,lng]); } else { marker = L.marker([lat,lng], {draggable:true}).addTo(map).on('dragend', function(e){ var p=e.target.getLatLng(); $('[name="Latitude"]').val(p.lat); $('[name="Longitude"]').val(p.lng); }); }
+                $('[name="Latitude"]').val(lat); $('[name="Longitude"]').val(lng);
+            }
+            map.on('click', function(e){ setLL(e.latlng.lat, e.latlng.lng); });
+        })();
     </script>
 }

@@ -23,6 +23,8 @@ namespace ServiceRequestApp.ViewModels
         public string LastName { get; set; }
 
         public string? Address { get; set; }
+        public string? Street { get; set; }
+        public string? City { get; set; }
 
         [Required]
         public string UserType { get; set; } // "Provider" or "Requester"
@@ -75,6 +77,8 @@ namespace ServiceRequestApp.ViewModels
         public string LastName { get; set; }
 
         public string? Address { get; set; }
+        public string? Street { get; set; }
+        public string? City { get; set; }
 
         [Required]
         public string PhoneNumber { get; set; }
@@ -105,10 +109,14 @@ namespace ServiceRequestApp.ViewModels
         [Required]
         public string LastName { get; set; }
         public string? Address { get; set; }
+        public string? Street { get; set; }
+        public string? City { get; set; }
         [Required]
         public string PhoneNumber { get; set; }
         [Required]
         public string Zipcode { get; set; }
+        public double? Latitude { get; set; }
+        public double? Longitude { get; set; }
     }
 
     public class EditProviderProfileViewModel
@@ -118,10 +126,14 @@ namespace ServiceRequestApp.ViewModels
         [Required]
         public string LastName { get; set; }
         public string? Address { get; set; }
+        public string? Street { get; set; }
+        public string? City { get; set; }
         [Required]
         public string PhoneNumber { get; set; }
         [Required]
         public string Zipcode { get; set; }
+        public double? Latitude { get; set; }
+        public double? Longitude { get; set; }
         public string? ShopName { get; set; }
         public string? ShopDescription { get; set; }
         public string? ShopAddress { get; set; }
@@ -137,10 +149,14 @@ namespace ServiceRequestApp.ViewModels
         [Required]
         public string LastName { get; set; }
         public string? Address { get; set; }
+        public string? Street { get; set; }
+        public string? City { get; set; }
         [Required]
         public string PhoneNumber { get; set; }
         [Required]
         public string Zipcode { get; set; }
+        public double? Latitude { get; set; }
+        public double? Longitude { get; set; }
         public string? Skills { get; set; }
         public string? PortfolioUrl { get; set; }
         public string? ProfileDescription { get; set; }
@@ -168,6 +184,8 @@ namespace ServiceRequestApp.ViewModels
 
         [Required]
         public string Address { get; set; }
+        public string? Street { get; set; }
+        public string? City { get; set; }
 
         [Required]
         public string PhoneNumber { get; set; }
@@ -177,6 +195,8 @@ namespace ServiceRequestApp.ViewModels
 
         [Required]
         public string NationalId { get; set; }
+        public double? Latitude { get; set; }
+        public double? Longitude { get; set; }
     }
 
     public class ProviderRegisterViewModel
@@ -201,6 +221,8 @@ namespace ServiceRequestApp.ViewModels
 
         [Required]
         public string Address { get; set; }
+        public string? Street { get; set; }
+        public string? City { get; set; }
 
         [Required]
         public string PhoneNumber { get; set; }
@@ -210,6 +232,8 @@ namespace ServiceRequestApp.ViewModels
 
         [Required]
         public string NationalId { get; set; }
+        public double? Latitude { get; set; }
+        public double? Longitude { get; set; }
 
         // Provider-specific fields
         [Required]

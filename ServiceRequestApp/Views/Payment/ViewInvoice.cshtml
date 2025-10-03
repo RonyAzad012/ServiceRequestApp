@@ -1,0 +1,157 @@
+@{
+    ViewData["Title"] = "Invoice";
+    var invoice = ViewBag.Invoice as ServiceRequestApp.Models.Invoice;
+    var currentUser = ViewBag.CurrentUser as ServiceRequestApp.Models.ApplicationUser;
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <!-- Invoice Header -->
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <div class="row align-items-center">
+                        <div class="col-md-6">
+                            <h4 class="mb-0"><i class="fas fa-file-invoice me-2"></i>Invoice</h4>
+                        </div>
+                        <div class="col-md-6 text-end">
+                            <h5 class="mb-0">@invoice.InvoiceNumber</h5>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="text-muted">Invoice Details</h6>
+                            <p><strong>Invoice Date:</strong> @invoice.CreatedAt.ToString("MMM dd, yyyy")</p>
+                            <p><strong>Service Date:</strong> @(invoice.ServiceDate?.ToString("MMM dd, yyyy") ?? "N/A")</p>
+                            <p><strong>Status:</strong> <span class="badge bg-success">@invoice.Status</span></p>
+                            <p><strong>Payment Method:</strong> @(invoice.PaymentMethod ?? "N/A")</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-muted">Service Request</h6>
+                            <p><strong>Service Request ID:</strong> #@invoice.ServiceRequestId</p>
+                            <p><strong>Transaction ID:</strong> @(invoice.PaymentTransactionId ?? "N/A")</p>
+                            <p><strong>Paid Date:</strong> @(invoice.PaidAt?.ToString("MMM dd, yyyy HH:mm") ?? "N/A")</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Parties Information -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header bg-light">
+                            <h6 class="mb-0"><i class="fas fa-user me-2"></i>From (Requester)</h6>
+                        </div>
+                        <div class="card-body">
+                            <p><strong>Name:</strong> @(invoice.Requester?.FirstName) @(invoice.Requester?.LastName)</p>
+                            <p><strong>Email:</strong> @(invoice.Requester?.Email)</p>
+                            <p><strong>Phone:</strong> @(invoice.Requester?.PhoneNumber)</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header bg-light">
+                            <h6 class="mb-0"><i class="fas fa-tools me-2"></i>To (Provider)</h6>
+                        </div>
+                        <div class="card-body">
+                            <p><strong>Name:</strong> @(invoice.Provider?.FirstName) @(invoice.Provider?.LastName)</p>
+                            <p><strong>Email:</strong> @(invoice.Provider?.Email)</p>
+                            <p><strong>Phone:</strong> @(invoice.Provider?.PhoneNumber)</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Service Details -->
+            <div class="card mb-4">
+                <div class="card-header bg-light">
+                    <h6 class="mb-0"><i class="fas fa-clipboard-list me-2"></i>Service Details</h6>
+                </div>
+                <div class="card-body">
+                    <p><strong>Description:</strong> @(invoice.ServiceDescription ?? "N/A")</p>
+                    <p><strong>Location:</strong> @(invoice.ServiceLocation ?? "N/A")</p>
+                    @if (!string.IsNullOrEmpty(invoice.Notes))
+                    {
+                        <p><strong>Notes:</strong> @invoice.Notes</p>
+                    }
+                </div>
+            </div>
+
+            <!-- Amount Breakdown -->
+            <div class="card mb-4">
+                <div class="card-header bg-light">
+                    <h6 class="mb-0"><i class="fas fa-calculator me-2"></i>Amount Breakdown</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-borderless">
+                            <tbody>
+                                <tr>
+                                    <td><strong>Total Service Amount:</strong></td>
+                                    <td class="text-end"><strong>৳@invoice.TotalAmount.ToString("N2")</strong></td>
+                                </tr>
+                                <tr>
+                                    <td>Admin Commission (5%):</td>
+                                    <td class="text-end">৳@invoice.AdminCommission.ToString("N2")</td>
+                                </tr>
+                                <tr>
+                                    <td>Provider Amount (95%):</td>
+                                    <td class="text-end">৳@invoice.ProviderAmount.ToString("N2")</td>
+                                </tr>
+                                <tr class="border-top">
+                                    <td><strong>Total Paid:</strong></td>
+                                    <td class="text-end"><strong>৳@invoice.TotalAmount.ToString("N2")</strong></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="text-center mb-4">
+                <button onclick="window.print()" class="btn btn-primary me-3">
+                    <i class="fas fa-print me-2"></i>Print Invoice
+                </button>
+                <a href="@Url.Action("MyInvoices", "Payment")" class="btn btn-outline-secondary me-3">
+                    <i class="fas fa-list me-2"></i>All Invoices
+                </a>
+                <a href="@Url.Action("Details", "ServiceRequest", new { id = invoice.ServiceRequestId })" class="btn btn-outline-info">
+                    <i class="fas fa-eye me-2"></i>View Service Request
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        @@media print {
+            .btn, .card-header {
+                display: none !important;
+            }
+            
+            .container {
+                max-width: none !important;
+            }
+            
+            .card {
+                border: 1px solid #000 !important;
+                box-shadow: none !important;
+            }
+        }
+        
+        .card {
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+            border: 1px solid rgba(0, 0, 0, 0.125);
+        }
+        
+        .card-header {
+            border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+        }
+    </style>
+}

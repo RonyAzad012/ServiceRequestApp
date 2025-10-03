@@ -166,6 +166,11 @@
                     </a>
                 </li>
                 <li class="nav-item">
+                    <a class="nav-link @((ViewContext.RouteData.Values["action"] as string == "PendingApprovals") ? "active" : "")" asp-controller="Admin" asp-action="PendingApprovals">
+                        <i class="fas fa-user-check"></i> Pending Approvals
+                    </a>
+                </li>
+                <li class="nav-item">
                     <a class="nav-link @((ViewContext.RouteData.Values["action"] as string == "ServiceRequests") ? "active" : "")" asp-controller="Admin" asp-action="ServiceRequests">
                         <i class="fas fa-tasks"></i> Service Requests
                     </a>

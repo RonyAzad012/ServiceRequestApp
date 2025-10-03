@@ -14,107 +14,284 @@
     }
 }
 
-<div class="container">
+<div class="container py-4">
     <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card">
-                <div class="card-body">
-                    <h2 class="card-title">@Model.Title</h2>
-                    <h6 class="card-subtitle mb-3 text-muted">@Model.Category?.Name</h6>
+        <div class="col-lg-10">
+            <div class="card border-0 shadow-lg">
+                <div class="card-header bg-gradient-primary text-white py-4">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h1 class="h3 mb-2 text-white">@Model.Title</h1>
+                            <p class="mb-0 text-white-50">
+                                <i class="fas fa-tags me-2"></i>@(Model.Category?.Name ?? "General")
+                                <span class="ms-3">
+                                    <i class="fas fa-calendar me-1"></i>@Model.CreatedAt.ToString("MMM dd, yyyy")
+                                </span>
+                            </p>
+                        </div>
+                        <div class="col-md-4 text-md-end">
+                            <span class="badge @(Model.Status switch {
+                                "Pending" => "bg-warning",
+                                "Accepted" => "bg-info", 
+                                "Completed" => "bg-success",
+                                _ => "bg-secondary"
+                            }) fs-6 px-3 py-2">@Model.Status</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body p-5">
+                    <!-- Service Details Section -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h5 class="text-primary mb-3">
+                                <i class="fas fa-info-circle me-2"></i>Service Details
+                            </h5>
+                        </div>
+                    </div>
 
-                    <dl class="row">
-                        <dt class="col-sm-3">Description</dt>
+                    <dl class="row g-3 mb-4">
+                        <dt class="col-sm-3 fw-semibold">
+                            <i class="fas fa-align-left me-2 text-primary"></i>Description
+                        </dt>
                         <dd class="col-sm-9">@Model.Description</dd>
 
-                        <dt class="col-sm-3">Status</dt>
-                        <dd class="col-sm-9">@Model.Status</dd>
-
-                        <dt class="col-sm-3">Created At</dt>
-                        <dd class="col-sm-9">@Model.CreatedAt.ToString("g")</dd>
-
-                        <dt class="col-sm-3">Requester</dt>
+                        <dt class="col-sm-3 fw-semibold">
+                            <i class="fas fa-user me-2 text-primary"></i>Requester
+                        </dt>
                         <dd class="col-sm-9">@($"{Model.Requester.FirstName} {Model.Requester.LastName}")</dd>
 
-                        <dt class="col-sm-3">Address</dt>
-                        <dd class="col-sm-9">@Model.Address</dd>
-
-                        <dt class="col-sm-3">Zipcode</dt>
-                        <dd class="col-sm-9">@Model.Zipcode</dd>
-
-                        <dt class="col-sm-3">Budget</dt>
-                        <dd class="col-sm-9">@(Model.Budget?.ToString("C") ?? "Not specified")</dd>
-
-                        <dt class="col-sm-3">Phone Number</dt>
+                        <dt class="col-sm-3 fw-semibold">
+                            <i class="fas fa-phone me-2 text-primary"></i>Contact
+                        </dt>
                         <dd class="col-sm-9">@Model.PhoneNumber</dd>
-
-                        <dt class="col-sm-3">Deadline</dt>
-                        <dd class="col-sm-9">@(Model.Deadline?.ToString("d") ?? "N/A")</dd>
-
-                        @if (!string.IsNullOrEmpty(Model.AttachedFiles))
-                        {
-                            <dt class="col-sm-3">Attached Files</dt>
-                            <dd class="col-sm-9">
-                                @foreach (var file in Model.AttachedFiles.Split(','))
-                                {
-                                    <a href="@file" target="_blank" class="btn btn-sm btn-outline-primary me-2 mb-2">
-                                        <i class="fas fa-file"></i> View File
-                                    </a>
-                                }
-                            </dd>
-                        }
-
-                        @if (Model.AcceptedRequest != null)
-                        {
-                            <dt class="col-sm-3">Provider</dt>
-                            <dd class="col-sm-9">
-                                @($"{Model.AcceptedRequest.Provider.FirstName} {Model.AcceptedRequest.Provider.LastName}")
-                                <a asp-action="ProviderReviews" asp-route-providerId="@Model.AcceptedRequest.ProviderId" class="ms-2 btn btn-link btn-sm">View Reviews</a>
-                            </dd>
-
-                            <dt class="col-sm-3">Accepted At</dt>
-                            <dd class="col-sm-9">@Model.AcceptedRequest.AcceptedAt.ToString("g")</dd>
-                        }
-
-                        <dt class="col-sm-3">Payment Status</dt>
-                        <dd class="col-sm-9">@Model.PaymentStatus ?? "Pending"</dd>
-                        @if (Model.PaymentStatus == "Paid")
-                        {
-                            <dt class="col-sm-3">Payment Date</dt>
-                            <dd class="col-sm-9">@Model.PaymentDate?.ToString("g")</dd>
-                            <dt class="col-sm-3">Transaction ID</dt>
-                            <dd class="col-sm-9">@Model.PaymentTransactionId</dd>
-                        }
-                        @if (Model.Status == "Accepted" && Model.PaymentStatus != "Paid" && currentUser.UserType == "Requester")
-                        {
-                            <dt class="col-sm-3">Action</dt>
-                            <dd class="col-sm-9">
-                                <a asp-action="Pay" asp-route-id="@Model.Id" class="btn btn-warning">Pay Now</a>
-                            </dd>
-                        }
-                        <dt class="col-sm-3">Category</dt>
-                        <dd class="col-sm-9">@(Model.Category?.Name ?? "N/A")</dd>
                     </dl>
 
-                    <div id="map" style="height: 400px;" class="mb-3"></div>
+                    <!-- Budget and Timeline Section -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h5 class="text-primary mb-3">
+                                <i class="fas fa-dollar-sign me-2"></i>Budget & Timeline
+                            </h5>
+                        </div>
+                    </div>
 
-                    <div class="d-flex justify-content-between">
-                        <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+                    <dl class="row g-3 mb-4">
+                        <dt class="col-sm-3 fw-semibold">
+                            <i class="fas fa-money-bill-wave me-2 text-success"></i>Budget
+                        </dt>
+                        <dd class="col-sm-9">
+                            <span class="fs-5 fw-bold text-success">
+                                @(Model.Budget.HasValue ? $"৳{Model.Budget.Value:N2}" : "Not specified")
+                            </span>
+                            @if (!string.IsNullOrEmpty(Model.BudgetType))
+                            {
+                                <span class="badge bg-light text-dark ms-2">@Model.BudgetType</span>
+                            }
+                        </dd>
 
-                        @if (currentUser.UserType == "Provider" && Model.Status == "Pending")
+                        <dt class="col-sm-3 fw-semibold">
+                            <i class="fas fa-clock me-2 text-warning"></i>Urgency
+                        </dt>
+                        <dd class="col-sm-9">
+                            <span class="badge @(Model.Urgency switch {
+                                "Low" => "bg-success",
+                                "Medium" => "bg-warning",
+                                "High" => "bg-danger",
+                                "Urgent" => "bg-dark",
+                                _ => "bg-secondary"
+                            })">@Model.Urgency</span>
+                        </dd>
+
+                        @if (Model.PreferredDate.HasValue)
                         {
-                            <form asp-action="Accept" asp-route-id="@Model.Id" method="post" style="display: inline;">
-                                <button type="submit" class="btn btn-success">Accept Request</button>
-                            </form>
+                            <dt class="col-sm-3 fw-semibold">
+                                <i class="fas fa-calendar-alt me-2 text-info"></i>Preferred Date
+                            </dt>
+                            <dd class="col-sm-9">@Model.PreferredDate.Value.ToString("MMM dd, yyyy")</dd>
                         }
 
-                        @if (Model.Status == "Accepted" &&
-                        (Model.RequesterId == currentUser.Id ||
-                        Model.AcceptedRequest?.ProviderId == currentUser.Id))
+                        @if (Model.Deadline.HasValue)
                         {
-                            <form asp-action="Complete" asp-route-id="@Model.Id" method="post" style="display: inline;">
-                                <button type="submit" class="btn btn-primary">Mark as Completed</button>
-                            </form>
+                            <dt class="col-sm-3 fw-semibold">
+                                <i class="fas fa-calendar-times me-2 text-danger"></i>Deadline
+                            </dt>
+                            <dd class="col-sm-9">@Model.Deadline.Value.ToString("MMM dd, yyyy")</dd>
                         }
+                    </dl>
+
+                    <!-- Location Section -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h5 class="text-primary mb-3">
+                                <i class="fas fa-map-marker-alt me-2"></i>Service Location
+                            </h5>
+                        </div>
+                    </div>
+
+                    <dl class="row g-3 mb-4">
+                        @if (!string.IsNullOrEmpty(Model.Street))
+                        {
+                            <dt class="col-sm-3 fw-semibold">
+                                <i class="fas fa-road me-2 text-primary"></i>Street
+                            </dt>
+                            <dd class="col-sm-9">@Model.Street</dd>
+                        }
+
+                        @if (!string.IsNullOrEmpty(Model.City))
+                        {
+                            <dt class="col-sm-3 fw-semibold">
+                                <i class="fas fa-city me-2 text-primary"></i>City
+                            </dt>
+                            <dd class="col-sm-9">@Model.City</dd>
+                        }
+
+                        <dt class="col-sm-3 fw-semibold">
+                            <i class="fas fa-map-marker-alt me-2 text-primary"></i>Full Address
+                        </dt>
+                        <dd class="col-sm-9">@Model.Address</dd>
+
+                        <dt class="col-sm-3 fw-semibold">
+                            <i class="fas fa-mail-bulk me-2 text-primary"></i>Zip Code
+                        </dt>
+                        <dd class="col-sm-9">@Model.Zipcode</dd>
+                    </dl>
+
+                    <!-- Additional Details Section -->
+                    @if (!string.IsNullOrEmpty(Model.SpecialRequirements) || !string.IsNullOrEmpty(Model.AttachedFiles))
+                    {
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h5 class="text-primary mb-3">
+                                    <i class="fas fa-clipboard-list me-2"></i>Additional Details
+                                </h5>
+                            </div>
+                        </div>
+
+                        <dl class="row g-3 mb-4">
+                            @if (!string.IsNullOrEmpty(Model.SpecialRequirements))
+                            {
+                                <dt class="col-sm-3 fw-semibold">
+                                    <i class="fas fa-exclamation-triangle me-2 text-warning"></i>Special Requirements
+                                </dt>
+                                <dd class="col-sm-9">@Model.SpecialRequirements</dd>
+                            }
+
+                            @if (!string.IsNullOrEmpty(Model.AttachedFiles))
+                            {
+                                <dt class="col-sm-3 fw-semibold">
+                                    <i class="fas fa-paperclip me-2 text-info"></i>Attached Files
+                                </dt>
+                                <dd class="col-sm-9">
+                                    @foreach (var file in Model.AttachedFiles.Split(','))
+                                    {
+                                        <a href="@file" target="_blank" class="btn btn-sm btn-outline-primary me-2 mb-2">
+                                            <i class="fas fa-file me-1"></i>View File
+                                        </a>
+                                    }
+                                </dd>
+                            }
+                        </dl>
+                    }
+
+                    <!-- Map Section -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h5 class="text-primary mb-3">
+                                <i class="fas fa-map me-2"></i>Location Map
+                            </h5>
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <div id="map" style="height: 400px;" class="rounded border"></div>
+                    </div>
+
+                    <!-- Provider & Payment Information -->
+                    @if (Model.AcceptedRequest != null || !string.IsNullOrEmpty(Model.PaymentStatus))
+                    {
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h5 class="text-primary mb-3">
+                                    <i class="fas fa-user-tie me-2"></i>Provider & Payment Information
+                                </h5>
+                            </div>
+                        </div>
+
+                        <dl class="row g-3 mb-4">
+                            @if (Model.AcceptedRequest != null)
+                            {
+                                <dt class="col-sm-3 fw-semibold">
+                                    <i class="fas fa-user-tie me-2 text-success"></i>Assigned Provider
+                                </dt>
+                                <dd class="col-sm-9">
+                                    @($"{Model.AcceptedRequest.Provider.FirstName} {Model.AcceptedRequest.Provider.LastName}")
+                                    <a asp-action="ProviderReviews" asp-route-providerId="@Model.AcceptedRequest.ProviderId" class="ms-2 btn btn-outline-primary btn-sm">
+                                        <i class="fas fa-star me-1"></i>View Reviews
+                                    </a>
+                                </dd>
+
+                                <dt class="col-sm-3 fw-semibold">
+                                    <i class="fas fa-calendar-check me-2 text-info"></i>Accepted At
+                                </dt>
+                                <dd class="col-sm-9">@Model.AcceptedRequest.AcceptedAt.ToString("MMM dd, yyyy 'at' h:mm tt")</dd>
+                            }
+
+                            <dt class="col-sm-3 fw-semibold">
+                                <i class="fas fa-credit-card me-2 text-warning"></i>Payment Status
+                            </dt>
+                            <dd class="col-sm-9">
+                                <span class="badge @(Model.PaymentStatus switch {
+                                    "Paid" => "bg-success",
+                                    "Pending" => "bg-warning",
+                                    "Failed" => "bg-danger",
+                                    _ => "bg-secondary"
+                                }) fs-6">@(Model.PaymentStatus ?? "Pending")</span>
+                            </dd>
+
+                            @if (Model.PaymentStatus == "Paid")
+                            {
+                                <dt class="col-sm-3 fw-semibold">
+                                    <i class="fas fa-calendar me-2 text-success"></i>Payment Date
+                                </dt>
+                                <dd class="col-sm-9">@Model.PaymentDate?.ToString("MMM dd, yyyy 'at' h:mm tt")</dd>
+
+                                <dt class="col-sm-3 fw-semibold">
+                                    <i class="fas fa-receipt me-2 text-success"></i>Transaction ID
+                                </dt>
+                                <dd class="col-sm-9">
+                                    <code class="bg-light px-2 py-1 rounded">@Model.PaymentTransactionId</code>
+                                </dd>
+                            }
+                        </dl>
+                    }
+
+                    <!-- Action Buttons Section -->
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="d-flex flex-wrap gap-3 justify-content-between align-items-center">
+                                <a asp-action="Index" class="btn btn-secondary btn-lg">
+                                    <i class="fas fa-arrow-left me-2"></i>Back to List
+                                </a>
+
+                                <div class="d-flex flex-wrap gap-2">
+                                    @if (currentUser.UserType == "Provider" && Model.Status == "Pending")
+                                    {
+                                        <form asp-action="Accept" asp-route-id="@Model.Id" method="post" class="d-inline">
+                                            <button type="submit" class="btn btn-success btn-lg">
+                                                <i class="fas fa-check me-2"></i>Accept Request
+                                            </button>
+                                        </form>
+                                    }
+
+                                    @if (Model.Status == "Accepted" &&
+                                    (Model.RequesterId == currentUser.Id ||
+                                    Model.AcceptedRequest?.ProviderId == currentUser.Id))
+                                    {
+                                        <form asp-action="Complete" asp-route-id="@Model.Id" method="post" class="d-inline">
+                                            <button type="submit" class="btn btn-primary btn-lg">
+                                                <i class="fas fa-check-circle me-2"></i>Mark as Completed
+                                            </button>
+                                        </form>
+                                    }
                     </div>
 
                     @if (TempData["ReviewMessage"] != null)
@@ -126,7 +303,7 @@
                     }
                     @if (canReview)
                     {
-                        <a asp-action="AddReview" asp-route-id="@Model.Id" class="btn btn-outline-primary">Submit Review</a>
+                        <a href="#" data-action="open-review-modal" class="btn btn-outline-primary">Submit Review</a>
                     }
 
                     @if (TempData["ApplicationMessage"] != null)
@@ -154,17 +331,18 @@
                     {
                         <a asp-controller="Message" asp-action="Thread" asp-route-serviceRequestId="@Model.Id" asp-route-withUserId="@Model.AcceptedRequest.ProviderId" class="btn btn-outline-primary">Message Provider</a>
                         
-                        @if (Model.PaymentStatus != "Paid" && Model.Status == "In Progress")
+                        @if (Model.PaymentStatus != "Paid" && (Model.Status == "Accepted" || Model.Status == "In Progress"))
                         {
-                            <a asp-controller="Payment" asp-action="Process" asp-route-serviceRequestId="@Model.Id" class="btn btn-success">
-                                <i class="fas fa-credit-card me-1"></i>Make Payment (৳@(Model.Budget?.ToString("N2") ?? "TBD"))
+                            <a asp-controller="Payment" asp-action="Start" asp-route-serviceRequestId="@Model.Id" class="btn btn-success">
+                                <i class="fas fa-credit-card me-1"></i>Make Payment
+                                <span class="ms-1 fw-semibold">@(Model.Budget.HasValue ? $"(৳{Model.Budget.Value:N2})" : "")</span>
                             </a>
                         }
                         else if (Model.PaymentStatus == "Paid")
                         {
-                            <span class="badge bg-success">
-                                <i class="fas fa-check-circle me-1"></i>Payment Completed
-                            </span>
+                            <a asp-controller="Payment" asp-action="Invoice" asp-route-serviceRequestId="@Model.Id" class="btn btn-outline-success">
+                                <i class="fas fa-file-invoice me-1"></i>Invoice
+                            </a>
                         }
                         
                         <!-- Requester Completion Actions -->
@@ -256,13 +434,106 @@
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
 
     <script>
-        // Initialize the map
-        var map = L.map('map').setView([@Model.Latitude, @Model.Longitude], 13);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap contributors'
-        }).addTo(map);
-
-        // Add marker for the request location
-        L.marker([@Model.Latitude, @Model.Longitude]).addTo(map);
+        (function(){
+            var lat = @(Model.Latitude?.ToString("F6") ?? "null");
+            var lng = @(Model.Longitude?.ToString("F6") ?? "null");
+            
+            if (lat === null || lng === null || lat === 0 || lng === 0) {
+                document.getElementById('map').innerHTML = '<div class="text-center text-muted py-5"><i class="fas fa-map-marker-alt fa-3x mb-3"></i><br>Location not set</div>';
+                return;
+            }
+            
+            var map = L.map('map').setView([lat, lng], 13);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
+            
+            var marker = L.marker([lat, lng]).addTo(map);
+            marker.bindPopup('<b>@Model.Title</b><br>@Model.Address').openPopup();
+        })();
     </script>
-}}
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        (function(){
+            var successMsg = '@(TempData["PaymentSuccess"] ?? "")';
+            if (successMsg && successMsg.length > 0) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Payment Completed',
+                    html: successMsg,
+                    confirmButtonText: 'OK'
+                });
+            }
+            var errorMsg = '@(TempData["PaymentError"] ?? "")';
+            if (errorMsg && errorMsg.length > 0) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Payment Error',
+                    html: errorMsg,
+                    confirmButtonText: 'OK'
+                });
+            }
+        })();
+        document.addEventListener('click', function (e) {
+            var t = e.target;
+            // ignore
+            var trigger = t && t.closest && t.closest('[data-action="open-review-modal"]');
+            if (trigger) {
+                e.preventDefault();
+                Swal.fire({
+                    title: 'Submit a Review',
+                    html: '\
+                        <div class="text-start">\
+                            <label class="form-label fw-semibold">Rating</label>\
+                            <select id="review-rating" class="form-select mb-2">\
+                                <option value="5">5 - Excellent</option>\
+                                <option value="4">4 - Very Good</option>\
+                                <option value="3">3 - Good</option>\
+                                <option value="2">2 - Fair</option>\
+                                <option value="1">1 - Poor</option>\
+                            </select>\
+                            <label class="form-label fw-semibold">Comments</label>\
+                            <textarea id="review-comment" class="form-control" rows="3" placeholder="Share your experience..."></textarea>\
+                        </div>',
+                    showCancelButton: true,
+                    confirmButtonText: 'Submit',
+                    focusConfirm: false,
+                    preConfirm: function () {
+                        var ratingEl = document.getElementById('review-rating');
+                        var commentEl = document.getElementById('review-comment');
+                        var rating = ratingEl ? ratingEl.value : '';
+                        var comment = commentEl ? commentEl.value : '';
+                        if (!rating) {
+                            Swal.showValidationMessage('Please select a rating');
+                            return false;
+                        }
+                        return { rating: rating, comment: comment };
+                    }
+                }).then(function (result) {
+                    if (result.isConfirmed) {
+                        var data = result.value || {};
+                        var tokenEl = document.querySelector('input[name="__RequestVerificationToken"]');
+                        fetch('@Url.Action("AddReview", "ServiceRequest", new { id = Model.Id })', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/x-www-form-urlencoded',
+                                'RequestVerificationToken': tokenEl ? tokenEl.value : ''
+                            },
+                            body: new URLSearchParams({ rating: data.rating, comment: data.comment })
+                        }).then(function (resp) {
+                            if (resp.redirected) {
+                                window.location.href = resp.url;
+                                return;
+                            }
+                            return resp.text();
+                        }).then(function () {
+                            Swal.fire('Done', 'Review submitted.', 'success').then(function () { window.location.reload(); });
+                        }).catch(function () {
+                            Swal.fire('Error', 'Could not submit review. Please try again.', 'error');
+                        });
+                    }
+                });
+            }
+        });
+    </script>
+}
