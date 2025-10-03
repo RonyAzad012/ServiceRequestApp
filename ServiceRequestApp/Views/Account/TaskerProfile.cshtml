@@ -5,6 +5,20 @@
 }
 
 <div class="container-fluid py-4">
+    <!-- Approval Status Notice -->
+    @if (!Model.IsApproved)
+    {
+        <div class="alert alert-warning alert-dismissible fade show mb-4" role="alert">
+            <div class="d-flex align-items-center">
+                <i class="fas fa-clock me-3 fa-2x"></i>
+                <div>
+                    <h5 class="alert-heading mb-1">Account Under Review</h5>
+                    <p class="mb-0">Your account is currently under review by our admin team. You will be notified once approved. Until then, you can update your profile information but cannot apply for service requests.</p>
+                </div>
+            </div>
+        </div>
+    }
+    
     <!-- Profile Header -->
     <div class="row mb-4">
         <div class="col-12">

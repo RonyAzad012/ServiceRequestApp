@@ -17,31 +17,51 @@
                             <div class="d-flex align-items-end">
                                 <!-- Profile Image -->
                                 <div class="position-relative">
-                                    <div class="profile-image-container" style="cursor: pointer;" onclick="document.getElementById('profileImageInput').click()">
+                                    @if (ViewBag.IsOwner == true || ViewBag.IsAdmin == true)
+                                    {
+                                        <!-- Editable profile image for owner/admin -->
+                                        <div class="profile-image-container" style="cursor: pointer;" onclick="document.getElementById('profileImageInput').click()">
+                                            @if (!string.IsNullOrEmpty(Model.ProfileImagePath))
+                                            {
+                                                <img src="@Model.ProfileImagePath" class="rounded-circle border border-4 border-white shadow" 
+                                                     style="width: 120px; height: 120px; object-fit: cover;" alt="Profile Image" id="profileImage" />
+                                            }
+                                            else
+                                            {
+                                                <div class="rounded-circle border border-4 border-white shadow d-flex align-items-center justify-content-center bg-light" 
+                                                     style="width: 120px; height: 120px;" id="profileImagePlaceholder">
+                                                    <i class="fas fa-user fa-3x text-muted"></i>
+                                                </div>
+                                            }
+                                            <!-- Upload Overlay -->
+                                            <div class="position-absolute top-0 start-0 w-100 h-100 rounded-circle d-flex align-items-center justify-content-center" 
+                                                 style="background: rgba(0,0,0,0.5); opacity: 0; transition: opacity 0.3s;" id="uploadOverlay">
+                                                <i class="fas fa-camera text-white fa-2x"></i>
+                                            </div>
+                                        </div>
+                                        <!-- Hidden File Input -->
+                                        <input type="file" id="profileImageInput" accept="image/*" style="display: none;" />
+                                    }
+                                    else
+                                    {
+                                        <!-- Read-only profile image for public view -->
                                         @if (!string.IsNullOrEmpty(Model.ProfileImagePath))
                                         {
                                             <img src="@Model.ProfileImagePath" class="rounded-circle border border-4 border-white shadow" 
-                                                 style="width: 120px; height: 120px; object-fit: cover;" alt="Profile Image" id="profileImage" />
+                                                 style="width: 120px; height: 120px; object-fit: cover;" alt="Profile Image" />
                                         }
                                         else
                                         {
                                             <div class="rounded-circle border border-4 border-white shadow d-flex align-items-center justify-content-center bg-light" 
-                                                 style="width: 120px; height: 120px;" id="profileImagePlaceholder">
+                                                 style="width: 120px; height: 120px;">
                                                 <i class="fas fa-user fa-3x text-muted"></i>
                                             </div>
                                         }
-                                        <!-- Upload Overlay -->
-                                        <div class="position-absolute top-0 start-0 w-100 h-100 rounded-circle d-flex align-items-center justify-content-center" 
-                                             style="background: rgba(0,0,0,0.5); opacity: 0; transition: opacity 0.3s;" id="uploadOverlay">
-                                            <i class="fas fa-camera text-white fa-2x"></i>
-                                        </div>
-                                    </div>
+                                    }
                                     <!-- Status Badge -->
                                     <span class="position-absolute top-0 end-0 badge bg-success rounded-pill">
                                         <i class="fas fa-user-check me-1"></i>Active
                                     </span>
-                                    <!-- Hidden File Input -->
-                                    <input type="file" id="profileImageInput" accept="image/*" style="display: none;" />
                                 </div>
                                 <div class="ms-4 mb-3">
                                     <h2 class="text-dark mb-1">@Model.FirstName @Model.LastName</h2>
@@ -57,12 +77,15 @@
                     <!-- Action Buttons -->
                     <div class="d-flex justify-content-end p-3">
                         <div class="btn-group" role="group">
-                            <a asp-action="EditRequesterProfile" class="btn btn-outline-primary">
-                                <i class="fas fa-edit me-2"></i>Edit Profile
-                            </a>
-                            <a asp-controller="ServiceRequest" asp-action="Create" class="btn btn-primary">
-                                <i class="fas fa-plus me-2"></i>New Request
-                            </a>
+                            @if (ViewBag.IsOwner == true || ViewBag.IsAdmin == true)
+                            {
+                                <a asp-action="EditRequesterProfile" class="btn btn-outline-primary">
+                                    <i class="fas fa-edit me-2"></i>Edit Profile
+                                </a>
+                                <a asp-controller="ServiceRequest" asp-action="Create" class="btn btn-primary">
+                                    <i class="fas fa-plus me-2"></i>New Request
+                                </a>
+                            }
                         </div>
                     </div>
                 </div>
@@ -185,48 +208,54 @@
                 </div>
             </div>
 
-            <!-- Recent Requests -->
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0"><i class="fas fa-list me-2 text-info"></i>Recent Requests</h5>
-                    <a asp-controller="ServiceRequest" asp-action="Index" class="btn btn-sm btn-outline-primary">View All</a>
-                </div>
-                <div class="card-body">
-                    <div id="recentRequests">
-                        <div class="text-center py-4">
-                            <div class="spinner-border text-primary" role="status">
-                                <span class="visually-hidden">Loading...</span>
+            <!-- Recent Requests - Only visible to owner/admin -->
+            @if (ViewBag.IsOwner == true || ViewBag.IsAdmin == true)
+            {
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="fas fa-list me-2 text-info"></i>Recent Requests</h5>
+                        <a asp-controller="ServiceRequest" asp-action="Index" class="btn btn-sm btn-outline-primary">View All</a>
+                    </div>
+                    <div class="card-body">
+                        <div id="recentRequests">
+                            <div class="text-center py-4">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
+            }
         </div>
 
         <!-- Right Column -->
         <div class="col-lg-4">
-            <!-- Quick Actions -->
-            <div class="card border-0 shadow-sm mb-4">
-                <div class="card-header bg-white border-0 py-3">
-                    <h5 class="mb-0"><i class="fas fa-bolt me-2 text-primary"></i>Quick Actions</h5>
-                </div>
-                <div class="card-body">
-                    <div class="d-grid gap-2">
-                        <a asp-controller="ServiceRequest" asp-action="Create" class="btn btn-primary">
-                            <i class="fas fa-plus me-2"></i>Create New Request
-                        </a>
-                        <a asp-controller="ServiceRequest" asp-action="Index" class="btn btn-outline-secondary">
-                            <i class="fas fa-list me-2"></i>View All Requests
-                        </a>
-                        <a asp-controller="Provider" asp-action="Index" class="btn btn-outline-info">
-                            <i class="fas fa-search me-2"></i>Find Providers
-                        </a>
-                        <a asp-controller="Message" asp-action="Index" class="btn btn-outline-success">
-                            <i class="fas fa-envelope me-2"></i>Messages
-                        </a>
+            <!-- Quick Actions - Only visible to owner/admin -->
+            @if (ViewBag.IsOwner == true || ViewBag.IsAdmin == true)
+            {
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-white border-0 py-3">
+                        <h5 class="mb-0"><i class="fas fa-bolt me-2 text-primary"></i>Quick Actions</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-grid gap-2">
+                            <a asp-controller="ServiceRequest" asp-action="Create" class="btn btn-primary">
+                                <i class="fas fa-plus me-2"></i>Create New Request
+                            </a>
+                            <a asp-controller="ServiceRequest" asp-action="Index" class="btn btn-outline-secondary">
+                                <i class="fas fa-list me-2"></i>View All Requests
+                            </a>
+                            <a asp-controller="Provider" asp-action="Index" class="btn btn-outline-info">
+                                <i class="fas fa-search me-2"></i>Find Providers
+                            </a>
+                            <a asp-controller="Message" asp-action="Index" class="btn btn-outline-success">
+                                <i class="fas fa-envelope me-2"></i>Messages
+                            </a>
+                        </div>
                     </div>
                 </div>
-            </div>
+            }
 
             <!-- Service Categories -->
             <div class="card border-0 shadow-sm mb-4">

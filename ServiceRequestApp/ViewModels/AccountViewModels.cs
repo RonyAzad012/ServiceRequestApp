@@ -140,6 +140,12 @@ namespace ServiceRequestApp.ViewModels
         public string? ShopPhone { get; set; }
         public string? BusinessCredentials { get; set; }
         public string? BusinessImagePath { get; set; }
+        public string? ServiceTypes { get; set; }
+        public string? WorkingHours { get; set; }
+        public string? GalleryImages { get; set; }
+        public decimal? StartingPrice { get; set; }
+        public string? Experience { get; set; }
+        public string? Certifications { get; set; }
     }
 
     public class EditTaskerProfileViewModel

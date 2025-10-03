@@ -59,7 +59,8 @@ namespace ServiceRequestApp.Controllers
                     UserType = "Requester",
                     PhoneNumber = model.PhoneNumber,
                     Zipcode = model.Zipcode,
-                    NationalId = model.NationalId
+                    NationalId = model.NationalId,
+                    IsApproved = true // Requesters are automatically approved
                 };
                 user.Latitude = model.Latitude;
                 user.Longitude = model.Longitude;
@@ -127,7 +128,7 @@ namespace ServiceRequestApp.Controllers
                 {
                     await _userManager.AddToRoleAsync(user, "Provider");
                     await _signInManager.SignInAsync(user, isPersistent: false);
-                    return Json(new { success = true, message = "Registration successful! Welcome to our business platform." });
+                    return Json(new { success = true, message = "Registration successful! Your account is under review by our admin team. You will be notified once approved. You can still access your profile and update your information." });
                 }
                 
                 foreach (var error in result.Errors)
@@ -212,8 +213,24 @@ namespace ServiceRequestApp.Controllers
         public async Task<IActionResult> ProviderProfile(string id)
         {
             if (string.IsNullOrEmpty(id)) return NotFound();
-            var user = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == id && u.UserType == "Provider");
+            
+            var currentUser = await _userManager.GetUserAsync(User);
+            if (currentUser == null) return Unauthorized();
+            
+            var user = await _userManager.Users
+                .Include(u => u.PrimaryCategory)
+                .FirstOrDefaultAsync(u => u.Id == id && u.UserType == "Provider");
+            
             if (user == null) return NotFound();
+            
+            // Check if current user is viewing their own profile or is an admin
+            var isOwner = currentUser.Id == user.Id;
+            var isAdmin = await _userManager.IsInRoleAsync(currentUser, "Admin");
+            
+            ViewBag.IsOwner = isOwner;
+            ViewBag.IsAdmin = isAdmin;
+            ViewBag.CurrentUser = currentUser;
+            
             return View(user);
         }
 
@@ -221,8 +238,24 @@ namespace ServiceRequestApp.Controllers
         public async Task<IActionResult> RequesterProfile(string id)
         {
             if (string.IsNullOrEmpty(id)) return NotFound();
-            var user = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == id && u.UserType == "Requester");
+            
+            var currentUser = await _userManager.GetUserAsync(User);
+            if (currentUser == null) return Unauthorized();
+            
+            var user = await _userManager.Users
+                .Include(u => u.PrimaryCategory)
+                .FirstOrDefaultAsync(u => u.Id == id && u.UserType == "Requester");
+            
             if (user == null) return NotFound();
+            
+            // Check if current user is viewing their own profile or is an admin
+            var isOwner = currentUser.Id == user.Id;
+            var isAdmin = await _userManager.IsInRoleAsync(currentUser, "Admin");
+            
+            ViewBag.IsOwner = isOwner;
+            ViewBag.IsAdmin = isAdmin;
+            ViewBag.CurrentUser = currentUser;
+            
             return View(user);
         }
 
@@ -230,8 +263,24 @@ namespace ServiceRequestApp.Controllers
         public async Task<IActionResult> TaskerProfile(string id)
         {
             if (string.IsNullOrEmpty(id)) return NotFound();
-            var user = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == id && u.UserType == "Tasker");
+            
+            var currentUser = await _userManager.GetUserAsync(User);
+            if (currentUser == null) return Unauthorized();
+            
+            var user = await _userManager.Users
+                .Include(u => u.PrimaryCategory)
+                .FirstOrDefaultAsync(u => u.Id == id && u.UserType == "Tasker");
+            
             if (user == null) return NotFound();
+            
+            // Check if current user is viewing their own profile or is an admin
+            var isOwner = currentUser.Id == user.Id;
+            var isAdmin = await _userManager.IsInRoleAsync(currentUser, "Admin");
+            
+            ViewBag.IsOwner = isOwner;
+            ViewBag.IsAdmin = isAdmin;
+            ViewBag.CurrentUser = currentUser;
+            
             return View(user);
         }
 
@@ -336,7 +385,7 @@ namespace ServiceRequestApp.Controllers
                 {
                     await _userManager.AddToRoleAsync(user, "Tasker");
                     await _signInManager.SignInAsync(user, isPersistent: false);
-                    return Json(new { success = true, message = "Registration successful! Welcome to our tasker platform." });
+                    return Json(new { success = true, message = "Registration successful! Your account is under review by our admin team. You will be notified once approved. You can still access your profile and update your information." });
                 }
                 foreach (var error in result.Errors)
                 {
@@ -408,7 +457,13 @@ namespace ServiceRequestApp.Controllers
                 ShopAddress = user.ShopAddress,
                 ShopPhone = user.ShopPhone,
                 BusinessCredentials = user.BusinessCredentials,
-                BusinessImagePath = user.BusinessImagePath
+                BusinessImagePath = user.BusinessImagePath,
+                ServiceTypes = user.ServiceTypes,
+                WorkingHours = user.WorkingHours,
+                GalleryImages = user.GalleryImages,
+                StartingPrice = user.StartingPrice,
+                Experience = user.Experience,
+                Certifications = user.Certifications
             };
             return View(model);
         }
@@ -435,6 +490,12 @@ namespace ServiceRequestApp.Controllers
             user.ShopPhone = model.ShopPhone;
             user.BusinessCredentials = model.BusinessCredentials;
             user.BusinessImagePath = model.BusinessImagePath;
+            user.ServiceTypes = model.ServiceTypes;
+            user.WorkingHours = model.WorkingHours;
+            user.GalleryImages = model.GalleryImages;
+            user.StartingPrice = model.StartingPrice;
+            user.Experience = model.Experience;
+            user.Certifications = model.Certifications;
             await _userManager.UpdateAsync(user);
             TempData["ProfileMessage"] = "Profile updated successfully.";
             return RedirectToAction("ProviderProfile", new { id = user.Id });

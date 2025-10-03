@@ -1,4 +1,4 @@
-@model ServiceRequestApp.ViewModels.AdminDashboardViewModel
+﻿@model ServiceRequestApp.ViewModels.AdminDashboardViewModel
 @{
     ViewData["Title"] = "Admin Dashboard";
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
@@ -71,7 +71,7 @@
                     <i class="fas fa-dollar-sign"></i>
                 </div>
                 <div class="stats-card-content">
-                    <h3 class="stats-card-number" id="totalPayments">@Model.TotalPayments.ToString("C0")</h3>
+                    <h3 class="stats-card-number" id="totalPayments">৳ @Model.TotalPayments.ToString("N2")</h3>
                     <p class="stats-card-label">Total Revenue</p>
                     <div class="stats-card-change positive">
                         <i class="fas fa-arrow-up me-1"></i>+22% from last month

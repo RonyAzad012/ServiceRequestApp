@@ -29,7 +29,7 @@ namespace ServiceRequestApp.Controllers
             {
                 var model = new AdminDashboardViewModel
                 {
-                    UserCount = await _userManager.Users.CountAsync(),
+                    UserCount = await _userManager.Users.Where(u => u.UserType != "Admin").CountAsync(),
                     ServiceRequestCount = await _dbContext.ServiceRequests.CountAsync(),
                     CompletedRequestCount = await _dbContext.ServiceRequests.CountAsync(r => r.Status == "Completed"),
                     PaidRequestCount = await _dbContext.ServiceRequests.CountAsync(r => r.PaymentStatus == "Paid"),
@@ -78,6 +78,7 @@ namespace ServiceRequestApp.Controllers
             try
             {
                 var users = await _userManager.Users
+                    .Where(u => u.UserType != "Admin") // Exclude admin users
                     .OrderByDescending(u => u.CreatedAt)
                     .ToListAsync();
                 return View(users);
@@ -93,6 +94,67 @@ namespace ServiceRequestApp.Controllers
         public IActionResult PendingApprovals()
         {
             return View();
+        }
+
+        // Temporary method to reset existing providers/taskers to pending for testing
+        [HttpPost]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> ResetUsersToPending()
+        {
+            try
+            {
+                var providersAndTaskers = await _userManager.Users
+                    .Where(u => (u.UserType == "Provider" || u.UserType == "Tasker") && u.IsApproved)
+                    .ToListAsync();
+
+                foreach (var user in providersAndTaskers)
+                {
+                    user.IsApproved = false;
+                    user.ApprovedAt = null;
+                    user.ApprovedBy = null;
+                    user.RejectionReason = null;
+                    await _userManager.UpdateAsync(user);
+                }
+
+                return Json(new { 
+                    success = true, 
+                    message = $"Reset {providersAndTaskers.Count} users to pending status for testing" 
+                });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        // Fix existing requesters to be automatically approved
+        [HttpPost]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> FixRequestersApproval()
+        {
+            try
+            {
+                var requesters = await _userManager.Users
+                    .Where(u => u.UserType == "Requester" && !u.IsApproved)
+                    .ToListAsync();
+
+                foreach (var user in requesters)
+                {
+                    user.IsApproved = true;
+                    user.ApprovedAt = DateTime.UtcNow;
+                    user.ApprovedBy = "System";
+                    await _userManager.UpdateAsync(user);
+                }
+
+                return Json(new { 
+                    success = true, 
+                    message = $"Fixed {requesters.Count} requesters to be automatically approved" 
+                });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
         }
 
         [HttpGet]
@@ -155,6 +217,7 @@ namespace ServiceRequestApp.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> ApproveUser(string userId)
         {
             try
@@ -190,6 +253,7 @@ namespace ServiceRequestApp.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> RejectUser(string userId, string reason)
         {
             try
@@ -260,6 +324,7 @@ namespace ServiceRequestApp.Controllers
         }
 
         [HttpDelete]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteUser(string userId)
         {
             try

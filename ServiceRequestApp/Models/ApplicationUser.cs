@@ -58,6 +58,14 @@ namespace ServiceRequestApp.Models
         // Availability
         public bool IsAvailable { get; set; } = true;
         public string? AvailabilitySchedule { get; set; } // JSON string for schedule
+        
+        // Provider-specific fields
+        public string? ServiceTypes { get; set; } // JSON string for service types with prices
+        public string? WorkingHours { get; set; } // JSON string for working hours
+        public string? GalleryImages { get; set; } // JSON string for gallery image paths
+        public decimal? StartingPrice { get; set; } // Starting price for services
+        public string? Experience { get; set; } // Years of experience
+        public string? Certifications { get; set; } // Certifications and qualifications
 
         public virtual ICollection<ServiceRequest>? Requests { get; set; }
         public virtual ICollection<ServiceRequest>? ServiceRequests { get; set; }

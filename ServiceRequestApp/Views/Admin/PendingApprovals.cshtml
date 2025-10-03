@@ -2,6 +2,8 @@
     ViewData["Title"] = "Pending Approvals";
 }
 
+@Html.AntiForgeryToken()
+
 <div class="container-fluid py-4">
     <div class="row mb-4">
         <div class="col-12">
@@ -11,6 +13,9 @@
                     <p class="text-muted mb-0">Review and approve new provider and tasker registrations</p>
                 </div>
                 <div>
+                    <button class="btn btn-warning me-2" onclick="resetUsersToPending()">
+                        <i class="fas fa-undo me-2"></i>Reset to Pending (Testing)
+                    </button>
                     <button class="btn btn-primary" onclick="refreshPendingApprovals()">
                         <i class="fas fa-sync-alt me-2"></i>Refresh
                     </button>
@@ -227,6 +232,11 @@
 
     $(document).ready(function() {
         loadPendingApprovals();
+        
+        // Auto-refresh every 30 seconds to catch new registrations
+        setInterval(function() {
+            loadPendingApprovals();
+        }, 30000);
     });
 
     function loadPendingApprovals() {
@@ -328,9 +338,13 @@
                         <button class="btn btn-danger btn-sm" onclick="showRejectionModal('${user.id}')" title="Reject">
                             <i class="fas fa-times"></i>
                         </button>
-                        <button class="btn btn-info btn-sm" onclick="viewUserDetails('${user.id}')" title="View Details">
+                        <a class="btn btn-info btn-sm" 
+                           href="${user.userType === 'Provider' ? '/Account/ProviderProfile/' + user.id : 
+                                  user.userType === 'Requester' ? '/Account/RequesterProfile/' + user.id : 
+                                  user.userType === 'Tasker' ? '/Account/TaskerProfile/' + user.id : '#'}" 
+                           title="View Details">
                             <i class="fas fa-eye"></i>
-                        </button>
+                        </a>
                     </div>
                 </td>
             </tr>
@@ -385,9 +399,16 @@
 
     function approveUser(userId) {
         if (confirm('Are you sure you want to approve this user?')) {
+            // Get anti-forgery token
+            const token = $('input[name="__RequestVerificationToken"]').val();
+            
             $.ajax({
                 url: '/Admin/ApproveUser',
                 type: 'POST',
+                headers: {
+                    'RequestVerificationToken': token,
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
                 data: { userId: userId },
                 success: function(response) {
                     if (response.success) {
@@ -397,8 +418,9 @@
                         showAlert('Error', response.message, 'error');
                     }
                 },
-                error: function() {
-                    showAlert('Error', 'An error occurred while approving the user', 'error');
+                error: function(xhr, status, error) {
+                    console.error('Approval error:', xhr.responseText);
+                    showAlert('Error', 'An error occurred while approving the user: ' + error, 'error');
                 }
             });
         }
@@ -419,9 +441,16 @@
             return;
         }
 
+        // Get anti-forgery token
+        const token = $('input[name="__RequestVerificationToken"]').val();
+
         $.ajax({
             url: '/Admin/RejectUser',
             type: 'POST',
+            headers: {
+                'RequestVerificationToken': token,
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
             data: { 
                 userId: userId,
                 reason: reason
@@ -435,19 +464,44 @@
                     showAlert('Error', response.message, 'error');
                 }
             },
-            error: function() {
-                showAlert('Error', 'An error occurred while rejecting the user', 'error');
+            error: function(xhr, status, error) {
+                console.error('Rejection error:', xhr.responseText);
+                showAlert('Error', 'An error occurred while rejecting the user: ' + error, 'error');
             }
         });
     }
 
-    function viewUserDetails(userId) {
-        // Implement user details view
-        alert('User details view will be implemented');
-    }
+    // viewUserDetails function removed - now using direct links to user profiles
 
     function refreshPendingApprovals() {
         loadPendingApprovals();
+    }
+
+    function resetUsersToPending() {
+        if (confirm('This will reset all existing providers and taskers to pending status for testing. Are you sure?')) {
+            // Get anti-forgery token
+            const token = $('input[name="__RequestVerificationToken"]').val();
+            
+            $.ajax({
+                url: '/Admin/ResetUsersToPending',
+                type: 'POST',
+                contentType: 'application/json',
+                headers: {
+                    'RequestVerificationToken': token
+                },
+                success: function(response) {
+                    if (response.success) {
+                        showAlert('Success', response.message, 'success');
+                        loadPendingApprovals();
+                    } else {
+                        showAlert('Error', response.message, 'error');
+                    }
+                },
+                error: function() {
+                    showAlert('Error', 'An error occurred while resetting users', 'error');
+                }
+            });
+        }
     }
 
     function showAlert(title, message, type) {

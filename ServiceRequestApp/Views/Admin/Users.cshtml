@@ -4,6 +4,8 @@
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
 }
 
+@Html.AntiForgeryToken()
+
 <div class="admin-users-page">
     <!-- Header Section -->
     <div class="d-flex justify-content-between align-items-center mb-4">
@@ -12,6 +14,9 @@
             <p class="text-muted">Manage all users on the platform</p>
         </div>
         <div class="d-flex gap-2">
+            <button class="btn btn-warning" onclick="fixRequestersApproval()">
+                <i class="fas fa-user-check me-2"></i>Fix Requesters
+            </button>
             <button class="btn btn-outline-primary" onclick="refreshUsers()">
                 <i class="fas fa-sync-alt me-2"></i>Refresh
             </button>
@@ -163,17 +168,17 @@
                                 </td>
                                 <td>
                                     <div class="btn-group" role="group">
-                                        <button class="btn btn-sm btn-outline-primary" onclick="viewUserDetails('@user.Id')" title="View Details">
+                                        <a class="btn btn-sm btn-outline-primary" 
+                                           href="@(user.UserType == "Provider" ? Url.Action("ProviderProfile", "Account", new { id = user.Id }) : 
+                                                  user.UserType == "Requester" ? Url.Action("RequesterProfile", "Account", new { id = user.Id }) : 
+                                                  user.UserType == "Tasker" ? Url.Action("TaskerProfile", "Account", new { id = user.Id }) : "#")" 
+                                           title="View User Profile">
                                             <i class="fas fa-eye"></i>
-                                        </button>
+                                        </a>
                                         <button class="btn btn-sm btn-outline-warning" onclick="editUser('@user.Id')" title="Edit User">
                                             <i class="fas fa-edit"></i>
                                         </button>
-                                        <button class="btn btn-sm @(user.EmailConfirmed ? "btn-outline-warning" : "btn-outline-success")" 
-                                                onclick="toggleUserStatus('@user.Id')" 
-                                                title="@(user.EmailConfirmed ? "Deactivate" : "Activate") User">
-                                            <i class="fas @(user.EmailConfirmed ? "fa-ban" : "fa-check")"></i>
-                                        </button>
+                                        <!-- No approval buttons on Users page - use PendingApprovals page instead -->
                                         <button class="btn btn-sm btn-outline-danger" onclick="deleteUser('@user.Id')" title="Delete User">
                                             <i class="fas fa-trash"></i>
                                         </button>
@@ -374,13 +379,34 @@
         });
     }
 
-    function viewUserDetails(userId) {
-        Swal.fire({
-            title: 'User Details',
-            text: 'User details modal coming soon!',
-            icon: 'info',
-            confirmButtonText: 'OK'
-        });
+    // viewUserDetails function removed - now using direct links to user profiles
+
+    function fixRequestersApproval() {
+        if (confirm('This will automatically approve all existing requesters. Are you sure?')) {
+            // Get anti-forgery token
+            const token = $('input[name="__RequestVerificationToken"]').val();
+            
+            $.ajax({
+                url: '/Admin/FixRequestersApproval',
+                type: 'POST',
+                contentType: 'application/json',
+                headers: {
+                    'RequestVerificationToken': token
+                },
+                success: function(response) {
+                    if (response.success) {
+                        Swal.fire('Success!', response.message, 'success').then(() => {
+                            location.reload();
+                        });
+                    } else {
+                        Swal.fire('Error!', response.message, 'error');
+                    }
+                },
+                error: function() {
+                    Swal.fire('Error!', 'Failed to fix requesters approval', 'error');
+                }
+            });
+        }
     }
 
     function editUser(userId) {
@@ -416,8 +442,28 @@
             confirmButtonColor: '#ef4444'
         }).then((result) => {
             if (result.isConfirmed) {
-                Swal.fire('User deleted!', '', 'success');
+                fetch(`/Admin/DeleteUser?userId=${userId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        Swal.fire('User deleted!', data.message, 'success').then(() => {
+                            location.reload();
+                        });
+                    } else {
+                        Swal.fire('Error!', data.message, 'error');
+                    }
+                })
+                .catch(error => {
+                    Swal.fire('Error!', 'Failed to delete user', 'error');
+                });
             }
         });
     }
+
+    // Approval functions removed - use PendingApprovals page instead
 </script>

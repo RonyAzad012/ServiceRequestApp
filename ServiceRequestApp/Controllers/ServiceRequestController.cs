@@ -177,6 +177,15 @@ namespace ServiceRequestApp.Controllers
         [Authorize(Roles = "Provider")]
         public async Task<IActionResult> Accept(int id)
         {
+            var currentUser = await _userManager.GetUserAsync(User);
+            
+            // Check if provider is approved
+            if (!currentUser.IsApproved)
+            {
+                TempData["ApplicationMessage"] = "Your account is under review. You cannot accept service requests until approved by admin.";
+                return RedirectToAction("Details", new { id });
+            }
+
             var request = await _dbContext.ServiceRequests
                 .Include(r => r.AcceptedRequest)
                 .FirstOrDefaultAsync(r => r.Id == id);
@@ -190,8 +199,6 @@ namespace ServiceRequestApp.Controllers
             {
                 return BadRequest("This request is no longer available.");
             }
-
-            var currentUser = await _userManager.GetUserAsync(User);
 
             var acceptedRequest = new AcceptedRequest
             {
@@ -594,6 +601,14 @@ namespace ServiceRequestApp.Controllers
         public async Task<IActionResult> Apply(int id, string? message, decimal? offeredPrice)
         {
             var currentUser = await _userManager.GetUserAsync(User);
+            
+            // Check if provider is approved
+            if (!currentUser.IsApproved)
+            {
+                TempData["ApplicationMessage"] = "Your account is under review. You cannot apply for service requests until approved by admin.";
+                return RedirectToAction("Details", new { id });
+            }
+            
             var request = await _dbContext.ServiceRequests.FindAsync(id);
             if (request == null || request.Status != "Pending")
             {

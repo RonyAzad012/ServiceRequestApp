@@ -5,6 +5,20 @@
 }
 
 <div class="container-fluid py-4">
+    <!-- Approval Status Notice -->
+    @if (!Model.IsApproved)
+    {
+        <div class="alert alert-warning alert-dismissible fade show mb-4" role="alert">
+            <div class="d-flex align-items-center">
+                <i class="fas fa-clock me-3 fa-2x"></i>
+                <div>
+                    <h5 class="alert-heading mb-1">Account Under Review</h5>
+                    <p class="mb-0">Your account is currently under review by our admin team. You will be notified once approved. Until then, you can update your profile information but cannot apply for service requests.</p>
+                </div>
+            </div>
+        </div>
+    }
+    
     <!-- Profile Header -->
     <div class="row mb-4">
         <div class="col-12">
@@ -60,12 +74,21 @@
                     <!-- Action Buttons -->
                     <div class="d-flex justify-content-end p-3">
                         <div class="btn-group" role="group">
-                            <a asp-action="EditProviderProfile" class="btn btn-outline-primary">
-                                <i class="fas fa-edit me-2"></i>Edit Profile
-                            </a>
+                            @if (ViewBag.IsOwner == true || ViewBag.IsAdmin == true)
+                            {
+                                <a asp-action="EditProviderProfile" class="btn btn-outline-primary">
+                                    <i class="fas fa-edit me-2"></i>Edit Profile
+                                </a>
+                            }
                             <a asp-action="ProviderReviews" asp-controller="ServiceRequest" asp-route-providerId="@Model.Id" class="btn btn-outline-info">
                                 <i class="fas fa-star me-2"></i>Reviews
                             </a>
+                            @if (ViewBag.CurrentUser?.UserType == "Requester")
+                            {
+                                <a asp-controller="ServiceRequest" asp-action="Create" asp-route-providerId="@Model.Id" class="btn btn-success">
+                                    <i class="fas fa-plus me-2"></i>Request Service
+                                </a>
+                            }
                         </div>
                     </div>
                 </div>
@@ -181,22 +204,103 @@
                 </div>
             }
 
-            <!-- Recent Requests -->
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0"><i class="fas fa-list me-2 text-info"></i>Recent Requests</h5>
-                    <a asp-controller="ServiceRequest" asp-action="Index" class="btn btn-sm btn-outline-primary">View All</a>
+            <!-- Service Types & Pricing -->
+            @if (!string.IsNullOrEmpty(Model.ServiceTypes))
+            {
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-white border-0 py-3">
+                        <h5 class="mb-0"><i class="fas fa-tools me-2 text-primary"></i>Services & Pricing</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="serviceTypesList">
+                            <!-- Service types will be loaded via JavaScript -->
+                        </div>
+                        @if (Model.StartingPrice.HasValue)
+                        {
+                            <div class="mt-3 p-3 bg-light rounded">
+                                <h6 class="text-primary mb-1">Starting from</h6>
+                                <h4 class="text-success mb-0">৳@Model.StartingPrice.Value.ToString("N0")</h4>
+                            </div>
+                        }
+                    </div>
                 </div>
-                <div class="card-body">
-                    <div id="recentRequests">
-                        <div class="text-center py-4">
-                            <div class="spinner-border text-primary" role="status">
-                                <span class="visually-hidden">Loading...</span>
+            }
+
+            <!-- Working Hours -->
+            @if (!string.IsNullOrEmpty(Model.WorkingHours))
+            {
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-white border-0 py-3">
+                        <h5 class="mb-0"><i class="fas fa-clock me-2 text-warning"></i>Working Hours</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="workingHoursList">
+                            <!-- Working hours will be loaded via JavaScript -->
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <!-- Gallery -->
+            @if (!string.IsNullOrEmpty(Model.GalleryImages))
+            {
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-white border-0 py-3">
+                        <h5 class="mb-0"><i class="fas fa-images me-2 text-info"></i>Gallery</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="galleryImages" class="row g-2">
+                            <!-- Gallery images will be loaded via JavaScript -->
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <!-- Experience & Certifications -->
+            @if (!string.IsNullOrEmpty(Model.Experience) || !string.IsNullOrEmpty(Model.Certifications))
+            {
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-white border-0 py-3">
+                        <h5 class="mb-0"><i class="fas fa-award me-2 text-success"></i>Experience & Certifications</h5>
+                    </div>
+                    <div class="card-body">
+                        @if (!string.IsNullOrEmpty(Model.Experience))
+                        {
+                            <div class="mb-3">
+                                <label class="form-label text-muted">Experience</label>
+                                <p class="fw-bold">@Model.Experience</p>
+                            </div>
+                        }
+                        @if (!string.IsNullOrEmpty(Model.Certifications))
+                        {
+                            <div class="mb-3">
+                                <label class="form-label text-muted">Certifications</label>
+                                <p>@Model.Certifications</p>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+
+            <!-- Recent Requests - Only visible to owner/admin -->
+            @if (ViewBag.IsOwner == true || ViewBag.IsAdmin == true)
+            {
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="fas fa-list me-2 text-info"></i>Recent Requests</h5>
+                        <a asp-controller="ServiceRequest" asp-action="Index" class="btn btn-sm btn-outline-primary">View All</a>
+                    </div>
+                    <div class="card-body">
+                        <div id="recentRequests">
+                            <div class="text-center py-4">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
+            }
         </div>
 
         <!-- Right Column -->
@@ -207,22 +311,42 @@
                     <h5 class="mb-0"><i class="fas fa-address-book me-2 text-warning"></i>Contact Information</h5>
                 </div>
                 <div class="card-body">
-                    <div class="mb-3">
-                        <label class="form-label text-muted">Email</label>
-                        <p class="fw-bold">@Model.Email</p>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label text-muted">Phone</label>
-                        <p class="fw-bold">@Model.PhoneNumber</p>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label text-muted">Address</label>
-                        <p class="fw-bold">@Model.Address</p>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label text-muted">Zipcode</label>
-                        <p class="fw-bold">@Model.Zipcode</p>
-                    </div>
+                    @if (ViewBag.IsOwner == true || ViewBag.IsAdmin == true)
+                    {
+                        <!-- Full contact info for owner/admin -->
+                        <div class="mb-3">
+                            <label class="form-label text-muted">Email</label>
+                            <p class="fw-bold">@Model.Email</p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-muted">Phone</label>
+                            <p class="fw-bold">@Model.PhoneNumber</p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-muted">Address</label>
+                            <p class="fw-bold">@Model.Address</p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-muted">Zipcode</label>
+                            <p class="fw-bold">@Model.Zipcode</p>
+                        </div>
+                    }
+                    else
+                    {
+                        <!-- Limited contact info for public view -->
+                        <div class="mb-3">
+                            <label class="form-label text-muted">Business Phone</label>
+                            <p class="fw-bold">@Model.ShopPhone</p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-muted">Business Address</label>
+                            <p class="fw-bold">@Model.ShopAddress</p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-muted">Service Areas</label>
+                            <p class="fw-bold">@Model.ServiceAreas</p>
+                        </div>
+                    }
                 </div>
             </div>
 
@@ -252,24 +376,24 @@
             </div>
 
             <!-- Quick Actions -->
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-white border-0 py-3">
-                    <h5 class="mb-0"><i class="fas fa-bolt me-2 text-primary"></i>Quick Actions</h5>
-                </div>
-                <div class="card-body">
-                    <div class="d-grid gap-2">
-                        <a asp-controller="ServiceRequest" asp-action="Create" class="btn btn-primary">
-                            <i class="fas fa-plus me-2"></i>Create Service Request
-                        </a>
-                        <a asp-controller="ServiceRequest" asp-action="Index" class="btn btn-outline-secondary">
-                            <i class="fas fa-list me-2"></i>View All Requests
-                        </a>
-                        <a asp-controller="Message" asp-action="Index" class="btn btn-outline-info">
-                            <i class="fas fa-envelope me-2"></i>Messages
-                        </a>
+            @if (ViewBag.IsOwner == true || ViewBag.IsAdmin == true)
+            {
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white border-0 py-3">
+                        <h5 class="mb-0"><i class="fas fa-bolt me-2 text-primary"></i>Quick Actions</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-grid gap-2">
+                            <a asp-controller="ServiceRequest" asp-action="Index" class="btn btn-outline-secondary">
+                                <i class="fas fa-list me-2"></i>View All Requests
+                            </a>
+                            <a asp-controller="Message" asp-action="Index" class="btn btn-outline-info">
+                                <i class="fas fa-envelope me-2"></i>Messages
+                            </a>
+                        </div>
                     </div>
                 </div>
-            </div>
+            }
         </div>
     </div>
 </div>
@@ -279,6 +403,9 @@
         $(document).ready(function() {
             loadDashboardStats();
             loadRecentRequests();
+            loadServiceTypes();
+            loadWorkingHours();
+            loadGalleryImages();
         });
 
         function loadDashboardStats() {
@@ -350,6 +477,107 @@
         function formatDate(dateString) {
             const date = new Date(dateString);
             return date.toLocaleDateString();
+        }
+
+        function loadServiceTypes() {
+            const serviceTypesJson = '@Html.Raw(Model.ServiceTypes)';
+            if (serviceTypesJson && serviceTypesJson !== '') {
+                try {
+                    const serviceTypes = JSON.parse(serviceTypesJson);
+                    let html = '';
+                    serviceTypes.forEach(function(service) {
+                        html += `
+                            <div class="d-flex justify-content-between align-items-center p-3 border rounded mb-2">
+                                <div>
+                                    <h6 class="mb-1">${service.name}</h6>
+                                    <small class="text-muted">${service.description || ''}</small>
+                                </div>
+                                <div class="text-end">
+                                    <span class="h5 text-success mb-0">৳${service.price}</span>
+                                    <small class="text-muted d-block">${service.duration || ''}</small>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    $('#serviceTypesList').html(html);
+                } catch (e) {
+                    console.log('Error parsing service types:', e);
+                }
+            }
+        }
+
+        function loadWorkingHours() {
+            const workingHoursJson = '@Html.Raw(Model.WorkingHours)';
+            if (workingHoursJson && workingHoursJson !== '') {
+                try {
+                    const workingHours = JSON.parse(workingHoursJson);
+                    let html = '';
+                    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+                    days.forEach(function(day) {
+                        const dayHours = workingHours[day.toLowerCase()];
+                        const isOpen = dayHours && dayHours.isOpen;
+                        html += `
+                            <div class="d-flex justify-content-between align-items-center p-2 border-bottom">
+                                <span class="fw-bold">${day}</span>
+                                <span class="${isOpen ? 'text-success' : 'text-muted'}">
+                                    ${isOpen ? `${dayHours.startTime} - ${dayHours.endTime}` : 'Closed'}
+                                </span>
+                            </div>
+                        `;
+                    });
+                    $('#workingHoursList').html(html);
+                } catch (e) {
+                    console.log('Error parsing working hours:', e);
+                }
+            }
+        }
+
+        function loadGalleryImages() {
+            const galleryJson = '@Html.Raw(Model.GalleryImages)';
+            if (galleryJson && galleryJson !== '') {
+                try {
+                    const galleryImages = JSON.parse(galleryJson);
+                    let html = '';
+                    galleryImages.forEach(function(image, index) {
+                        html += `
+                            <div class="col-md-4 col-sm-6">
+                                <div class="gallery-item" style="cursor: pointer;" onclick="openImageModal('${image}')">
+                                    <img src="${image}" class="img-fluid rounded shadow-sm" 
+                                         style="width: 100%; height: 150px; object-fit: cover;" 
+                                         alt="Gallery Image ${index + 1}" />
+                                </div>
+                            </div>
+                        `;
+                    });
+                    $('#galleryImages').html(html);
+                } catch (e) {
+                    console.log('Error parsing gallery images:', e);
+                }
+            }
+        }
+
+        function openImageModal(imageSrc) {
+            // Create and show image modal
+            const modalHtml = `
+                <div class="modal fade" id="imageModal" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog modal-lg modal-dialog-centered">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">Gallery Image</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body text-center">
+                                <img src="${imageSrc}" class="img-fluid rounded" alt="Gallery Image" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            $('body').append(modalHtml);
+            $('#imageModal').modal('show');
+            $('#imageModal').on('hidden.bs.modal', function() {
+                $(this).remove();
+            });
         }
     </script>
 }
