@@ -22,42 +22,34 @@
                     <div class="search-form animate-fade-in-up">
                         <form asp-action="Search" asp-controller="Home" method="get" class="row g-3">
                             <div class="col-md-3">
-                                <div class="form-floating">
-                                    <select id="categorySelect" name="categoryId" class="form-select" aria-label="Select a category">
-                                        <option value="">All categories</option>
-                                        @if (categories != null)
+                                <label for="categorySelect" class="form-label text-white">Service Category</label>
+                                <select id="categorySelect" name="categoryId" class="form-select" aria-label="Select a category">
+                                    <option value="">All Categories</option>
+                                    @if (categories != null)
+                                    {
+                                        foreach (var cat in categories)
                                         {
-                                            foreach (var cat in categories)
-                                            {
-                                                <option value="@cat.Id">@cat.Name</option>
-                                            }
+                                            <option value="@cat.Id">@cat.Name</option>
                                         }
-                                    </select>
-                                    <label for="categorySelect">What service do you need?</label>
-                                </div>
+                                    }
+                                </select>
                             </div>
                             <div class="col-md-3">
-                                <div class="form-floating">
-                                    <input id="streetInput" name="street" class="form-control" placeholder="Street" />
-                                    <label for="streetInput">Street</label>
-                                </div>
+                                <label for="streetInput" class="form-label text-white">Street Name</label>
+                                <input id="streetInput" name="street" class="form-control" placeholder="Enter street name" />
                             </div>
                             <div class="col-md-3">
-                                <div class="form-floating">
-                                    <input id="cityInput" name="city" class="form-control" placeholder="City" />
-                                    <label for="cityInput">City</label>
-                                </div>
+                                <label for="cityInput" class="form-label text-white">City</label>
+                                <input id="cityInput" name="city" class="form-control" placeholder="Enter city name" />
                             </div>
                             <div class="col-md-2">
-                                <div class="form-floating">
-                                    <input id="zipInput" name="zipcode" class="form-control" placeholder="Zip" />
-                                    <label for="zipInput">Zip</label>
-                                </div>
+                                <label for="zipInput" class="form-label text-white">Zip Code</label>
+                                <input id="zipInput" name="zipcode" class="form-control" placeholder="Enter zip code" />
                             </div>
-                            <div class="col-md-1">
-                                <button type="submit" class="btn btn-primary btn-lg w-100 h-100 d-flex align-items-center justify-content-center">
+                            <div class="col-md-1 d-flex align-items-end">
+                                <button type="submit" class="btn btn-primary btn-lg w-100 d-flex align-items-center justify-content-center">
                                     <i class="fas fa-search me-2"></i>Search
-                </button>
+                                </button>
                             </div>
                         </form>
                     </div>

@@ -237,11 +237,63 @@ namespace ServiceRequestApp.Controllers
 
         [HttpGet]
         [AllowAnonymous]
-        public async Task<IActionResult> AllProviders()
+        public async Task<IActionResult> AllProviders(string category, string city, string rating, string search)
         {
-            var providers = await _userManager.Users
+            var query = _userManager.Users
                 .Where(u => u.UserType == "Provider")
+                .Include(u => u.Reviews)
+                .Include(u => u.PrimaryCategory)
+                .AsQueryable();
+
+            // Apply filters
+            if (!string.IsNullOrEmpty(search))
+            {
+                query = query.Where(u => 
+                    u.FirstName.Contains(search) || 
+                    u.LastName.Contains(search) ||
+                    u.ShopName.Contains(search) ||
+                    u.ShopDescription.Contains(search));
+            }
+
+            if (!string.IsNullOrEmpty(city))
+            {
+                query = query.Where(u => u.City == city);
+            }
+
+            if (!string.IsNullOrEmpty(rating) && int.TryParse(rating, out int minRating))
+            {
+                query = query.Where(u => u.Reviews.Any() && 
+                    u.Reviews.Average(r => r.Rating) >= minRating);
+            }
+
+            if (!string.IsNullOrEmpty(category))
+            {
+                // Filter providers by their primary category
+                query = query.Where(u => u.PrimaryCategory != null && u.PrimaryCategory.Name == category);
+            }
+
+            var providers = await query.ToListAsync();
+
+            // Get filter options
+            var cities = await _userManager.Users
+                .Where(u => u.UserType == "Provider" && !string.IsNullOrEmpty(u.City))
+                .Select(u => u.City)
+                .Distinct()
+                .OrderBy(c => c)
                 .ToListAsync();
+
+            var categories = await _dbContext.Categories
+                .Where(c => c.IsActive && _userManager.Users.Any(u => u.UserType == "Provider" && u.PrimaryCategoryId == c.Id))
+                .OrderBy(c => c.Name)
+                .ToListAsync();
+
+            ViewBag.Cities = cities;
+            ViewBag.Categories = categories;
+            ViewBag.SelectedCategory = category;
+            ViewBag.SelectedCity = city;
+            ViewBag.SelectedRating = rating;
+            ViewBag.SearchTerm = search;
+
             return View(providers);
         }
 

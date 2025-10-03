@@ -30,13 +30,15 @@ namespace ServiceRequestApp.Controllers
                 query = query.Where(u => u.PrimaryCategoryId == categoryId.Value);
             }
 
-            // Filter by location
+            // Filter by location - improved search
             if (!string.IsNullOrEmpty(location))
             {
-                query = query.Where(u => u.Address.Contains(location) || 
-                                       u.ShopAddress.Contains(location) || 
-                                       u.Zipcode.Contains(location) ||
-                                       u.ServiceAreas.Contains(location));
+                query = query.Where(u => 
+                    (u.City != null && u.City.Contains(location)) ||
+                    (u.Address != null && u.Address.Contains(location)) || 
+                    (u.ShopAddress != null && u.ShopAddress.Contains(location)) || 
+                    (u.Zipcode != null && u.Zipcode.Contains(location)) ||
+                    (u.ServiceAreas != null && u.ServiceAreas.Contains(location)));
             }
 
             var providers = await query
@@ -44,9 +46,9 @@ namespace ServiceRequestApp.Controllers
                 .ThenByDescending(u => u.TotalReviews)
                 .ToListAsync();
 
-            // Get categories for filter dropdown
+            // Get categories for filter dropdown - only show categories that have providers
             var categories = await _dbContext.Categories
-                .Where(c => c.IsActive)
+                .Where(c => c.IsActive && _dbContext.Users.Any(u => (u.UserType == "Provider" || u.UserType == "Business" || u.UserType == "Tasker") && u.PrimaryCategoryId == c.Id))
                 .OrderBy(c => c.Name)
                 .ToListAsync();
 
@@ -73,10 +75,12 @@ namespace ServiceRequestApp.Controllers
 
             if (!string.IsNullOrEmpty(location))
             {
-                query = query.Where(u => u.Address.Contains(location) || 
-                                       u.ShopAddress.Contains(location) || 
-                                       u.Zipcode.Contains(location) ||
-                                       u.ServiceAreas.Contains(location));
+                query = query.Where(u => 
+                    (u.City != null && u.City.Contains(location)) ||
+                    (u.Address != null && u.Address.Contains(location)) || 
+                    (u.ShopAddress != null && u.ShopAddress.Contains(location)) || 
+                    (u.Zipcode != null && u.Zipcode.Contains(location)) ||
+                    (u.ServiceAreas != null && u.ServiceAreas.Contains(location)));
             }
 
             var providers = await query

@@ -72,6 +72,31 @@ namespace ServiceRequestApp.Controllers
                 .ThenByDescending(u => u.TotalReviews)
                 .ToListAsync();
                 
+            // If no results found, redirect to AllProviders page
+            if (!results.Any())
+            {
+                // Build route values for AllProviders
+                var routeValues = new Dictionary<string, object>();
+                if (categoryId.HasValue && categoryId.Value > 0)
+                {
+                    var selectedCategory = await _dbContext.Categories.FirstOrDefaultAsync(c => c.Id == categoryId.Value);
+                    if (selectedCategory != null)
+                    {
+                        routeValues["category"] = selectedCategory.Name;
+                    }
+                }
+                if (!string.IsNullOrWhiteSpace(city))
+                {
+                    routeValues["city"] = city;
+                }
+                if (!string.IsNullOrWhiteSpace(street))
+                {
+                    routeValues["search"] = street;
+                }
+                
+                return RedirectToAction("AllProviders", "Account", routeValues);
+            }
+                
             // For UI display
             ViewBag.Street = street;
             ViewBag.City = city;
