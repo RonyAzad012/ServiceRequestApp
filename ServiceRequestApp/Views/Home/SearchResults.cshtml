@@ -227,34 +227,6 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
     <script>
-        var map = L.map('providers-map').setView([23.8103, 90.4125], 11); // Default to Dhaka
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '� OpenStreetMap contributors'
-        }).addTo(map);
-        var providers = [
-            @foreach (var provider in Model)
-            {
-                if (!string.IsNullOrEmpty(provider.Address))
-                {
-                    <text>{ name: '@provider.ShopName', address: '@provider.ShopAddress', lat: null, lng: null },</text>
-                }
-            }
-        ];
-        // Geocode addresses (simple demo, production should cache results)
-        providers.forEach(function (p, i) {
-            if (p.address) {
-                fetch('https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(p.address))
-                    .then(res => res.json())
-                    .then(data => {
-                        if (data && data.length > 0) {
-                            var lat = parseFloat(data[0].lat);
-                            var lon = parseFloat(data[0].lon);
-                            L.marker([lat, lon]).addTo(map).bindPopup('<b>' + p.name + '</b><br>' + p.address);
-                        }
-                    });
-            }
-        });
-
         // Enhanced map functionality
         let map;
         let markers = [];
@@ -308,6 +280,7 @@
 
             let bounds = L.latLngBounds();
             let hasValidCoordinates = false;
+            let geocodingPromises = [];
 
             providers.forEach(function(provider) {
                 let lat, lng;
@@ -317,9 +290,11 @@
                     lat = parseFloat(provider.lat);
                     lng = parseFloat(provider.lng);
                     hasValidCoordinates = true;
+                    addMarker(provider, lat, lng);
+                    bounds.extend([lat, lng]);
                 } else if (provider.address) {
                     // Geocode address
-                    fetch('https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(provider.address) + ', Bangladesh')
+                    const geocodingPromise = fetch('https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(provider.address) + ', Bangladesh')
                         .then(res => res.json())
                         .then(data => {
                             if (data && data.length > 0) {
@@ -327,27 +302,21 @@
                                 lng = parseFloat(data[0].lon);
                                 addMarker(provider, lat, lng);
                                 bounds.extend([lat, lng]);
-                                if (markers.length === providers.length) {
-                                    map.fitBounds(bounds, { padding: [20, 20] });
-                                }
                             }
                         })
                         .catch(error => {
-                            console.error('Geocoding error:', error);
+                            console.error('Geocoding error for provider:', provider.name, error);
                         });
-                    return; // Skip adding marker for now
-                } else {
-                    return; // Skip if no address
+                    geocodingPromises.push(geocodingPromise);
                 }
-
-                addMarker(provider, lat, lng);
-                bounds.extend([lat, lng]);
             });
 
-            // Fit map to bounds if we have valid coordinates
-            if (hasValidCoordinates && bounds.isValid()) {
-                map.fitBounds(bounds, { padding: [20, 20] });
-            }
+            // Wait for all geocoding to complete, then fit bounds
+            Promise.all(geocodingPromises).then(() => {
+                if (bounds.isValid()) {
+                    map.fitBounds(bounds, { padding: [20, 20] });
+                }
+            });
         }
 
         function addMarker(provider, lat, lng) {

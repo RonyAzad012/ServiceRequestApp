@@ -26,7 +26,7 @@
         <tr>
             <td>@app.Provider.FirstName @app.Provider.LastName</td>
             <td>@app.Message</td>
-            <td>@(app.OfferedPrice.HasValue ? app.OfferedPrice.Value.ToString("C") : "-")</td>
+            <td>@(app.OfferedPrice.HasValue ? "৳" + app.OfferedPrice.Value.ToString("N0") : "-")</td>
             <td>@app.Status</td>
             <td>
                 @if (app.Status == "Pending")
