@@ -140,11 +140,8 @@
                            (item.RequesterId == currentUser.Id ||
                            item.AcceptedRequest?.ProviderId == currentUser.Id))
                             {
-                                <form asp-action="Complete" asp-route-id="@item.Id" method="post" class="d-inline">
-                                    <button type="submit" class="btn btn-outline-success btn-sm" style="font-size: 0.75rem; padding: 0.25rem 0.5rem;">
-                                        <i class="fas fa-check-circle me-1"></i>Complete
-                                    </button>
-                                </form>
+                                   
+                                
                             }
 
                             @if (item.Status == "Pending" && item.RequesterId == currentUser.Id)

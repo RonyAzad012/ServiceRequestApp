@@ -138,6 +138,16 @@
                                 </div>
                             </div>
 
+                            <!-- Category Information -->
+                            @if (provider.PrimaryCategory != null)
+                            {
+                                <div class="category-badge mb-2">
+                                    <span class="badge bg-info text-white">
+                                        <i class="fas fa-tag me-1"></i>@provider.PrimaryCategory.Name
+                                    </span>
+                                </div>
+                            }
+
                             <!-- Shop Information -->
                             @if (!string.IsNullOrEmpty(provider.ShopDescription))
                             {
@@ -217,6 +227,12 @@
         
         .credentials .badge {
             font-size: 0.75rem;
+        }
+        
+        .category-badge .badge {
+            font-size: 0.8rem;
+            font-weight: 500;
+            border-radius: 6px;
         }
         
         .form-label {

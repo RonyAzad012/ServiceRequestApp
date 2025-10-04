@@ -59,9 +59,9 @@
                         </div>
                         <div class="col-md-6">
                             <h6 class="text-muted">Amount Breakdown</h6>
-                            <p><strong>Total Amount:</strong> ৳@(transaction.Amount.ToString("N2"))</p>
-                            <p><strong>Admin Commission (5%):</strong> ৳@((transaction.AdminCommissionAmount ?? 0).ToString("N2"))</p>
-                            <p><strong>Provider Amount (95%):</strong> ৳@((transaction.ProviderReceivedAmount ?? 0).ToString("N2"))</p>
+                            <p><strong>Total Amount:</strong> @(transaction.Amount.ToString("N0")) BDT</p>
+                            <p><strong>Admin Commission (5%):</strong> @((transaction.AdminCommissionAmount ?? 0).ToString("N0")) BDT</p>
+                            <p><strong>Provider Amount (95%):</strong> @((transaction.ProviderReceivedAmount ?? 0).ToString("N0")) BDT</p>
                         </div>
                     </div>
                 </div>

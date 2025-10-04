@@ -92,19 +92,19 @@
                             <tbody>
                                 <tr>
                                     <td><strong>Total Service Amount:</strong></td>
-                                    <td class="text-end"><strong>৳@invoice.TotalAmount.ToString("N2")</strong></td>
+                                    <td class="text-end"><strong>@invoice.TotalAmount.ToString("N0") BDT</strong></td>
                                 </tr>
                                 <tr>
                                     <td>Admin Commission (5%):</td>
-                                    <td class="text-end">৳@invoice.AdminCommission.ToString("N2")</td>
+                                    <td class="text-end">@invoice.AdminCommission.ToString("N0") BDT</td>
                                 </tr>
                                 <tr>
                                     <td>Provider Amount (95%):</td>
-                                    <td class="text-end">৳@invoice.ProviderAmount.ToString("N2")</td>
+                                    <td class="text-end">@invoice.ProviderAmount.ToString("N0") BDT</td>
                                 </tr>
                                 <tr class="border-top">
                                     <td><strong>Total Paid:</strong></td>
-                                    <td class="text-end"><strong>৳@invoice.TotalAmount.ToString("N2")</strong></td>
+                                    <td class="text-end"><strong>@invoice.TotalAmount.ToString("N0") BDT</strong></td>
                                 </tr>
                             </tbody>
                         </table>

@@ -32,7 +32,7 @@
                     <div class="text-success mb-2">
                         <i class="fas fa-arrow-up fa-2x"></i>
                     </div>
-                    <h4 class="mb-1">৳@totalPaid.ToString("N2")</h4>
+                    <h4 class="mb-1">@totalPaid.ToString("N0") BDT</h4>
                     <p class="text-muted mb-0">Total Paid</p>
                     <small class="text-muted">All transactions</small>
                 </div>
@@ -44,7 +44,7 @@
                     <div class="text-danger mb-2">
                         <i class="fas fa-arrow-down fa-2x"></i>
                     </div>
-                    <h4 class="mb-1">৳@totalRefunded.ToString("N2")</h4>
+                    <h4 class="mb-1">@totalRefunded.ToString("N0") BDT</h4>
                     <p class="text-muted mb-0">Total Refunded</p>
                     <small class="text-muted">Refunded amount</small>
                 </div>
@@ -56,7 +56,7 @@
                     <div class="text-info mb-2">
                         <i class="fas fa-chart-line fa-2x"></i>
                     </div>
-                    <h4 class="mb-1">৳@((totalPaid - totalRefunded).ToString("N2"))</h4>
+                    <h4 class="mb-1">@((totalPaid - totalRefunded).ToString("N0")) BDT</h4>
                     <p class="text-muted mb-0">Net Amount</p>
                     <small class="text-muted">After refunds</small>
                 </div>
@@ -107,7 +107,7 @@
                                             </td>
                                             <td>
                                                 <span class="fw-bold @(transaction.Amount > 0 ? "text-success" : "text-danger")">
-                                                    @(transaction.Amount > 0 ? "+" : "")৳@Math.Abs(transaction.Amount).ToString("N2")
+                                                    @(transaction.Amount > 0 ? "+" : "")@Math.Abs(transaction.Amount).ToString("N0") BDT
                                                 </span>
                                             </td>
                                             <td>

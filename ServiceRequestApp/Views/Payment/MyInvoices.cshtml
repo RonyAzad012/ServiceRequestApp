@@ -34,9 +34,9 @@
                                     
                                     <div class="mb-3">
                                         <h6 class="text-muted">Amount Details</h6>
-                                        <p class="mb-1"><strong>Total:</strong> ৳@invoice.TotalAmount.ToString("N2")</p>
-                                        <p class="mb-1"><strong>Commission:</strong> ৳@invoice.AdminCommission.ToString("N2")</p>
-                                        <p class="mb-1"><strong>Provider:</strong> ৳@invoice.ProviderAmount.ToString("N2")</p>
+                                        <p class="mb-1"><strong>Total:</strong> @invoice.TotalAmount.ToString("N0") BDT</p>
+                                        <p class="mb-1"><strong>Commission:</strong> @invoice.AdminCommission.ToString("N0") BDT</p>
+                                        <p class="mb-1"><strong>Provider:</strong> @invoice.ProviderAmount.ToString("N0") BDT</p>
                                     </div>
                                     
                                     <div class="mb-3">

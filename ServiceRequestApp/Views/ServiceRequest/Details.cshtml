@@ -282,16 +282,8 @@
                                         </form>
                                     }
 
-                                    @if (Model.Status == "Accepted" &&
-                                    (Model.RequesterId == currentUser.Id ||
-                                    Model.AcceptedRequest?.ProviderId == currentUser.Id))
-                                    {
-                                        <form asp-action="Complete" asp-route-id="@Model.Id" method="post" class="d-inline">
-                                            <button type="submit" class="btn btn-primary btn-lg">
-                                                <i class="fas fa-check-circle me-2"></i>Mark as Completed
-                                            </button>
-                                        </form>
-                                    }
+                                   
+                                   
                     </div>
 
                     @if (TempData["ReviewMessage"] != null)
