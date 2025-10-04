@@ -13,9 +13,6 @@
                     <p class="text-muted mb-0">Review and approve new provider and tasker registrations</p>
                 </div>
                 <div>
-                    <button class="btn btn-warning me-2" onclick="resetUsersToPending()">
-                        <i class="fas fa-undo me-2"></i>Reset to Pending (Testing)
-                    </button>
                     <button class="btn btn-primary" onclick="refreshPendingApprovals()">
                         <i class="fas fa-sync-alt me-2"></i>Refresh
                     </button>
@@ -477,32 +474,6 @@
         loadPendingApprovals();
     }
 
-    function resetUsersToPending() {
-        if (confirm('This will reset all existing providers and taskers to pending status for testing. Are you sure?')) {
-            // Get anti-forgery token
-            const token = $('input[name="__RequestVerificationToken"]').val();
-            
-            $.ajax({
-                url: '/Admin/ResetUsersToPending',
-                type: 'POST',
-                contentType: 'application/json',
-                headers: {
-                    'RequestVerificationToken': token
-                },
-                success: function(response) {
-                    if (response.success) {
-                        showAlert('Success', response.message, 'success');
-                        loadPendingApprovals();
-                    } else {
-                        showAlert('Error', response.message, 'error');
-                    }
-                },
-                error: function() {
-                    showAlert('Error', 'An error occurred while resetting users', 'error');
-                }
-            });
-        }
-    }
 
     function showAlert(title, message, type) {
         // You can use SweetAlert2 or any other alert library here

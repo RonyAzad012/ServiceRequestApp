@@ -76,7 +76,7 @@
                 </h5>
                 <div class="d-flex gap-2">
                     <span class="badge bg-primary" id="totalUsersCount">@Model.Count()</span>
-                    <span class="badge bg-success" id="activeUsersCount">@Model.Count(u => u.EmailConfirmed)</span>
+                    <span class="badge bg-success" id="activeUsersCount">@Model.Count(u => u.IsApproved)</span>
                 </div>
             </div>
         </div>
@@ -100,7 +100,7 @@
                     <tbody id="usersTableBody">
                         @foreach (var user in Model)
                         {
-                            <tr class="user-row" data-user-id="@user.Id" data-user-type="@user.UserType" data-user-name="@user.FirstName.ToLower() @user.LastName.ToLower()" data-user-email="@user.Email.ToLower()">
+                            <tr class="user-row" data-user-id="@user.Id" data-user-type="@user.UserType" data-user-name="@(user.FirstName?.ToLower() ?? "") @(user.LastName?.ToLower() ?? "")" data-user-email="@(user.Email?.ToLower() ?? "")">
                                 <td>
                                     <div class="d-flex align-items-center">
                                         <input type="checkbox" class="form-check-input me-3 user-checkbox" value="@user.Id">
@@ -154,9 +154,9 @@
                                     }
                                     else
                                     {
-                                        <span class="badge @(user.EmailConfirmed ? "bg-success" : "bg-warning") text-white" id="status-@user.Id">
-                                            <i class="fas @(user.EmailConfirmed ? "fa-check-circle" : "fa-clock") me-1"></i>
-                                            @(user.EmailConfirmed ? "Active" : "Pending")
+                                        <span class="badge @(user.IsApproved ? "bg-success" : "bg-warning") text-white" id="status-@user.Id">
+                                            <i class="fas @(user.IsApproved ? "fa-check-circle" : "fa-clock") me-1"></i>
+                                            @(user.IsApproved ? "Active" : "Pending")
                                         </span>
                                     }
                                 </td>

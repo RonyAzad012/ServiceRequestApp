@@ -96,36 +96,6 @@ namespace ServiceRequestApp.Controllers
             return View();
         }
 
-        // Temporary method to reset existing providers/taskers to pending for testing
-        [HttpPost]
-        [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> ResetUsersToPending()
-        {
-            try
-            {
-                var providersAndTaskers = await _userManager.Users
-                    .Where(u => (u.UserType == "Provider" || u.UserType == "Tasker") && u.IsApproved)
-                    .ToListAsync();
-
-                foreach (var user in providersAndTaskers)
-                {
-                    user.IsApproved = false;
-                    user.ApprovedAt = null;
-                    user.ApprovedBy = null;
-                    user.RejectionReason = null;
-                    await _userManager.UpdateAsync(user);
-                }
-
-                return Json(new { 
-                    success = true, 
-                    message = $"Reset {providersAndTaskers.Count} users to pending status for testing" 
-                });
-            }
-            catch (Exception ex)
-            {
-                return Json(new { success = false, message = ex.Message });
-            }
-        }
 
         // Fix existing requesters to be automatically approved
         [HttpPost]
